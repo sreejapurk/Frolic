@@ -50,10 +50,9 @@ export default function ForStudiosPage() {
       <Navbar />
       <section style={{ maxWidth: '900px', margin: '0 auto', padding: '64px 24px' }}>
         <div id="partner-form" style={{ marginBottom: '80px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', flexWrap: 'wrap', gap: '16px' }}>
-            <h1 style={{ fontSize: '36px', fontWeight: '900', color: 'white', margin: 0 }}>Grow Your Studio with Frolic</h1>
-            <h2 style={{ fontSize: '32px', fontWeight: '900', color: '#F97316', margin: 0 }}>Partner Application</h2>
-          </div>
+          <h1 style={{ fontSize: '36px', fontWeight: '900', color: 'white', marginBottom: '8px' }}>
+            Grow Your Studio with Frolic — <span style={{ color: '#F97316' }}>Partner Application</span>
+          </h1>
           <p style={{ color: '#9CA3AF', marginBottom: '32px' }}>Fill out the form below to learn what Frolic can do for your business.</p>
           <div style={{ backgroundColor: '#1A2332', borderRadius: '16px', padding: '32px', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {[
