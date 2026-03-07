@@ -52,28 +52,7 @@ export default function ForStudiosPage() {
         <h1 style={{ fontSize: '48px', fontWeight: '900', color: 'white' }}>Grow Your Studio with Frolic</h1>
       </section>
       <section style={{ maxWidth: '900px', margin: '0 auto', padding: '64px 24px' }}>
-        <h2 style={{ fontSize: '36px', fontWeight: '900', color: 'white', textAlign: 'center', marginBottom: '8px' }}>Why Studios Love Frolic</h2>
-        <p style={{ color: '#9CA3AF', textAlign: 'center', marginBottom: '48px' }}>Sell out classes in 3 clicks</p>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '80px' }}>
-          {FEATURES.map((f, i) => (
-            <div key={f.title} style={{ backgroundColor: '#1A2332', borderRadius: '16px', padding: '28px', border: i === 3 ? '1px solid rgba(249,115,22,0.5)' : '1px solid rgba(255,255,255,0.1)' }}>
-              <h3 style={{ color: 'white', fontWeight: 'bold', fontSize: '20px', marginBottom: '12px' }}>{f.title}</h3>
-              <p style={{ color: '#9CA3AF' }}>{f.desc}</p>
-            </div>
-          ))}
-        </div>
-        <div style={{ textAlign: 'center', padding: '64px 0', marginBottom: '64px' }}>
-          <h2 style={{ fontSize: '36px', fontWeight: '900', color: 'white', marginBottom: '32px' }}>Ready to sell out your next class?</h2>
-          <button
-            onClick={() => document.getElementById('partner-form')?.scrollIntoView({ behavior: 'smooth' })}
-            style={{ backgroundColor: '#F97316', border: 'none', color: 'white', padding: '20px 48px', borderRadius: '16px', fontWeight: 'bold', fontSize: '18px', cursor: 'pointer', boxShadow: '0 0 30px rgba(249,115,22,0.3)' }}
-          >
-            Create your first class
-          </button>
-          <p style={{ color: '#6B7280', fontSize: '14px', marginTop: '16px' }}>No credit card required. A few mins to launch.</p>
-          <p style={{ color: '#6B7280', fontSize: '14px' }}>No monthly fees. No contracts.</p>
-        </div>
-        <div id="partner-form">
+        <div id="partner-form" style={{ marginBottom: '80px' }}>
           <h2 style={{ fontSize: '32px', fontWeight: '900', color: 'white', marginBottom: '8px' }}>Partner Application</h2>
           <p style={{ color: '#9CA3AF', marginBottom: '32px' }}>Fill out the form below to learn what Frolic can do for your business.</p>
           <div style={{ backgroundColor: '#1A2332', borderRadius: '16px', padding: '32px', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -102,6 +81,16 @@ export default function ForStudiosPage() {
               {loading ? 'Submitting...' : 'Submit Application'}
             </button>
           </div>
+        </div>
+        <h2 style={{ fontSize: '36px', fontWeight: '900', color: 'white', textAlign: 'center', marginBottom: '8px' }}>Why Studios Love Frolic</h2>
+        <p style={{ color: '#9CA3AF', textAlign: 'center', marginBottom: '48px' }}>Sell out classes in 3 clicks</p>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '80px' }}>
+          {FEATURES.map((f, i) => (
+            <div key={f.title} style={{ backgroundColor: '#1A2332', borderRadius: '16px', padding: '28px', border: i === 3 ? '1px solid rgba(249,115,22,0.5)' : '1px solid rgba(255,255,255,0.1)' }}>
+              <h3 style={{ color: 'white', fontWeight: 'bold', fontSize: '20px', marginBottom: '12px' }}>{f.title}</h3>
+              <p style={{ color: '#9CA3AF' }}>{f.desc}</p>
+            </div>
+          ))}
         </div>
       </section>
     </main>
