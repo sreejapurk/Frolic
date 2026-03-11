@@ -1,0 +1,181 @@
+'use client'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+
+const EMPTY_CLASS = {
+  title: '', category: 'Dance', price: '', level: 'Beginner',
+  duration: '60 min', date: '', time: '', spots: '', distance: '',
+  rating: '4.9', image: '', instructor: '', room: '',
+}
+
+export default function StudioDashboard() {
+  const router = useRouter()
+  const [classes, setClasses] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [tab, setTab] = useState<'classes' | 'add' | 'edit'>('classes')
+  const [newClass, setNewClass] = useState({ ...EMPTY_CLASS })
+  const [editingClass, setEditingClass] = useState<any>(null)
+  const [studioName, setStudioName] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    loadClasses()
+  }, [])
+
+  const loadClasses = async () => {
+    setLoading(true)
+    const res = await fetch('/api/studio/classes')
+    if (res.status === 401) {
+      router.push('/studio/login')
+      return
+    }
+    const data = await res.json()
+    setClasses(data)
+    setLoading(false)
+  }
+
+  const handleLogout = async () => {
+    await fetch('/api/studio/logout', { method: 'POST' })
+    router.push('/studio/login')
+  }
+
+  const handleAdd = async () => {
+    setSaving(true)
+    const res = await fetch('/api/studio/classes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newClass),
+    })
+    setSaving(false)
+    if (res.ok) {
+      setNewClass({ ...EMPTY_CLASS })
+      setTab('classes')
+      loadClasses()
+    } else {
+      alert('Failed to add class')
+    }
+  }
+
+  const handleEdit = async () => {
+    setSaving(true)
+    const res = await fetch(`/api/studio/classes/${editingClass.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(editingClass),
+    })
+    setSaving(false)
+    if (res.ok) {
+      setTab('classes')
+      setEditingClass(null)
+      loadClasses()
+    } else {
+      alert('Failed to update class')
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Delete this class?')) return
+    await fetch(`/api/studio/classes/${id}`, { method: 'DELETE' })
+    loadClasses()
+  }
+
+  const inputStyle = { width: '100%', backgroundColor: '#0F1624', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '12px 16px', color: 'white', outline: 'none', fontSize: '14px', boxSizing: 'border-box' as const }
+
+  const ClassForm = ({ data, setData, onSave, saveLabel }: any) => (
+    <div style={{ backgroundColor: '#1A2332', borderRadius: '16px', padding: '28px', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      {[
+        { label: 'Class Title', key: 'title' },
+        { label: 'Instructor', key: 'instructor' },
+        { label: 'Room', key: 'room' },
+        { label: 'Price ($)', key: 'price', type: 'number' },
+        { label: 'Total Spots', key: 'spots', type: 'number' },
+        { label: 'Date (e.g. Mon, Feb 23)', key: 'date' },
+        { label: 'Time (e.g. 6:00 PM)', key: 'time' },
+        { label: 'Duration (e.g. 60 min)', key: 'duration' },
+        { label: 'Distance (e.g. 1.2 mi)', key: 'distance' },
+        { label: 'Image URL', key: 'image' },
+      ].map(field => (
+        <div key={field.key}>
+          <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>{field.label}</label>
+          <input type={field.type || 'text'} value={data[field.key]} onChange={e => setData((d: any) => ({ ...d, [field.key]: e.target.value }))} style={inputStyle} />
+        </div>
+      ))}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+        <div>
+          <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Category</label>
+          <select value={data.category} onChange={e => setData((d: any) => ({ ...d, category: e.target.value }))} style={inputStyle}>
+            {['Dance', 'Singing', 'Art'].map(c => <option key={c}>{c}</option>)}
+          </select>
+        </div>
+        <div>
+          <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Level</label>
+          <select value={data.level} onChange={e => setData((d: any) => ({ ...d, level: e.target.value }))} style={inputStyle}>
+            {['Beginner', 'Intermediate', 'Advanced', 'All Levels', 'Kids'].map(l => <option key={l}>{l}</option>)}
+          </select>
+        </div>
+      </div>
+      <button onClick={onSave} disabled={saving} style={{ width: '100%', backgroundColor: '#F97316', border: 'none', color: 'white', padding: '16px', borderRadius: '16px', fontWeight: 'bold', fontSize: '18px', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1, marginTop: '8px' }}>
+        {saving ? 'Saving...' : saveLabel}
+      </button>
+    </div>
+  )
+
+  return (
+    <div style={{ minHeight: '100vh', backgroundColor: '#0F1624' }}>
+      <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', backgroundColor: '#1A2332', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+        <Link href="/" style={{ color: 'white', fontWeight: 'bold', fontSize: '20px', textDecoration: 'none' }}>Frolic</Link>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button onClick={() => setTab('classes')} style={{ padding: '8px 16px', borderRadius: '999px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', border: 'none', backgroundColor: tab === 'classes' ? '#F97316' : 'transparent', color: 'white' }}>My Classes</button>
+          <button onClick={() => setTab('add')} style={{ padding: '8px 16px', borderRadius: '999px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', border: 'none', backgroundColor: tab === 'add' ? '#F97316' : 'transparent', color: 'white' }}>+ Add Class</button>
+        </div>
+        <button onClick={handleLogout} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.2)', color: '#9CA3AF', padding: '8px 16px', borderRadius: '999px', fontSize: '14px', cursor: 'pointer' }}>Log Out</button>
+      </nav>
+
+      <div style={{ maxWidth: '900px', margin: '0 auto', padding: '32px 24px' }}>
+        {tab === 'classes' && (
+          <div>
+            <h2 style={{ color: 'white', fontWeight: '900', fontSize: '24px', marginBottom: '24px' }}>My Classes ({classes.length})</h2>
+            {loading ? (
+              <p style={{ color: '#9CA3AF' }}>Loading...</p>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
+                {classes.map(c => (
+                  <div key={c.id} style={{ backgroundColor: '#1A2332', borderRadius: '12px', padding: '20px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                    {c.image && <img src={c.image} alt={c.title} style={{ width: '100%', height: '128px', objectFit: 'cover', borderRadius: '8px', marginBottom: '12px' }} />}
+                    <h3 style={{ color: 'white', fontWeight: 'bold', marginBottom: '4px' }}>{c.title}</h3>
+                    <p style={{ color: '#9CA3AF', fontSize: '14px', marginBottom: '8px' }}>{c.category} • {c.level}</p>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                      <span style={{ color: '#F97316', fontWeight: 'bold' }}>${c.price}</span>
+                      <span style={{ color: '#9CA3AF', fontSize: '14px' }}>{c.spots_left} spots left</span>
+                    </div>
+                    <p style={{ color: '#6B7280', fontSize: '14px', marginBottom: '12px' }}>{c.date} • {c.time}</p>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button onClick={() => { setEditingClass({ ...c }); setTab('edit') }} style={{ flex: 1, backgroundColor: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.3)', color: '#F97316', padding: '8px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>Edit</button>
+                      <button onClick={() => handleDelete(c.id)} style={{ flex: 1, backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#F87171', padding: '8px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>Delete</button>
+                    </div>
+                  </div>
+                ))}
+                {classes.length === 0 && <p style={{ color: '#6B7280' }}>No classes yet. Add your first one!</p>}
+              </div>
+            )}
+          </div>
+        )}
+
+        {tab === 'add' && (
+          <div style={{ maxWidth: '600px' }}>
+            <h2 style={{ color: 'white', fontWeight: '900', fontSize: '24px', marginBottom: '24px' }}>Add New Class</h2>
+            <ClassForm data={newClass} setData={setNewClass} onSave={handleAdd} saveLabel="Add Class" />
+          </div>
+        )}
+
+        {tab === 'edit' && editingClass && (
+          <div style={{ maxWidth: '600px' }}>
+            <h2 style={{ color: 'white', fontWeight: '900', fontSize: '24px', marginBottom: '24px' }}>Edit Class</h2>
+            <ClassForm data={editingClass} setData={setEditingClass} onSave={handleEdit} saveLabel="Save Changes" />
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}

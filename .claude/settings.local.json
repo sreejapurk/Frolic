@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install --save-dev @types/pg && git add package.json package-lock.json && git commit -m \"add @types/pg\" && git push)",
+      "Bash(git add lib/stripe.ts && git commit -m \"fix stripe api version\" && git push)",
+      "Bash(git add app/for-studios/page.tsx && git commit -m \"show partner application before why studios love frolic\" && git push)",
+      "Bash(git add app/for-studios/page.tsx && git commit -m \"align grow your studio and partner application on same line\" && git push)",
+      "Bash(git add app/for-studios/page.tsx && git commit -m \"combine header into one line\" && git push)",
+      "Bash(git add app/for-studios/page.tsx && git commit -m \"partner application above grow your studio, both white\" && git push)",
+      "Bash(git add app/for-studios/page.tsx && git commit -m \"grow your studio above partner application\" && git push)",
+      "Bash(git add app/checkout/page.tsx && git commit -m \"replace tok_visa with real Stripe CardElement\" && git push)",
+      "Bash(git add .env.production && git commit -m \"switch to live Stripe keys\" && git push)",
+      "Bash(npm install resend)",
+      "Bash(git add app/api/bookings/route.ts package.json package-lock.json && git commit -m \"add Resend email confirmation on booking\" && git push)",
+      "Bash(npm install bcryptjs jose && npm install --save-dev @types/bcryptjs)",
+      "Bash(git add -A && git commit -m \"add studio portal with signup, login, dashboard and admin approval\" && git push)"
+    ]
+  }
+}

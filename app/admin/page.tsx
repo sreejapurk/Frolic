@@ -8,7 +8,8 @@ export default function AdminPage() {
   const [classes, setClasses] = useState<any[]>([])
   const [bookings, setBookings] = useState<any[]>([])
   const [applications, setApplications] = useState<any[]>([])
-  const [tab, setTab] = useState<'classes' | 'bookings' | 'applications' | 'add'>('classes')
+  const [studios, setStudios] = useState<any[]>([])
+  const [tab, setTab] = useState<'classes' | 'bookings' | 'applications' | 'studios' | 'add'>('classes')
   const [loading, setLoading] = useState(false)
   const [newClass, setNewClass] = useState({
     title: '', studio: '', category: 'Dance', price: '', level: 'Beginner',
@@ -33,14 +34,16 @@ export default function AdminPage() {
 
   const loadData = async () => {
     setLoading(true)
-    const [c, b, a] = await Promise.all([
+    const [c, b, a, s] = await Promise.all([
       fetch('/api/classes').then(r => r.json()),
       fetch('/api/bookings').then(r => r.json()),
       fetch('/api/applications').then(r => r.json()),
+      fetch('/api/admin/studios').then(r => r.json()),
     ])
     setClasses(c)
     setBookings(b)
     setApplications(a)
+    setStudios(s)
     setLoading(false)
   }
 
@@ -89,9 +92,9 @@ export default function AdminPage() {
       <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', backgroundColor: '#1A2332', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
         <Link href="/" style={{ color: 'white', fontWeight: 'bold', fontSize: '20px', textDecoration: 'none' }}>Frolic Admin</Link>
         <div style={{ display: 'flex', gap: '12px' }}>
-          {(['classes', 'bookings', 'applications', 'add'] as const).map(t => (
+          {(['classes', 'bookings', 'applications', 'studios', 'add'] as const).map(t => (
             <button key={t} onClick={() => setTab(t)} style={{ padding: '8px 16px', borderRadius: '999px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', border: 'none', backgroundColor: tab === t ? '#F97316' : 'transparent', color: 'white' }}>
-              {t === 'add' ? '+ Add Class' : t.charAt(0).toUpperCase() + t.slice(1)}
+              {t === 'add' ? '+ Add Class' : t === 'studios' ? 'Studios' : t.charAt(0).toUpperCase() + t.slice(1)}
             </button>
           ))}
         </div>
@@ -180,6 +183,51 @@ export default function AdminPage() {
                 </tbody>
               </table>
               {applications.length === 0 && <p style={{ color: '#6B7280', textAlign: 'center', padding: '48px' }}>No applications yet</p>}
+            </div>
+          </div>
+        )}
+
+        {tab === 'studios' && !loading && (
+          <div>
+            <h2 style={{ color: 'white', fontWeight: '900', fontSize: '24px', marginBottom: '24px' }}>Studio Accounts ({studios.length})</h2>
+            <div style={{ backgroundColor: '#1A2332', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', overflow: 'hidden' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                    {['Studio', 'Email', 'Status', 'Joined', 'Action'].map(h => (
+                      <th key={h} style={{ color: '#9CA3AF', fontSize: '14px', fontWeight: '600', textAlign: 'left', padding: '16px 20px' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {studios.map((s: any) => (
+                    <tr key={s.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                      <td style={{ padding: '16px 20px', color: 'white', fontSize: '14px' }}>{s.studio_name}</td>
+                      <td style={{ padding: '16px 20px', color: '#9CA3AF', fontSize: '14px' }}>{s.email}</td>
+                      <td style={{ padding: '16px 20px' }}>
+                        <span style={{ backgroundColor: s.approved ? 'rgba(34,197,94,0.2)' : 'rgba(249,115,22,0.2)', color: s.approved ? '#4ADE80' : '#F97316', padding: '4px 12px', borderRadius: '999px', fontSize: '12px', fontWeight: '600' }}>
+                          {s.approved ? 'Approved' : 'Pending'}
+                        </span>
+                      </td>
+                      <td style={{ padding: '16px 20px', color: '#9CA3AF', fontSize: '14px' }}>{new Date(s.created_at).toLocaleDateString()}</td>
+                      <td style={{ padding: '16px 20px' }}>
+                        {!s.approved && (
+                          <button
+                            onClick={async () => {
+                              await fetch(`/api/admin/studios/${s.id}/approve`, { method: 'POST' })
+                              loadData()
+                            }}
+                            style={{ backgroundColor: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', color: '#4ADE80', padding: '6px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}
+                          >
+                            Approve
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {studios.length === 0 && <p style={{ color: '#6B7280', textAlign: 'center', padding: '48px' }}>No studio accounts yet</p>}
             </div>
           </div>
         )}
