@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
     // Send confirmation email
     try {
       await resend.emails.send({
-        from: 'onboarding@resend.dev',
+        from: 'Frolic <hello@joinfrolic.com>',
         to: data.email,
         subject: `Booking Confirmed — ${data.className}`,
         html: `
