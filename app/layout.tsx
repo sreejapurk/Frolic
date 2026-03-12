@@ -4,6 +4,9 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'Frolic — Discover Creative Classes Near You',
   description: 'Find and book dance, singing, and art classes in your community.',
+  icons: {
+    icon: '/favicon.svg',
+  },
 }
 
 export default function RootLayout({
