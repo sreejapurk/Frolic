@@ -12,11 +12,11 @@ const EMPTY_CLASS = {
 export default function StudioDashboard() {
   const router = useRouter()
   const [classes, setClasses] = useState<any[]>([])
+  const [earnings, setEarnings] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const [tab, setTab] = useState<'classes' | 'add' | 'edit'>('classes')
+  const [tab, setTab] = useState<'classes' | 'add' | 'edit' | 'earnings'>('classes')
   const [newClass, setNewClass] = useState({ ...EMPTY_CLASS })
   const [editingClass, setEditingClass] = useState<any>(null)
-  const [studioName, setStudioName] = useState('')
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
@@ -26,13 +26,20 @@ export default function StudioDashboard() {
   const loadClasses = async () => {
     setLoading(true)
     const res = await fetch('/api/studio/classes')
-    if (res.status === 401) {
-      router.push('/studio/login')
-      return
-    }
+    if (res.status === 401) { router.push('/studio/login'); return }
     const data = await res.json()
     setClasses(data)
     setLoading(false)
+  }
+
+  const loadEarnings = async () => {
+    const res = await fetch('/api/studio/earnings')
+    if (res.ok) setEarnings(await res.json())
+  }
+
+  const handleTabChange = (t: typeof tab) => {
+    setTab(t)
+    if (t === 'earnings' && !earnings) loadEarnings()
   }
 
   const handleLogout = async () => {
@@ -48,13 +55,8 @@ export default function StudioDashboard() {
       body: JSON.stringify(newClass),
     })
     setSaving(false)
-    if (res.ok) {
-      setNewClass({ ...EMPTY_CLASS })
-      setTab('classes')
-      loadClasses()
-    } else {
-      alert('Failed to add class')
-    }
+    if (res.ok) { setNewClass({ ...EMPTY_CLASS }); setTab('classes'); loadClasses() }
+    else alert('Failed to add class')
   }
 
   const handleEdit = async () => {
@@ -65,13 +67,8 @@ export default function StudioDashboard() {
       body: JSON.stringify(editingClass),
     })
     setSaving(false)
-    if (res.ok) {
-      setTab('classes')
-      setEditingClass(null)
-      loadClasses()
-    } else {
-      alert('Failed to update class')
-    }
+    if (res.ok) { setTab('classes'); setEditingClass(null); loadClasses() }
+    else alert('Failed to update class')
   }
 
   const handleDelete = async (id: string) => {
@@ -81,6 +78,11 @@ export default function StudioDashboard() {
   }
 
   const inputStyle = { width: '100%', backgroundColor: '#0F1624', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '12px 16px', color: 'white', outline: 'none', fontSize: '14px', boxSizing: 'border-box' as const }
+  const tabBtn = (t: typeof tab, label: string) => (
+    <button onClick={() => handleTabChange(t)} style={{ padding: '8px 16px', borderRadius: '999px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', border: 'none', backgroundColor: tab === t ? '#F97316' : 'transparent', color: 'white' }}>
+      {label}
+    </button>
+  )
 
   const ClassForm = ({ data, setData, onSave, saveLabel }: any) => (
     <div style={{ backgroundColor: '#1A2332', borderRadius: '16px', padding: '28px', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -126,19 +128,19 @@ export default function StudioDashboard() {
       <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', backgroundColor: '#1A2332', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
         <Link href="/" style={{ color: 'white', fontWeight: 'bold', fontSize: '20px', textDecoration: 'none' }}>Frolic</Link>
         <div style={{ display: 'flex', gap: '12px' }}>
-          <button onClick={() => setTab('classes')} style={{ padding: '8px 16px', borderRadius: '999px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', border: 'none', backgroundColor: tab === 'classes' ? '#F97316' : 'transparent', color: 'white' }}>My Classes</button>
-          <button onClick={() => setTab('add')} style={{ padding: '8px 16px', borderRadius: '999px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', border: 'none', backgroundColor: tab === 'add' ? '#F97316' : 'transparent', color: 'white' }}>+ Add Class</button>
+          {tabBtn('classes', 'My Classes')}
+          {tabBtn('earnings', '💰 Earnings')}
+          {tabBtn('add', '+ Add Class')}
         </div>
         <button onClick={handleLogout} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.2)', color: '#9CA3AF', padding: '8px 16px', borderRadius: '999px', fontSize: '14px', cursor: 'pointer' }}>Log Out</button>
       </nav>
 
       <div style={{ maxWidth: '900px', margin: '0 auto', padding: '32px 24px' }}>
+
         {tab === 'classes' && (
           <div>
             <h2 style={{ color: 'white', fontWeight: '900', fontSize: '24px', marginBottom: '24px' }}>My Classes ({classes.length})</h2>
-            {loading ? (
-              <p style={{ color: '#9CA3AF' }}>Loading...</p>
-            ) : (
+            {loading ? <p style={{ color: '#9CA3AF' }}>Loading...</p> : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
                 {classes.map(c => (
                   <div key={c.id} style={{ backgroundColor: '#1A2332', borderRadius: '12px', padding: '20px', border: '1px solid rgba(255,255,255,0.1)' }}>
@@ -158,6 +160,48 @@ export default function StudioDashboard() {
                 ))}
                 {classes.length === 0 && <p style={{ color: '#6B7280' }}>No classes yet. Add your first one!</p>}
               </div>
+            )}
+          </div>
+        )}
+
+        {tab === 'earnings' && (
+          <div>
+            <h2 style={{ color: 'white', fontWeight: '900', fontSize: '24px', marginBottom: '24px' }}>Earnings</h2>
+            {!earnings ? <p style={{ color: '#9CA3AF' }}>Loading...</p> : (
+              <>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '32px' }}>
+                  <div style={{ backgroundColor: '#1A2332', borderRadius: '16px', padding: '24px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                    <p style={{ color: '#9CA3AF', fontSize: '14px', marginBottom: '8px' }}>Total Revenue</p>
+                    <p style={{ color: '#4ADE80', fontSize: '36px', fontWeight: '900' }}>${earnings.totalRevenue.toFixed(2)}</p>
+                  </div>
+                  <div style={{ backgroundColor: '#1A2332', borderRadius: '16px', padding: '24px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                    <p style={{ color: '#9CA3AF', fontSize: '14px', marginBottom: '8px' }}>Total Bookings</p>
+                    <p style={{ color: 'white', fontSize: '36px', fontWeight: '900' }}>{earnings.totalBookings}</p>
+                  </div>
+                </div>
+
+                <h3 style={{ color: 'white', fontWeight: '800', fontSize: '18px', marginBottom: '16px' }}>Transaction History</h3>
+                {earnings.bookings.length === 0 ? (
+                  <p style={{ color: '#6B7280' }}>No bookings yet.</p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    {earnings.bookings.map((b: any) => (
+                      <div key={b.id} style={{ backgroundColor: '#1A2332', borderRadius: '12px', padding: '16px 20px', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                        <div>
+                          <p style={{ color: 'white', fontWeight: '600', marginBottom: '2px' }}>{b.class_name}</p>
+                          <p style={{ color: '#6B7280', fontSize: '13px' }}>{b.first_name} {b.last_name} · {new Date(b.created_at).toLocaleDateString()}</p>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <p style={{ color: '#F97316', fontWeight: '700', fontSize: '16px' }}>${parseFloat(b.amount).toFixed(2)}</p>
+                          <span style={{ fontSize: '12px', fontWeight: '600', padding: '2px 8px', borderRadius: '999px', backgroundColor: b.payment_status === 'paid' ? 'rgba(34,197,94,0.15)' : 'rgba(251,191,36,0.15)', color: b.payment_status === 'paid' ? '#4ADE80' : '#FBBF24' }}>
+                            {b.payment_status}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}
