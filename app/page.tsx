@@ -46,10 +46,6 @@ export default function HomePage() {
           >
             Find Classes You'll Love,<br />Right Near You
           </h1>
-          <p className="animate-fade-up" style={{ color: '#9CA3AF', fontSize: '18px', marginBottom: '40px', animationDelay: '100ms' }}>
-            Dance, sing, and create with your local community
-          </p>
-
           {/* Search bar */}
           <div className="animate-fade-up" style={{ maxWidth: '580px', margin: '0 auto', animationDelay: '150ms' }}>
             <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '16px', padding: '16px 20px', gap: '12px', transition: 'border-color 0.2s, box-shadow 0.2s' }}
