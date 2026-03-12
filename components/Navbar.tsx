@@ -68,30 +68,28 @@ export default function Navbar() {
               <>
                 <Link
                   href="/login"
-                  style={{ textDecoration: 'none', fontSize: '14px', fontWeight: '600', color: '#9CA3AF', padding: '8px 16px', borderRadius: '9px', transition: 'color 0.2s' }}
+                  style={{ textDecoration: 'none', fontSize: '14px', fontWeight: '600', color: '#9CA3AF', padding: '8px 16px', borderRadius: '9px' }}
                 >
                   Log In
                 </Link>
                 <Link
                   href="/signup"
-                  style={{ background: '#F97316', color: 'white', padding: '8px 18px', borderRadius: '9px', fontSize: '14px', fontWeight: '700', textDecoration: 'none', transition: 'all 0.2s ease' }}
+                  style={{ background: '#F97316', color: 'white', padding: '8px 18px', borderRadius: '9px', fontSize: '14px', fontWeight: '700', textDecoration: 'none' }}
                 >
                   Sign Up
                 </Link>
               </>
             )
           )}
-          {isStudios && (
-            <Link
-              href="/studio/login"
-              style={{ textDecoration: 'none', fontSize: '14px', fontWeight: '600', color: '#9CA3AF', padding: '8px 16px', borderRadius: '9px', transition: 'color 0.2s' }}
-            >
-              Studio Login
-            </Link>
-          )}
+          <Link
+            href="/studio/login"
+            style={{ textDecoration: 'none', fontSize: '14px', fontWeight: '600', color: '#9CA3AF', padding: '8px 16px', borderRadius: '9px' }}
+          >
+            Studio Login
+          </Link>
           <Link
             href="/studio/signup"
-            style={{ background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.3)', color: '#F97316', padding: '8px 18px', borderRadius: '9px', fontSize: '14px', fontWeight: '700', textDecoration: 'none', transition: 'all 0.2s ease' }}
+            style={{ background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.3)', color: '#F97316', padding: '8px 18px', borderRadius: '9px', fontSize: '14px', fontWeight: '700', textDecoration: 'none' }}
           >
             List Your Studio
           </Link>
