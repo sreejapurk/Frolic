@@ -15,47 +15,99 @@ interface ClassCardProps {
   rating: string
   image: string
   category: string
+  instructor?: string
+}
+
+const CATEGORY_COLORS: Record<string, string> = {
+  Dance: '#A78BFA',
+  Singing: '#34D399',
+  Art: '#60A5FA',
 }
 
 export default function ClassCard(props: ClassCardProps) {
-  const { id, title, studio, price, level, duration, date, time, spots_left, distance, rating, image } = props
+  const { id, title, studio, price, level, duration, date, time, spots_left, distance, rating, image, category, instructor } = props
   const isSoldOut = spots_left === 0
+  const isLow = spots_left > 0 && spots_left <= 3
+  const categoryColor = CATEGORY_COLORS[category] || '#F97316'
 
   return (
-    <div style={{ backgroundColor: '#1A2332', borderRadius: '16px', overflow: 'hidden', display: 'flex', flexDirection: 'column', border: isSoldOut ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(255,255,255,0.1)', opacity: isSoldOut ? 0.8 : 1 }}>
-      <div style={{ position: 'relative' }}>
+    <div
+      className="card animate-fade-up"
+      style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', opacity: isSoldOut ? 0.6 : 1 }}
+    >
+      {/* Image */}
+      <div style={{ position: 'relative', height: '200px', overflow: 'hidden', backgroundColor: '#0A0F1A' }}>
         {image ? (
-          <img src={image} alt={title} style={{ width: '100%', height: '192px', objectFit: 'cover' }} />
+          <img
+            src={image}
+            alt={title}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s ease' }}
+            onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.05)')}
+            onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
+          />
         ) : (
-          <div style={{ width: '100%', height: '192px', backgroundColor: '#0F1624', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4B5563', fontSize: '14px' }}>No image</div>
+          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #1A2332, #0A0F1A)' }}>
+            <span style={{ fontSize: '40px', opacity: 0.3 }}>🎭</span>
+          </div>
         )}
-        <span style={{ position: 'absolute', top: '12px', right: '12px', backgroundColor: '#F97316', color: 'white', fontSize: '14px', fontWeight: 'bold', padding: '4px 12px', borderRadius: '999px' }}>${price}</span>
+
+        {/* Price badge */}
+        <div style={{ position: 'absolute', top: '12px', right: '12px', background: '#F97316', color: 'white', fontSize: '15px', fontWeight: '800', padding: '5px 12px', borderRadius: '9999px', boxShadow: '0 2px 12px rgba(249,115,22,0.4)' }}>
+          ${price}
+        </div>
+
+        {/* Category badge */}
+        <div style={{ position: 'absolute', top: '12px', left: '12px', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', color: categoryColor, fontSize: '11px', fontWeight: '700', padding: '4px 10px', borderRadius: '9999px', border: `1px solid ${categoryColor}30`, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+          {category}
+        </div>
+
         {isSoldOut && (
-          <span style={{ position: 'absolute', top: '12px', left: '12px', backgroundColor: '#1A2332', color: 'white', fontSize: '12px', fontWeight: 'bold', padding: '4px 12px', borderRadius: '999px' }}>SOLD OUT</span>
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ background: 'rgba(0,0,0,0.8)', color: 'white', fontWeight: '700', fontSize: '13px', padding: '8px 20px', borderRadius: '9999px', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Sold Out</span>
+          </div>
         )}
       </div>
-      <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', flex: 1 }}>
-        <h3 style={{ color: 'white', fontWeight: 'bold', fontSize: '18px', marginBottom: '4px' }}>{title}</h3>
-        <p style={{ color: '#9CA3AF', fontSize: '14px', marginBottom: '12px' }}>{studio}</p>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '14px', color: '#9CA3AF', marginBottom: '12px' }}>
-          <span>📍 {distance}</span>
-          <span style={{ color: '#FBBF24', fontWeight: '500' }}>⭐ {rating}</span>
+
+      {/* Content */}
+      <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', flex: 1, gap: '12px' }}>
+        <div>
+          <h3 style={{ color: 'white', fontWeight: '800', fontSize: '17px', marginBottom: '4px', lineHeight: '1.3', letterSpacing: '-0.2px' }}>{title}</h3>
+          <p style={{ color: '#9CA3AF', fontSize: '13px', fontWeight: '500' }}>{studio}{instructor ? ` · ${instructor}` : ''}</p>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-          <span style={{ backgroundColor: '#0F1624', color: '#D1D5DB', fontSize: '12px', padding: '4px 12px', borderRadius: '999px', border: '1px solid rgba(255,255,255,0.1)' }}>{level}</span>
-          <span style={{ color: '#9CA3AF', fontSize: '12px' }}>{duration}</span>
+
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ color: '#9CA3AF', fontSize: '13px' }}>📍 {distance}</span>
+          <span style={{ color: '#FBBF24', fontSize: '13px', fontWeight: '600' }}>⭐ {rating}</span>
         </div>
-        <p style={{ color: '#9CA3AF', fontSize: '14px', marginBottom: '16px' }}>{date} • {time}</p>
-        <div style={{ marginTop: 'auto' }}>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <span className="badge badge-gray">{level}</span>
+          <span style={{ color: '#6B7280', fontSize: '12px' }}>·</span>
+          <span style={{ color: '#9CA3AF', fontSize: '13px' }}>{duration}</span>
+        </div>
+
+        <p style={{ color: '#6B7280', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span>📅</span> {date} · {time}
+        </p>
+
+        <div style={{ marginTop: 'auto', paddingTop: '4px' }}>
           {isSoldOut ? (
-            <>
-              <p style={{ color: '#6B7280', fontSize: '14px', marginBottom: '12px' }}>No spots available</p>
-              <button disabled style={{ width: '100%', backgroundColor: '#2A3547', color: '#6B7280', padding: '12px', borderRadius: '12px', fontWeight: '600', border: 'none', cursor: 'not-allowed' }}>Sold Out</button>
-            </>
+            <button disabled style={{ width: '100%', background: 'rgba(255,255,255,0.05)', color: '#6B7280', padding: '12px', borderRadius: '12px', fontWeight: '600', border: '1px solid rgba(255,255,255,0.08)', cursor: 'not-allowed', fontSize: '14px' }}>
+              Sold Out
+            </button>
           ) : (
             <>
-              <p style={{ color: '#F97316', fontSize: '14px', fontWeight: '500', marginBottom: '12px' }}>{spots_left} spots left</p>
-              <Link href={`/checkout?classId=${id}`} style={{ display: 'block', width: '100%', backgroundColor: '#F97316', color: 'white', padding: '12px', borderRadius: '12px', fontWeight: '600', textAlign: 'center', textDecoration: 'none' }}>Book Now</Link>
+              <p style={{ fontSize: '13px', fontWeight: '600', marginBottom: '10px', color: isLow ? '#F97316' : '#4ADE80' }}>
+                {isLow ? `⚡ Only ${spots_left} spots left!` : `✓ ${spots_left} spots available`}
+              </p>
+              <Link
+                href={`/checkout?classId=${id}`}
+                style={{ display: 'block', width: '100%', background: '#F97316', color: 'white', padding: '12px', borderRadius: '12px', fontWeight: '700', textAlign: 'center', textDecoration: 'none', fontSize: '14px', transition: 'all 0.2s ease', boxShadow: '0 2px 12px rgba(249,115,22,0.25)' }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#EA6C0A'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)' }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#F97316'; (e.currentTarget as HTMLElement).style.transform = 'translateY(0)' }}
+              >
+                Book Now →
+              </Link>
             </>
           )}
         </div>

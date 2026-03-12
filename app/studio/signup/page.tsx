@@ -12,18 +12,9 @@ export default function StudioSignupPage() {
 
   const handleSubmit = async () => {
     setError('')
-    if (!form.studioName || !form.email || !form.password) {
-      setError('All fields are required')
-      return
-    }
-    if (form.password !== form.confirm) {
-      setError('Passwords do not match')
-      return
-    }
-    if (form.password.length < 8) {
-      setError('Password must be at least 8 characters')
-      return
-    }
+    if (!form.studioName || !form.email || !form.password) { setError('All fields are required'); return }
+    if (form.password !== form.confirm) { setError('Passwords do not match'); return }
+    if (form.password.length < 8) { setError('Password must be at least 8 characters'); return }
     setLoading(true)
     const res = await fetch('/api/studio/signup', {
       method: 'POST',
@@ -32,56 +23,66 @@ export default function StudioSignupPage() {
     })
     const data = await res.json()
     setLoading(false)
-    if (!res.ok) {
-      setError(data.error)
-    } else {
-      setSubmitted(true)
-    }
+    if (!res.ok) { setError(data.error) } else { setSubmitted(true) }
   }
 
-  const inputStyle = { width: '100%', backgroundColor: '#0F1624', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '12px 16px', color: 'white', outline: 'none', fontSize: '14px', boxSizing: 'border-box' as const }
-
   if (submitted) return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#0F1624', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ backgroundColor: '#1A2332', borderRadius: '16px', padding: '40px', border: '1px solid rgba(255,255,255,0.1)', maxWidth: '420px', width: '100%', textAlign: 'center' }}>
-        <div style={{ width: '64px', height: '64px', backgroundColor: 'rgba(34,197,94,0.2)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', border: '2px solid #22C55E', fontSize: '28px' }}>✓</div>
-        <h1 style={{ color: 'white', fontWeight: '900', fontSize: '24px', marginBottom: '12px' }}>Application Submitted!</h1>
-        <p style={{ color: '#9CA3AF', marginBottom: '24px' }}>We'll review your application and notify you at <strong style={{ color: 'white' }}>{form.email}</strong> once approved.</p>
-        <Link href="/" style={{ color: '#F97316', textDecoration: 'none', fontWeight: '600' }}>Back to Frolic</Link>
+    <div style={{ minHeight: '100vh', backgroundColor: '#0A0F1A', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+      <div className="card animate-fade-up" style={{ padding: '48px 40px', maxWidth: '420px', width: '100%', textAlign: 'center' }}>
+        <div style={{ width: '64px', height: '64px', background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', fontSize: '28px' }}>✓</div>
+        <h1 style={{ color: 'white', fontWeight: '800', fontSize: '24px', marginBottom: '12px', letterSpacing: '-0.5px' }}>Application Submitted!</h1>
+        <p style={{ color: '#9CA3AF', marginBottom: '8px', lineHeight: '1.6' }}>We'll review your application and reach out to <strong style={{ color: 'white' }}>{form.email}</strong> once approved.</p>
+        <p style={{ color: '#6B7280', fontSize: '13px', marginBottom: '32px' }}>This usually takes 1-2 business days.</p>
+        <Link href="/" className="btn-primary" style={{ textDecoration: 'none', display: 'inline-flex' }}>Back to Frolic</Link>
       </div>
     </div>
   )
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#0F1624', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
-      <div style={{ backgroundColor: '#1A2332', borderRadius: '16px', padding: '40px', border: '1px solid rgba(255,255,255,0.1)', width: '100%', maxWidth: '420px' }}>
-        <Link href="/" style={{ color: '#F97316', fontWeight: 'bold', fontSize: '20px', textDecoration: 'none', display: 'block', marginBottom: '32px' }}>Frolic</Link>
-        <h1 style={{ color: 'white', fontWeight: '900', fontSize: '24px', marginBottom: '8px' }}>Create Studio Account</h1>
-        <p style={{ color: '#9CA3AF', fontSize: '14px', marginBottom: '32px' }}>Apply to list your classes on Frolic</p>
+    <div style={{ minHeight: '100vh', backgroundColor: '#0A0F1A', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ position: 'absolute', top: '20%', left: '50%', transform: 'translateX(-50%)', width: '500px', height: '300px', background: 'radial-gradient(ellipse, rgba(249,115,22,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
-        {error && <p style={{ color: '#F87171', fontSize: '14px', marginBottom: '16px', backgroundColor: 'rgba(248,113,113,0.1)', padding: '12px', borderRadius: '8px' }}>{error}</p>}
+      <div className="animate-fade-up" style={{ width: '100%', maxWidth: '440px', position: 'relative' }}>
+        <div className="card" style={{ padding: '40px' }}>
+          <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '36px' }}>
+            <span style={{ fontSize: '20px', fontWeight: '900', color: 'white' }}>Frolic</span>
+            <span style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: '#F97316', display: 'inline-block' }} />
+          </Link>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {[
-            { label: 'Studio Name', name: 'studioName', type: 'text' },
-            { label: 'Email', name: 'email', type: 'email' },
-            { label: 'Password', name: 'password', type: 'password' },
-            { label: 'Confirm Password', name: 'confirm', type: 'password' },
-          ].map(f => (
-            <div key={f.name}>
-              <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '8px' }}>{f.label}</label>
-              <input name={f.name} type={f.type} value={(form as any)[f.name]} onChange={handleChange} style={inputStyle} />
+          <div className="badge badge-orange" style={{ marginBottom: '16px' }}>For Studios</div>
+          <h1 style={{ color: 'white', fontWeight: '800', fontSize: '26px', marginBottom: '6px', letterSpacing: '-0.5px' }}>List your studio</h1>
+          <p style={{ color: '#6B7280', fontSize: '14px', marginBottom: '32px' }}>Apply to reach thousands of students in your area</p>
+
+          {error && (
+            <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '10px', padding: '12px 16px', marginBottom: '20px', color: '#F87171', fontSize: '14px' }}>
+              {error}
             </div>
-          ))}
-          <button onClick={handleSubmit} disabled={loading} style={{ width: '100%', backgroundColor: '#F97316', border: 'none', color: 'white', padding: '14px', borderRadius: '12px', fontWeight: 'bold', fontSize: '16px', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1, marginTop: '8px' }}>
-            {loading ? 'Submitting...' : 'Apply to Join'}
-          </button>
-        </div>
+          )}
 
-        <p style={{ color: '#9CA3AF', fontSize: '14px', textAlign: 'center', marginTop: '24px' }}>
-          Already approved?{' '}
-          <Link href="/studio/login" style={{ color: '#F97316', textDecoration: 'none', fontWeight: '600' }}>Log in</Link>
-        </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {[
+              { label: 'Studio Name', name: 'studioName', type: 'text', placeholder: 'Your Studio Name' },
+              { label: 'Email', name: 'email', type: 'email', placeholder: 'studio@example.com' },
+              { label: 'Password', name: 'password', type: 'password', placeholder: '8+ characters' },
+              { label: 'Confirm Password', name: 'confirm', type: 'password', placeholder: 'Repeat password' },
+            ].map(f => (
+              <div key={f.name}>
+                <label className="label">{f.label}</label>
+                <input name={f.name} type={f.type} value={(form as any)[f.name]} onChange={handleChange} className="input" placeholder={f.placeholder} />
+              </div>
+            ))}
+            <button onClick={handleSubmit} disabled={loading} className="btn-primary" style={{ width: '100%', marginTop: '8px' }}>
+              {loading ? 'Submitting...' : 'Apply to Join →'}
+            </button>
+          </div>
+
+          <hr className="divider" />
+
+          <p style={{ color: '#6B7280', fontSize: '14px', textAlign: 'center' }}>
+            Already approved?{' '}
+            <Link href="/studio/login" style={{ color: '#F97316', textDecoration: 'none', fontWeight: '600' }}>Sign in</Link>
+          </p>
+        </div>
       </div>
     </div>
   )

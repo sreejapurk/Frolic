@@ -21,42 +21,51 @@ export default function StudioLoginPage() {
     })
     const data = await res.json()
     setLoading(false)
-    if (!res.ok) {
-      setError(data.error)
-    } else {
-      router.push('/studio/dashboard')
-    }
+    if (!res.ok) { setError(data.error) } else { router.push('/studio/dashboard') }
   }
 
-  const inputStyle = { width: '100%', backgroundColor: '#0F1624', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '12px 16px', color: 'white', outline: 'none', fontSize: '14px', boxSizing: 'border-box' as const }
-
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#0F1624', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
-      <div style={{ backgroundColor: '#1A2332', borderRadius: '16px', padding: '40px', border: '1px solid rgba(255,255,255,0.1)', width: '100%', maxWidth: '420px' }}>
-        <Link href="/" style={{ color: '#F97316', fontWeight: 'bold', fontSize: '20px', textDecoration: 'none', display: 'block', marginBottom: '32px' }}>Frolic</Link>
-        <h1 style={{ color: 'white', fontWeight: '900', fontSize: '24px', marginBottom: '8px' }}>Studio Login</h1>
-        <p style={{ color: '#9CA3AF', fontSize: '14px', marginBottom: '32px' }}>Manage your classes on Frolic</p>
+    <div style={{ minHeight: '100vh', backgroundColor: '#0A0F1A', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', position: 'relative', overflow: 'hidden' }}>
+      {/* Background glow */}
+      <div style={{ position: 'absolute', top: '20%', left: '50%', transform: 'translateX(-50%)', width: '500px', height: '300px', background: 'radial-gradient(ellipse, rgba(249,115,22,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
-        {error && <p style={{ color: '#F87171', fontSize: '14px', marginBottom: '16px', backgroundColor: 'rgba(248,113,113,0.1)', padding: '12px', borderRadius: '8px' }}>{error}</p>}
+      <div className="animate-fade-up" style={{ width: '100%', maxWidth: '420px', position: 'relative' }}>
+        <div className="card" style={{ padding: '40px' }}>
+          <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '36px' }}>
+            <span style={{ fontSize: '20px', fontWeight: '900', color: 'white' }}>Frolic</span>
+            <span style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: '#F97316', display: 'inline-block' }} />
+          </Link>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div>
-            <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '8px' }}>Email</label>
-            <input name="email" type="email" value={form.email} onChange={handleChange} onKeyDown={e => e.key === 'Enter' && handleSubmit()} style={inputStyle} />
+          <h1 style={{ color: 'white', fontWeight: '800', fontSize: '26px', marginBottom: '6px', letterSpacing: '-0.5px' }}>Welcome back</h1>
+          <p style={{ color: '#6B7280', fontSize: '14px', marginBottom: '32px' }}>Sign in to your studio account</p>
+
+          {error && (
+            <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '10px', padding: '12px 16px', marginBottom: '20px', color: '#F87171', fontSize: '14px' }}>
+              {error}
+            </div>
+          )}
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div>
+              <label className="label">Email</label>
+              <input name="email" type="email" value={form.email} onChange={handleChange} onKeyDown={e => e.key === 'Enter' && handleSubmit()} className="input" placeholder="you@studio.com" />
+            </div>
+            <div>
+              <label className="label">Password</label>
+              <input name="password" type="password" value={form.password} onChange={handleChange} onKeyDown={e => e.key === 'Enter' && handleSubmit()} className="input" placeholder="••••••••" />
+            </div>
+            <button onClick={handleSubmit} disabled={loading} className="btn-primary" style={{ width: '100%', marginTop: '8px' }}>
+              {loading ? 'Signing in...' : 'Sign In →'}
+            </button>
           </div>
-          <div>
-            <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '8px' }}>Password</label>
-            <input name="password" type="password" value={form.password} onChange={handleChange} onKeyDown={e => e.key === 'Enter' && handleSubmit()} style={inputStyle} />
-          </div>
-          <button onClick={handleSubmit} disabled={loading} style={{ width: '100%', backgroundColor: '#F97316', border: 'none', color: 'white', padding: '14px', borderRadius: '12px', fontWeight: 'bold', fontSize: '16px', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1, marginTop: '8px' }}>
-            {loading ? 'Logging in...' : 'Log In'}
-          </button>
+
+          <hr className="divider" />
+
+          <p style={{ color: '#6B7280', fontSize: '14px', textAlign: 'center' }}>
+            New to Frolic?{' '}
+            <Link href="/studio/signup" style={{ color: '#F97316', textDecoration: 'none', fontWeight: '600' }}>Apply to join</Link>
+          </p>
         </div>
-
-        <p style={{ color: '#9CA3AF', fontSize: '14px', textAlign: 'center', marginTop: '24px' }}>
-          New studio?{' '}
-          <Link href="/studio/signup" style={{ color: '#F97316', textDecoration: 'none', fontWeight: '600' }}>Apply to join</Link>
-        </p>
       </div>
     </div>
   )
