@@ -19,7 +19,13 @@
       "Bash(git add -A && git commit -m \"add decline button for studio applications\" && git push)",
       "Bash(git add -A && git commit -m \"major UI redesign — design system, responsive layouts, animations\" && git push)",
       "Bash(git add -A && git commit -m \"replace favicon with Frolic orange F icon\" && git push)",
-      "Bash(git add -A && git commit -m \"update categories to Music, Dance, Sports\" && git push)"
+      "Bash(git add -A && git commit -m \"update categories to Music, Dance, Sports\" && git push)",
+      "Bash(lsof -i :3000 -i :3001 2>/dev/null | head -20)",
+      "Bash(lsof -p 26226 | grep -E \"cwd|txt\" | head -5)",
+      "Bash(git add app/page.tsx app/studio/dashboard/page.tsx && git commit -m \"Update hero title, remove badge, reorder categories to Sports/Music/Dance\")",
+      "Bash(git push origin main)",
+      "Bash(git add app/page.tsx app/for-studios/page.tsx && git commit -m \"Remove hero subtitle and partner application form from for-studios\" && git push origin main)",
+      "Bash(git add -A && git commit -m \"Add customer signup, login, logout, and account page\" && git push origin main)"
     ]
   }
 }
