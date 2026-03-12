@@ -31,7 +31,8 @@
       "Bash(git add components/Navbar.tsx && git commit -m \"Clean up navbar - show Studio Login only on For Studios page\" && git push origin main)",
       "Bash(git add components/Navbar.tsx && git commit -m \"Remove orange dot from navbar logo\" && git push origin main)",
       "Bash(git add components/Navbar.tsx && git commit -m \"Always show Studio Login in navbar\" && git push origin main)",
-      "Bash(git add -A && git commit -m \"Add earnings tab to studio dashboard with revenue and transaction history\" && git push origin main)"
+      "Bash(git add -A && git commit -m \"Add earnings tab to studio dashboard with revenue and transaction history\" && git push origin main)",
+      "Bash(git add -A && git commit -m \"Add Stripe Connect with 25% platform fee\" && git push origin main)"
     ]
   }
 }
