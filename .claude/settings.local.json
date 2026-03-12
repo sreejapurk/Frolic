@@ -18,7 +18,8 @@
       "Bash(git add app/api/bookings/route.ts && git commit -m \"send confirmation emails from hello@joinfrolic.com\" && git push)",
       "Bash(git add -A && git commit -m \"add decline button for studio applications\" && git push)",
       "Bash(git add -A && git commit -m \"major UI redesign — design system, responsive layouts, animations\" && git push)",
-      "Bash(git add -A && git commit -m \"replace favicon with Frolic orange F icon\" && git push)"
+      "Bash(git add -A && git commit -m \"replace favicon with Frolic orange F icon\" && git push)",
+      "Bash(git add -A && git commit -m \"update categories to Music, Dance, Sports\" && git push)"
     ]
   }
 }

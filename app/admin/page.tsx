@@ -12,7 +12,7 @@ export default function AdminPage() {
   const [tab, setTab] = useState<'classes' | 'bookings' | 'applications' | 'studios' | 'add'>('classes')
   const [loading, setLoading] = useState(false)
   const [newClass, setNewClass] = useState({
-    title: '', studio: '', category: 'Dance', price: '', level: 'Beginner',
+    title: '', studio: '', category: 'Music', price: '', level: 'Beginner',
     duration: '60 min', date: '', time: '', spots: '', distance: '',
     rating: '4.9', image: '', instructor: '', room: '',
   })
@@ -275,7 +275,7 @@ export default function AdminPage() {
                 <div>
                   <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Category</label>
                   <select value={newClass.category} onChange={e => setNewClass(n => ({ ...n, category: e.target.value }))} style={{ ...inputStyle }}>
-                    {['Dance', 'Singing', 'Art'].map(c => <option key={c}>{c}</option>)}
+                    {['Music', 'Dance', 'Sports'].map(c => <option key={c}>{c}</option>)}
                   </select>
                 </div>
                 <div>

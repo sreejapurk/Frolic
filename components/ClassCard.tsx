@@ -19,9 +19,9 @@ interface ClassCardProps {
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
+  Music: '#34D399',
   Dance: '#A78BFA',
-  Singing: '#34D399',
-  Art: '#60A5FA',
+  Sports: '#60A5FA',
 }
 
 export default function ClassCard(props: ClassCardProps) {

@@ -3,14 +3,7 @@ import { useState, useEffect, useMemo } from 'react'
 import Navbar from '@/components/Navbar'
 import ClassCard from '@/components/ClassCard'
 
-const CATEGORIES = ['All', 'Dance', 'Singing', 'Art']
-
-const CATEGORY_ICONS: Record<string, string> = {
-  All: '✦',
-  Dance: '💃',
-  Singing: '🎤',
-  Art: '🎨',
-}
+const CATEGORIES = ['All', 'Music', 'Dance', 'Sports']
 
 export default function HomePage() {
   const [classes, setClasses] = useState<any[]>([])
@@ -104,12 +97,8 @@ export default function HomePage() {
                 backgroundColor: activeCategory === cat ? '#F97316' : 'rgba(255,255,255,0.04)',
                 color: activeCategory === cat ? 'white' : '#9CA3AF',
                 boxShadow: activeCategory === cat ? '0 2px 12px rgba(249,115,22,0.3)' : 'none',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
               }}
             >
-              <span>{CATEGORY_ICONS[cat]}</span>
               {cat}
             </button>
           ))}

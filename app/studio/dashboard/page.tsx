@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
 const EMPTY_CLASS = {
-  title: '', category: 'Dance', price: '', level: 'Beginner',
+  title: '', category: 'Music', price: '', level: 'Beginner',
   duration: '60 min', date: '', time: '', spots: '', distance: '',
   rating: '4.9', image: '', instructor: '', room: '',
 }
@@ -105,7 +105,7 @@ export default function StudioDashboard() {
         <div>
           <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Category</label>
           <select value={data.category} onChange={e => setData((d: any) => ({ ...d, category: e.target.value }))} style={inputStyle}>
-            {['Dance', 'Singing', 'Art'].map(c => <option key={c}>{c}</option>)}
+            {['Music', 'Dance', 'Sports'].map(c => <option key={c}>{c}</option>)}
           </select>
         </div>
         <div>
