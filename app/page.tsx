@@ -3,7 +3,8 @@ import { useState, useEffect, useMemo } from 'react'
 import Navbar from '@/components/Navbar'
 import ClassCard from '@/components/ClassCard'
 
-const CATEGORIES = ['All', 'Music', 'Dance', 'Sports']
+const CATEGORIES = ['All', 'Sports', 'Music', 'Dance']
+
 
 export default function HomePage() {
   const [classes, setClasses] = useState<any[]>([])
@@ -39,16 +40,11 @@ export default function HomePage() {
         <div style={{ position: 'absolute', top: '-100px', left: '50%', transform: 'translateX(-50%)', width: '600px', height: '400px', background: 'radial-gradient(ellipse, rgba(249,115,22,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
         <div className="section" style={{ textAlign: 'center', position: 'relative' }}>
-          <div className="badge badge-orange" style={{ marginBottom: '20px', display: 'inline-flex' }}>
-            ✦ Creative Classes in Your City
-          </div>
           <h1
             className="hero-title animate-fade-up"
             style={{ fontSize: '56px', fontWeight: '900', color: 'white', marginBottom: '16px', lineHeight: '1.1', letterSpacing: '-1.5px', maxWidth: '700px', margin: '0 auto 16px' }}
           >
-            Discover{' '}
-            <span className="gradient-text">Creative Classes</span>
-            <br />Near You
+            Find Classes You'll Love,<br />Right Near You
           </h1>
           <p className="animate-fade-up" style={{ color: '#9CA3AF', fontSize: '18px', marginBottom: '40px', animationDelay: '100ms' }}>
             Dance, sing, and create with your local community
