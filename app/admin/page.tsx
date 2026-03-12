@@ -210,17 +210,29 @@ export default function AdminPage() {
                         </span>
                       </td>
                       <td style={{ padding: '16px 20px', color: '#9CA3AF', fontSize: '14px' }}>{new Date(s.created_at).toLocaleDateString()}</td>
-                      <td style={{ padding: '16px 20px' }}>
+                      <td style={{ padding: '16px 20px', display: 'flex', gap: '8px' }}>
                         {!s.approved && (
-                          <button
-                            onClick={async () => {
-                              await fetch(`/api/admin/studios/${s.id}/approve`, { method: 'POST' })
-                              loadData()
-                            }}
-                            style={{ backgroundColor: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', color: '#4ADE80', padding: '6px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}
-                          >
-                            Approve
-                          </button>
+                          <>
+                            <button
+                              onClick={async () => {
+                                await fetch(`/api/admin/studios/${s.id}/approve`, { method: 'POST' })
+                                loadData()
+                              }}
+                              style={{ backgroundColor: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', color: '#4ADE80', padding: '6px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}
+                            >
+                              Approve
+                            </button>
+                            <button
+                              onClick={async () => {
+                                if (!confirm('Decline this studio?')) return
+                                await fetch(`/api/admin/studios/${s.id}/decline`, { method: 'POST' })
+                                loadData()
+                              }}
+                              style={{ backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#F87171', padding: '6px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}
+                            >
+                              Decline
+                            </button>
+                          </>
                         )}
                       </td>
                     </tr>
