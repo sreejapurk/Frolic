@@ -46,8 +46,12 @@ export default function StudioDashboard() {
 
   const handleStripeConnect = async () => {
     const res = await fetch('/api/studio/connect', { method: 'POST' })
-    const { url } = await res.json()
-    window.location.href = url
+    const data = await res.json()
+    if (!res.ok || !data.url) {
+      alert('Stripe Connect error: ' + (data.error || 'Unknown error. Make sure Stripe Connect is enabled in your Stripe dashboard.'))
+      return
+    }
+    window.location.href = data.url
   }
 
   const handleLogout = async () => {
