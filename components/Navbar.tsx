@@ -81,18 +81,6 @@ export default function Navbar() {
               </>
             )
           )}
-          <Link
-            href="/studio/login"
-            style={{ textDecoration: 'none', fontSize: '14px', fontWeight: '600', color: '#9CA3AF', padding: '8px 16px', borderRadius: '9px' }}
-          >
-            Studio Login
-          </Link>
-          <Link
-            href="/studio/signup"
-            style={{ background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.3)', color: '#F97316', padding: '8px 18px', borderRadius: '9px', fontSize: '14px', fontWeight: '700', textDecoration: 'none' }}
-          >
-            List Your Studio
-          </Link>
         </div>
       </div>
     </nav>
