@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Frolic — Discover Creative Classes Near You',
-  description: 'Find and book dance, singing, and art classes in your community.',
+  title: 'Frolic — Find Classes You\'ll Love, Near You',
+  description: 'Find and book sports, music, and dance classes in your community.',
   icons: {
     icon: '/favicon.svg',
   },
