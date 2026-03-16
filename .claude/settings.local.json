@@ -32,7 +32,9 @@
       "Bash(git add components/Navbar.tsx && git commit -m \"Remove orange dot from navbar logo\" && git push origin main)",
       "Bash(git add components/Navbar.tsx && git commit -m \"Always show Studio Login in navbar\" && git push origin main)",
       "Bash(git add -A && git commit -m \"Add earnings tab to studio dashboard with revenue and transaction history\" && git push origin main)",
-      "Bash(git add -A && git commit -m \"Add Stripe Connect with 25% platform fee\" && git push origin main)"
+      "Bash(git add -A && git commit -m \"Add Stripe Connect with 25% platform fee\" && git push origin main)",
+      "Bash(git add app/studio/dashboard/page.tsx && git commit -m \"Add error handling to Stripe Connect button\" && git push origin main)",
+      "Bash(git add -A && git commit -m \"Add error handling to Stripe Connect POST route\" && git push origin main)"
     ]
   }
 }

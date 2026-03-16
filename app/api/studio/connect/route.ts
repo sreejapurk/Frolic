@@ -7,35 +7,41 @@ export async function POST() {
   const session = await getStudioSession()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  // Check if studio already has a Stripe account
-  const existing = await query(
-    'SELECT stripe_account_id, stripe_onboarded FROM studio_users WHERE id = $1',
-    [session.studioId]
-  )
-  const studio = existing.rows[0]
-
-  let accountId = studio.stripe_account_id
-
-  // Create a new Express account if they don't have one
-  if (!accountId) {
-    const account = await stripe.accounts.create({ type: 'express' })
-    accountId = account.id
-    await query(
-      'UPDATE studio_users SET stripe_account_id = $1 WHERE id = $2',
-      [accountId, session.studioId]
+  try {
+    const existing = await query(
+      'SELECT stripe_account_id, stripe_onboarded FROM studio_users WHERE id = $1',
+      [session.studioId]
     )
+    const studio = existing.rows[0]
+    let accountId = studio.stripe_account_id
+
+    if (!accountId) {
+      const account = await stripe.accounts.create({ type: 'express' })
+      accountId = account.id
+      await query(
+        'UPDATE studio_users SET stripe_account_id = $1 WHERE id = $2',
+        [accountId, session.studioId]
+      )
+    }
+
+    const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://joinfrolic.com'
+
+    const accountLink = await stripe.accountLinks.create({
+      account: accountId,
+      refresh_url: `${baseUrl}/studio/dashboard?stripe=refresh`,
+      return_url: `${baseUrl}/studio/dashboard?stripe=success`,
+      type: 'account_onboarding',
+    })
+
+    return NextResponse.json({ url: accountLink.url })
+  } catch (error: any) {
+    console.error('Stripe Connect error:', error)
+    return NextResponse.json({ error: error.message || 'Stripe Connect failed' }, { status: 500 })
   }
+}
 
-  const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://joinfrolic.com'
-
-  const accountLink = await stripe.accountLinks.create({
-    account: accountId,
-    refresh_url: `${baseUrl}/studio/dashboard?stripe=refresh`,
-    return_url: `${baseUrl}/studio/dashboard?stripe=success`,
-    type: 'account_onboarding',
-  })
-
-  return NextResponse.json({ url: accountLink.url })
+export async function DELETE() {
+  return NextResponse.json({ error: 'Not allowed' }, { status: 405 })
 }
 
 export async function GET() {
