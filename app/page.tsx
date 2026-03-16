@@ -44,7 +44,7 @@ export default function HomePage() {
             className="hero-title animate-fade-up"
             style={{ fontSize: '56px', fontWeight: '900', color: 'white', marginBottom: '16px', lineHeight: '1.1', letterSpacing: '-1.5px', maxWidth: '700px', margin: '0 auto 16px' }}
           >
-            Find Classes You'll Love,<br />Right Near You
+            Find Classes You'll Love, Near You
           </h1>
           {/* Search bar */}
           <div className="animate-fade-up" style={{ maxWidth: '580px', margin: '0 auto', animationDelay: '150ms' }}>
