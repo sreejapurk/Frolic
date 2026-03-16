@@ -1,4 +1,5 @@
 import Navbar from '@/components/Navbar'
+import Link from 'next/link'
 
 const FEATURES = [
   { title: 'Reach New Students', desc: 'Get discovered by thousands of creative learners in your area looking for their next class. Our community is always growing.' },
@@ -12,6 +13,14 @@ export default function ForStudiosPage() {
     <main style={{ minHeight: '100vh', backgroundColor: '#0F1624' }}>
       <Navbar />
       <section style={{ maxWidth: '900px', margin: '0 auto', padding: '64px 24px' }}>
+        <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginBottom: '64px' }}>
+          <Link href="/studio/login" style={{ backgroundColor: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: 'white', padding: '14px 32px', borderRadius: '12px', fontWeight: '700', fontSize: '16px', textDecoration: 'none' }}>
+            Studio Login
+          </Link>
+          <Link href="/studio/signup" style={{ backgroundColor: '#F97316', border: 'none', color: 'white', padding: '14px 32px', borderRadius: '12px', fontWeight: '700', fontSize: '16px', textDecoration: 'none' }}>
+            List Your Studio
+          </Link>
+        </div>
         <h2 style={{ fontSize: '36px', fontWeight: '900', color: 'white', textAlign: 'center', marginBottom: '8px' }}>Why Studios Love Frolic</h2>
         <p style={{ color: '#9CA3AF', textAlign: 'center', marginBottom: '48px' }}>Sell out classes in 3 clicks</p>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '80px' }}>
