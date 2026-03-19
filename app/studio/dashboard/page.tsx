@@ -9,6 +9,49 @@ const EMPTY_CLASS = {
   rating: '4.9', image: '', instructor: '', room: '',
 }
 
+const inputStyle = { width: '100%', backgroundColor: '#0F1624', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '12px 16px', color: 'white', outline: 'none', fontSize: '14px', boxSizing: 'border-box' as const }
+
+function ClassForm({ data, setData, onSave, saving, saveLabel }: any) {
+  return (
+    <div style={{ backgroundColor: '#1A2332', borderRadius: '16px', padding: '28px', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      {[
+        { label: 'Class Title', key: 'title' },
+        { label: 'Instructor', key: 'instructor' },
+        { label: 'Room', key: 'room' },
+        { label: 'Price ($)', key: 'price', type: 'number' },
+        { label: 'Total Spots', key: 'spots', type: 'number' },
+        { label: 'Date (e.g. Mon, Feb 23)', key: 'date' },
+        { label: 'Time (e.g. 6:00 PM)', key: 'time' },
+        { label: 'Duration (e.g. 60 min)', key: 'duration' },
+        { label: 'Distance (e.g. 1.2 mi)', key: 'distance' },
+        { label: 'Image URL', key: 'image' },
+      ].map(field => (
+        <div key={field.key}>
+          <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>{field.label}</label>
+          <input type={field.type || 'text'} value={data[field.key]} onChange={e => setData((d: any) => ({ ...d, [field.key]: e.target.value }))} style={inputStyle} />
+        </div>
+      ))}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+        <div>
+          <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Category</label>
+          <select value={data.category} onChange={e => setData((d: any) => ({ ...d, category: e.target.value }))} style={inputStyle}>
+            {['Sports', 'Music', 'Dance'].map(c => <option key={c}>{c}</option>)}
+          </select>
+        </div>
+        <div>
+          <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Level</label>
+          <select value={data.level} onChange={e => setData((d: any) => ({ ...d, level: e.target.value }))} style={inputStyle}>
+            {['Beginner', 'Intermediate', 'Advanced', 'All Levels', 'Kids'].map(l => <option key={l}>{l}</option>)}
+          </select>
+        </div>
+      </div>
+      <button onClick={onSave} disabled={saving} style={{ width: '100%', backgroundColor: '#F97316', border: 'none', color: 'white', padding: '16px', borderRadius: '16px', fontWeight: 'bold', fontSize: '18px', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1, marginTop: '8px' }}>
+        {saving ? 'Saving...' : saveLabel}
+      </button>
+    </div>
+  )
+}
+
 export default function StudioDashboard() {
   const router = useRouter()
   const [classes, setClasses] = useState<any[]>([])
@@ -90,51 +133,12 @@ export default function StudioDashboard() {
     loadClasses()
   }
 
-  const inputStyle = { width: '100%', backgroundColor: '#0F1624', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '12px 16px', color: 'white', outline: 'none', fontSize: '14px', boxSizing: 'border-box' as const }
   const tabBtn = (t: typeof tab, label: string) => (
     <button onClick={() => handleTabChange(t)} style={{ padding: '8px 16px', borderRadius: '999px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', border: 'none', backgroundColor: tab === t ? '#F97316' : 'transparent', color: 'white' }}>
       {label}
     </button>
   )
 
-  const ClassForm = ({ data, setData, onSave, saveLabel }: any) => (
-    <div style={{ backgroundColor: '#1A2332', borderRadius: '16px', padding: '28px', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      {[
-        { label: 'Class Title', key: 'title' },
-        { label: 'Instructor', key: 'instructor' },
-        { label: 'Room', key: 'room' },
-        { label: 'Price ($)', key: 'price', type: 'number' },
-        { label: 'Total Spots', key: 'spots', type: 'number' },
-        { label: 'Date (e.g. Mon, Feb 23)', key: 'date' },
-        { label: 'Time (e.g. 6:00 PM)', key: 'time' },
-        { label: 'Duration (e.g. 60 min)', key: 'duration' },
-        { label: 'Distance (e.g. 1.2 mi)', key: 'distance' },
-        { label: 'Image URL', key: 'image' },
-      ].map(field => (
-        <div key={field.key}>
-          <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>{field.label}</label>
-          <input type={field.type || 'text'} value={data[field.key]} onChange={e => setData((d: any) => ({ ...d, [field.key]: e.target.value }))} style={inputStyle} />
-        </div>
-      ))}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-        <div>
-          <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Category</label>
-          <select value={data.category} onChange={e => setData((d: any) => ({ ...d, category: e.target.value }))} style={inputStyle}>
-            {['Sports', 'Music', 'Dance'].map(c => <option key={c}>{c}</option>)}
-          </select>
-        </div>
-        <div>
-          <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Level</label>
-          <select value={data.level} onChange={e => setData((d: any) => ({ ...d, level: e.target.value }))} style={inputStyle}>
-            {['Beginner', 'Intermediate', 'Advanced', 'All Levels', 'Kids'].map(l => <option key={l}>{l}</option>)}
-          </select>
-        </div>
-      </div>
-      <button onClick={onSave} disabled={saving} style={{ width: '100%', backgroundColor: '#F97316', border: 'none', color: 'white', padding: '16px', borderRadius: '16px', fontWeight: 'bold', fontSize: '18px', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1, marginTop: '8px' }}>
-        {saving ? 'Saving...' : saveLabel}
-      </button>
-    </div>
-  )
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#0F1624' }}>
@@ -246,14 +250,14 @@ export default function StudioDashboard() {
         {tab === 'add' && (
           <div style={{ maxWidth: '600px' }}>
             <h2 style={{ color: 'white', fontWeight: '900', fontSize: '24px', marginBottom: '24px' }}>Add New Class</h2>
-            <ClassForm data={newClass} setData={setNewClass} onSave={handleAdd} saveLabel="Add Class" />
+            <ClassForm data={newClass} setData={setNewClass} onSave={handleAdd} saving={saving} saveLabel="Add Class" />
           </div>
         )}
 
         {tab === 'edit' && editingClass && (
           <div style={{ maxWidth: '600px' }}>
             <h2 style={{ color: 'white', fontWeight: '900', fontSize: '24px', marginBottom: '24px' }}>Edit Class</h2>
-            <ClassForm data={editingClass} setData={setEditingClass} onSave={handleEdit} saveLabel="Save Changes" />
+            <ClassForm data={editingClass} setData={setEditingClass} onSave={handleEdit} saving={saving} saveLabel="Save Changes" />
           </div>
         )}
       </div>
