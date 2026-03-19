@@ -34,10 +34,6 @@ function ClassForm({ data, setData, onSave, saving, saveLabel }: any) {
   const autocompleteRef = useRef<any>(null)
 
   useEffect(() => {
-    setLocationValue(data.room || '')
-  }, [data.room])
-
-  useEffect(() => {
     loadGoogleMaps().then(() => {
       if (!locationRef.current || autocompleteRef.current) return
       const ac = new window.google.maps.places.Autocomplete(locationRef.current, { types: ['establishment', 'geocode'] })
