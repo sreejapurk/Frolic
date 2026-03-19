@@ -1,23 +1,8 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
-declare global {
-  interface Window { google: any; initGooglePlaces: () => void }
-}
-
-function loadGoogleMaps(): Promise<void> {
-  if (typeof window === 'undefined') return Promise.resolve()
-  if (window.google?.maps?.places) return Promise.resolve()
-  return new Promise((resolve) => {
-    window.initGooglePlaces = () => resolve()
-    const script = document.createElement('script')
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places&callback=initGooglePlaces`
-    script.async = true
-    document.head.appendChild(script)
-  })
-}
 
 const EMPTY_CLASS = {
   title: '', category: 'Sports', price: '', level: 'Beginner',
@@ -27,37 +12,58 @@ const EMPTY_CLASS = {
 
 const inputStyle = { width: '100%', backgroundColor: '#0F1624', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '12px 16px', color: 'white', outline: 'none', fontSize: '14px', boxSizing: 'border-box' as const }
 
-function LocationInput({ initialValue, mapsUrl, onSelect, onBlurUpdate }: { initialValue: string, mapsUrl: string, onSelect: (room: string, url: string) => void, onBlurUpdate: (room: string) => void }) {
-  const inputRef = useRef<HTMLInputElement>(null)
-  const autocompleteRef = useRef<any>(null)
+function LocationInput({ initialValue, mapsUrl, onSelect }: { initialValue: string, mapsUrl: string, onSelect: (room: string, url: string) => void }) {
+  const [value, setValue] = useState(initialValue || '')
+  const [suggestions, setSuggestions] = useState<{ description: string, place_id: string }[]>([])
+  const [open, setOpen] = useState(false)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  useEffect(() => {
-    loadGoogleMaps().then(() => {
-      if (!inputRef.current || autocompleteRef.current) return
-      const ac = new window.google.maps.places.Autocomplete(inputRef.current, { types: ['establishment', 'geocode'] })
-      ac.addListener('place_changed', () => {
-        const place = ac.getPlace()
-        const address = place.formatted_address || place.name || ''
-        const url = place.url || (place.place_id ? `https://www.google.com/maps/place/?q=place_id:${place.place_id}` : '')
-        onSelect(address, url)
-      })
-      autocompleteRef.current = ac
-    })
-  }, [])
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = e.target.value
+    setValue(v)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    if (v.length < 2) { setSuggestions([]); setOpen(false); return }
+    debounceRef.current = setTimeout(async () => {
+      const res = await fetch(`/api/places?input=${encodeURIComponent(v)}`)
+      const data = await res.json()
+      setSuggestions(data.suggestions || [])
+      setOpen(true)
+    }, 300)
+  }
+
+  const handleSelect = (s: { description: string, place_id: string }) => {
+    setValue(s.description)
+    setSuggestions([])
+    setOpen(false)
+    onSelect(s.description, `https://www.google.com/maps/place/?q=place_id:${s.place_id}`)
+  }
 
   return (
-    <div>
+    <div style={{ position: 'relative' }}>
       <input
-        ref={inputRef}
         type="text"
-        defaultValue={initialValue}
-        onBlur={e => onBlurUpdate(e.target.value)}
+        value={value}
+        onChange={handleChange}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
         placeholder="Search for a location..."
         style={inputStyle}
+        autoComplete="off"
       />
+      {open && suggestions.length > 0 && (
+        <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, backgroundColor: '#1A2332', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '12px', marginTop: '4px', zIndex: 100, overflow: 'hidden' }}>
+          {suggestions.map(s => (
+            <div key={s.place_id} onMouseDown={() => handleSelect(s)}
+              style={{ padding: '12px 16px', cursor: 'pointer', color: 'white', fontSize: '14px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+              onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(249,115,22,0.1)')}
+              onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}>
+              📍 {s.description}
+            </div>
+          ))}
+        </div>
+      )}
       {mapsUrl && (
         <a href={mapsUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', marginTop: '6px', color: '#60A5FA', fontSize: '13px', textDecoration: 'none' }}>
-          📍 View on Google Maps
+          View on Google Maps →
         </a>
       )}
     </div>
@@ -102,7 +108,6 @@ function ClassForm({ data, setData, onSave, saving, saveLabel }: any) {
           initialValue={data.room || ''}
           mapsUrl={data.room_maps_url || ''}
           onSelect={(room, url) => setData((d: any) => ({ ...d, room, room_maps_url: url }))}
-          onBlurUpdate={room => setData((d: any) => ({ ...d, room }))}
         />
       </div>
       <div>
