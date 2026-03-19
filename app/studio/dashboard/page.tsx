@@ -29,8 +29,13 @@ const inputStyle = { width: '100%', backgroundColor: '#0F1624', border: '1px sol
 
 function ClassForm({ data, setData, onSave, saving, saveLabel }: any) {
   const [uploading, setUploading] = useState(false)
+  const [locationValue, setLocationValue] = useState(data.room || '')
   const locationRef = useRef<HTMLInputElement>(null)
   const autocompleteRef = useRef<any>(null)
+
+  useEffect(() => {
+    setLocationValue(data.room || '')
+  }, [data.room])
 
   useEffect(() => {
     loadGoogleMaps().then(() => {
@@ -40,6 +45,7 @@ function ClassForm({ data, setData, onSave, saving, saveLabel }: any) {
         const place = ac.getPlace()
         const address = place.formatted_address || place.name || ''
         const mapsUrl = place.url || (place.place_id ? `https://www.google.com/maps/place/?q=place_id:${place.place_id}` : '')
+        setLocationValue(address)
         setData((d: any) => ({ ...d, room: address, room_maps_url: mapsUrl }))
       })
       autocompleteRef.current = ac
@@ -79,8 +85,11 @@ function ClassForm({ data, setData, onSave, saving, saveLabel }: any) {
         <input
           ref={locationRef}
           type="text"
-          defaultValue={data.room}
-          onBlur={e => setData((d: any) => ({ ...d, room: e.target.value }))}
+          value={locationValue}
+          onChange={e => {
+            setLocationValue(e.target.value)
+            setData((d: any) => ({ ...d, room: e.target.value, room_maps_url: '' }))
+          }}
           placeholder="Search for a location..."
           style={inputStyle}
         />
