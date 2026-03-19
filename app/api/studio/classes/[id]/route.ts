@@ -11,10 +11,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
   // Only update if this class belongs to the studio
   const result = await query(
-    `UPDATE classes SET title=$1, category=$2, price=$3, level=$4, duration=$5, date=$6, time=$7, spots=$8, distance=$9, image=$10, instructor=$11, room=$12, recurring=$13
-     WHERE id=$14 AND studio_user_id=$15 RETURNING *`,
+    `UPDATE classes SET title=$1, category=$2, price=$3, level=$4, duration=$5, date=$6, time=$7, spots=$8, distance=$9, image=$10, instructor=$11, room=$12, room_maps_url=$13, recurring=$14
+     WHERE id=$15 AND studio_user_id=$16 RETURNING *`,
     [data.title, data.category, data.price, data.level, data.duration,
-     data.date, data.time, data.spots, data.distance, data.image, data.instructor, data.room, data.recurring ?? false, id, session.studioId]
+     data.date, data.time, data.spots, data.distance, data.image, data.instructor, data.room, data.room_maps_url || null, data.recurring ?? false, id, session.studioId]
   )
 
   if (result.rows.length === 0) {

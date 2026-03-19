@@ -1,18 +1,50 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+
+declare global {
+  interface Window { google: any; initGooglePlaces: () => void }
+}
+
+function loadGoogleMaps(): Promise<void> {
+  if (typeof window === 'undefined') return Promise.resolve()
+  if (window.google?.maps?.places) return Promise.resolve()
+  return new Promise((resolve) => {
+    window.initGooglePlaces = () => resolve()
+    const script = document.createElement('script')
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places&callback=initGooglePlaces`
+    script.async = true
+    document.head.appendChild(script)
+  })
+}
 
 const EMPTY_CLASS = {
   title: '', category: 'Sports', price: '', level: 'Beginner',
   date: '', time: '', spots: '',
-  rating: '4.9', image: '', instructor: '', room: '', recurring: false,
+  rating: '4.9', image: '', instructor: '', room: '', room_maps_url: '', recurring: false,
 }
 
 const inputStyle = { width: '100%', backgroundColor: '#0F1624', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '12px 16px', color: 'white', outline: 'none', fontSize: '14px', boxSizing: 'border-box' as const }
 
 function ClassForm({ data, setData, onSave, saving, saveLabel }: any) {
   const [uploading, setUploading] = useState(false)
+  const locationRef = useRef<HTMLInputElement>(null)
+  const autocompleteRef = useRef<any>(null)
+
+  useEffect(() => {
+    loadGoogleMaps().then(() => {
+      if (!locationRef.current || autocompleteRef.current) return
+      const ac = new window.google.maps.places.Autocomplete(locationRef.current, { types: ['establishment', 'geocode'] })
+      ac.addListener('place_changed', () => {
+        const place = ac.getPlace()
+        const address = place.formatted_address || place.name || ''
+        const mapsUrl = place.url || (place.place_id ? `https://www.google.com/maps/place/?q=place_id:${place.place_id}` : '')
+        setData((d: any) => ({ ...d, room: address, room_maps_url: mapsUrl }))
+      })
+      autocompleteRef.current = ac
+    })
+  }, [])
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -32,7 +64,6 @@ function ClassForm({ data, setData, onSave, saving, saveLabel }: any) {
       {[
         { label: 'Class Title', key: 'title' },
         { label: 'Instructor', key: 'instructor' },
-        { label: 'Location', key: 'room' },
         { label: 'Price ($)', key: 'price', type: 'number' },
         { label: 'Total Spots', key: 'spots', type: 'number' },
         { label: 'Date (e.g. Mon, Feb 23)', key: 'date' },
@@ -43,6 +74,22 @@ function ClassForm({ data, setData, onSave, saving, saveLabel }: any) {
           <input type={field.type || 'text'} value={data[field.key]} onChange={e => setData((d: any) => ({ ...d, [field.key]: e.target.value }))} style={inputStyle} />
         </div>
       ))}
+      <div>
+        <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Location</label>
+        <input
+          ref={locationRef}
+          type="text"
+          defaultValue={data.room}
+          onBlur={e => setData((d: any) => ({ ...d, room: e.target.value }))}
+          placeholder="Search for a location..."
+          style={inputStyle}
+        />
+        {data.room_maps_url && (
+          <a href={data.room_maps_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', marginTop: '6px', color: '#60A5FA', fontSize: '13px', textDecoration: 'none' }}>
+            📍 View on Google Maps
+          </a>
+        )}
+      </div>
       <div>
         <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Class Image</label>
         <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} style={{ ...inputStyle, padding: '10px 16px', cursor: 'pointer' }} />
