@@ -27,26 +27,45 @@ const EMPTY_CLASS = {
 
 const inputStyle = { width: '100%', backgroundColor: '#0F1624', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '12px 16px', color: 'white', outline: 'none', fontSize: '14px', boxSizing: 'border-box' as const }
 
-function ClassForm({ data, setData, onSave, saving, saveLabel }: any) {
-  const [uploading, setUploading] = useState(false)
-  const [locationValue, setLocationValue] = useState(data.room || '')
-  const locationRef = useRef<HTMLInputElement>(null)
+function LocationInput({ initialValue, mapsUrl, onSelect, onBlurUpdate }: { initialValue: string, mapsUrl: string, onSelect: (room: string, url: string) => void, onBlurUpdate: (room: string) => void }) {
+  const inputRef = useRef<HTMLInputElement>(null)
   const autocompleteRef = useRef<any>(null)
 
   useEffect(() => {
     loadGoogleMaps().then(() => {
-      if (!locationRef.current || autocompleteRef.current) return
-      const ac = new window.google.maps.places.Autocomplete(locationRef.current, { types: ['establishment', 'geocode'] })
+      if (!inputRef.current || autocompleteRef.current) return
+      const ac = new window.google.maps.places.Autocomplete(inputRef.current, { types: ['establishment', 'geocode'] })
       ac.addListener('place_changed', () => {
         const place = ac.getPlace()
         const address = place.formatted_address || place.name || ''
-        const mapsUrl = place.url || (place.place_id ? `https://www.google.com/maps/place/?q=place_id:${place.place_id}` : '')
-        setLocationValue(address)
-        setData((d: any) => ({ ...d, room: address, room_maps_url: mapsUrl }))
+        const url = place.url || (place.place_id ? `https://www.google.com/maps/place/?q=place_id:${place.place_id}` : '')
+        onSelect(address, url)
       })
       autocompleteRef.current = ac
     })
   }, [])
+
+  return (
+    <div>
+      <input
+        ref={inputRef}
+        type="text"
+        defaultValue={initialValue}
+        onBlur={e => onBlurUpdate(e.target.value)}
+        placeholder="Search for a location..."
+        style={inputStyle}
+      />
+      {mapsUrl && (
+        <a href={mapsUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', marginTop: '6px', color: '#60A5FA', fontSize: '13px', textDecoration: 'none' }}>
+          📍 View on Google Maps
+        </a>
+      )}
+    </div>
+  )
+}
+
+function ClassForm({ data, setData, onSave, saving, saveLabel }: any) {
+  const [uploading, setUploading] = useState(false)
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -78,22 +97,13 @@ function ClassForm({ data, setData, onSave, saving, saveLabel }: any) {
       ))}
       <div>
         <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Location</label>
-        <input
-          ref={locationRef}
-          type="text"
-          value={locationValue}
-          onChange={e => {
-            setLocationValue(e.target.value)
-            setData((d: any) => ({ ...d, room: e.target.value, room_maps_url: '' }))
-          }}
-          placeholder="Search for a location..."
-          style={inputStyle}
+        <LocationInput
+          key={data.id || 'new'}
+          initialValue={data.room || ''}
+          mapsUrl={data.room_maps_url || ''}
+          onSelect={(room, url) => setData((d: any) => ({ ...d, room, room_maps_url: url }))}
+          onBlurUpdate={room => setData((d: any) => ({ ...d, room }))}
         />
-        {data.room_maps_url && (
-          <a href={data.room_maps_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', marginTop: '6px', color: '#60A5FA', fontSize: '13px', textDecoration: 'none' }}>
-            📍 View on Google Maps
-          </a>
-        )}
       </div>
       <div>
         <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Class Image</label>
