@@ -6,12 +6,27 @@ import Link from 'next/link'
 const EMPTY_CLASS = {
   title: '', category: 'Sports', price: '', level: 'Beginner',
   date: '', time: '', spots: '',
-  rating: '4.9', image: '', instructor: '', room: '',
+  rating: '4.9', image: '', instructor: '', room: '', recurring: false,
 }
 
 const inputStyle = { width: '100%', backgroundColor: '#0F1624', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '12px 16px', color: 'white', outline: 'none', fontSize: '14px', boxSizing: 'border-box' as const }
 
 function ClassForm({ data, setData, onSave, saving, saveLabel }: any) {
+  const [uploading, setUploading] = useState(false)
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    const formData = new FormData()
+    formData.append('file', file)
+    const res = await fetch('/api/upload', { method: 'POST', body: formData })
+    const json = await res.json()
+    setUploading(false)
+    if (res.ok) setData((d: any) => ({ ...d, image: json.url }))
+    else alert(json.error || 'Upload failed')
+  }
+
   return (
     <div style={{ backgroundColor: '#1A2332', borderRadius: '16px', padding: '28px', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
       {[
@@ -28,6 +43,12 @@ function ClassForm({ data, setData, onSave, saving, saveLabel }: any) {
           <input type={field.type || 'text'} value={data[field.key]} onChange={e => setData((d: any) => ({ ...d, [field.key]: e.target.value }))} style={inputStyle} />
         </div>
       ))}
+      <div>
+        <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Class Image</label>
+        <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} style={{ ...inputStyle, padding: '10px 16px', cursor: 'pointer' }} />
+        {uploading && <p style={{ color: '#9CA3AF', fontSize: '13px', marginTop: '6px' }}>Uploading...</p>}
+        {data.image && !uploading && <img src={data.image} alt="preview" style={{ width: '100%', height: '120px', objectFit: 'cover', borderRadius: '8px', marginTop: '8px' }} />}
+      </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
         <div>
           <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Category</label>
@@ -40,6 +61,17 @@ function ClassForm({ data, setData, onSave, saving, saveLabel }: any) {
           <select value={data.level} onChange={e => setData((d: any) => ({ ...d, level: e.target.value }))} style={inputStyle}>
             {['Beginner', 'Intermediate', 'Advanced', 'All Levels', 'Kids'].map(l => <option key={l}>{l}</option>)}
           </select>
+        </div>
+      </div>
+      <div>
+        <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '10px' }}>Recurring Class?</label>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          {[{ label: 'Yes — repeats weekly at the same day & time', value: true }, { label: 'No — one-time class', value: false }].map(opt => (
+            <button key={String(opt.value)} type="button" onClick={() => setData((d: any) => ({ ...d, recurring: opt.value }))}
+              style={{ flex: 1, padding: '10px 14px', borderRadius: '10px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', border: data.recurring === opt.value ? '2px solid #F97316' : '1px solid rgba(255,255,255,0.15)', backgroundColor: data.recurring === opt.value ? 'rgba(249,115,22,0.15)' : 'transparent', color: data.recurring === opt.value ? '#F97316' : '#9CA3AF' }}>
+              {opt.label}
+            </button>
+          ))}
         </div>
       </div>
       <button onClick={onSave} disabled={saving} style={{ width: '100%', backgroundColor: '#F97316', border: 'none', color: 'white', padding: '16px', borderRadius: '16px', fontWeight: 'bold', fontSize: '18px', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1, marginTop: '8px' }}>

@@ -92,5 +92,14 @@ export async function initDB() {
       created_at TIMESTAMP DEFAULT NOW()
     )
   `)
+
+  await query(`
+    CREATE TABLE IF NOT EXISTS images (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      data TEXT NOT NULL,
+      mime_type TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `)
 }
 
