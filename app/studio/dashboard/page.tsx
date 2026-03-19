@@ -5,7 +5,7 @@ import Link from 'next/link'
 
 const EMPTY_CLASS = {
   title: '', category: 'Sports', price: '', level: 'Beginner',
-  duration: '60 min', date: '', time: '', spots: '', distance: '',
+  date: '', time: '', spots: '',
   rating: '4.9', image: '', instructor: '', room: '',
 }
 
@@ -17,14 +17,11 @@ function ClassForm({ data, setData, onSave, saving, saveLabel }: any) {
       {[
         { label: 'Class Title', key: 'title' },
         { label: 'Instructor', key: 'instructor' },
-        { label: 'Room', key: 'room' },
+        { label: 'Location', key: 'room' },
         { label: 'Price ($)', key: 'price', type: 'number' },
         { label: 'Total Spots', key: 'spots', type: 'number' },
         { label: 'Date (e.g. Mon, Feb 23)', key: 'date' },
         { label: 'Time (e.g. 6:00 PM)', key: 'time' },
-        { label: 'Duration (e.g. 60 min)', key: 'duration' },
-        { label: 'Distance (e.g. 1.2 mi)', key: 'distance' },
-        { label: 'Image URL', key: 'image' },
       ].map(field => (
         <div key={field.key}>
           <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>{field.label}</label>
