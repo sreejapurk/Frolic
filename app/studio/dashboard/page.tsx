@@ -14,6 +14,7 @@ export default function StudioDashboard() {
   const [classes, setClasses] = useState<any[]>([])
   const [earnings, setEarnings] = useState<any>(null)
   const [stripeStatus, setStripeStatus] = useState<any>(null)
+  const [stripeDismissed, setStripeDismissed] = useState(false)
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<'classes' | 'add' | 'edit' | 'earnings'>('classes')
   const [newClass, setNewClass] = useState({ ...EMPTY_CLASS })
@@ -150,15 +151,20 @@ export default function StudioDashboard() {
       <div style={{ maxWidth: '900px', margin: '0 auto', padding: '32px 24px' }}>
 
         {/* Stripe Connect Banner */}
-        {stripeStatus && !stripeStatus.connected && (
+        {stripeStatus && !stripeStatus.connected && !stripeDismissed && (
           <div style={{ backgroundColor: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.3)', borderRadius: '12px', padding: '16px 20px', marginBottom: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
             <div>
               <p style={{ color: 'white', fontWeight: '700', marginBottom: '2px' }}>Connect your Stripe account to receive payouts</p>
               <p style={{ color: '#9CA3AF', fontSize: '13px' }}>Frolic retains 25% of each booking. The remaining 75% is paid out to you directly.</p>
             </div>
-            <button onClick={handleStripeConnect} style={{ backgroundColor: '#F97316', border: 'none', color: 'white', padding: '10px 20px', borderRadius: '10px', fontWeight: '700', fontSize: '14px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
-              Connect with Stripe →
-            </button>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+              <button onClick={() => setStripeDismissed(true)} style={{ background: 'none', border: 'none', color: '#6B7280', fontSize: '14px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                I'll do this later
+              </button>
+              <button onClick={handleStripeConnect} style={{ backgroundColor: '#F97316', border: 'none', color: 'white', padding: '10px 20px', borderRadius: '10px', fontWeight: '700', fontSize: '14px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                Connect with Stripe →
+              </button>
+            </div>
           </div>
         )}
         {stripeStatus?.connected && (
