@@ -208,7 +208,7 @@ export default function StudioDashboard() {
     })
     setSaving(false)
     if (res.ok) { setNewClass({ ...EMPTY_CLASS }); setTab('classes'); loadClasses() }
-    else alert('Failed to add class')
+    else { const err = await res.json().catch(() => ({})); alert('Failed to add class: ' + (err.error || res.status)) }
   }
 
   const handleEdit = async () => {
