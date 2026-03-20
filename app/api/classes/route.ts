@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from 'uuid'
 export async function GET() {
   try {
     const result = await query(
-      "SELECT * FROM classes WHERE status = 'active' OR status IS NULL ORDER BY created_at DESC",
+      "SELECT * FROM classes WHERE status != 'deleted' ORDER BY created_at DESC",
       []
     )
     return NextResponse.json(result.rows)

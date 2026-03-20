@@ -8,7 +8,7 @@ export async function GET() {
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const result = await query(
-    `SELECT * FROM classes WHERE studio_user_id = $1 ORDER BY created_at DESC`,
+    `SELECT * FROM classes WHERE studio_user_id = $1 AND status != 'deleted' ORDER BY created_at DESC`,
     [session.studioId]
   )
   return NextResponse.json(result.rows)
