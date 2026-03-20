@@ -215,7 +215,9 @@ export default function AdminPage() {
                           <>
                             <button
                               onClick={async () => {
-                                await fetch(`/api/admin/studios/${s.id}/approve`, { method: 'POST' })
+                                const res = await fetch(`/api/admin/studios/${s.id}/approve`, { method: 'POST' })
+                                const data = await res.json()
+                                if (data.emailError) alert('Approved but email failed: ' + data.emailError)
                                 loadData()
                               }}
                               style={{ backgroundColor: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', color: '#4ADE80', padding: '6px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}

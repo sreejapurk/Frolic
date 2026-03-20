@@ -10,8 +10,9 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     const result = await query('UPDATE studio_users SET approved = true WHERE id = $1 RETURNING email, studio_name', [id])
     const studio = result.rows[0]
 
+    let emailError = null
     if (studio) {
-      await resend.emails.send({
+      const { error } = await resend.emails.send({
         from: 'Frolic <hello@joinfrolic.com>',
         to: studio.email,
         subject: 'Your Frolic studio account has been approved!',
@@ -20,12 +21,12 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
             <div style="text-align: center; margin-bottom: 32px;">
               <div style="display: inline-block; background: #F97316; width: 60px; height: 60px; border-radius: 14px; line-height: 60px; font-size: 32px; font-weight: 900; color: white;">F</div>
             </div>
-            <h1 style="color: white; font-size: 28px; font-weight: 900; margin-bottom: 16px;">You're approved! 🎉</h1>
+            <h1 style="color: white; font-size: 28px; font-weight: 900; margin-bottom: 16px;">You're approved!</h1>
             <p style="color: #9CA3AF; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
               Hi ${studio.studio_name}, your Frolic studio account has been approved. You can now log in and start listing your classes.
             </p>
             <a href="https://joinfrolic.com/studio/login" style="display: inline-block; background: #F97316; color: white; padding: 14px 28px; border-radius: 12px; font-weight: 700; font-size: 16px; text-decoration: none; margin-bottom: 32px;">
-              Log in to your dashboard →
+              Log in to your dashboard
             </a>
             <p style="color: #6B7280; font-size: 14px;">
               If you have any questions, just reply to this email.
@@ -33,9 +34,10 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
           </div>
         `,
       })
+      if (error) emailError = error.message
     }
 
-    return NextResponse.json({ ok: true })
+    return NextResponse.json({ ok: true, emailError })
   } catch (error) {
     console.error('Approve error:', error)
     return NextResponse.json({ error: 'Failed to approve studio' }, { status: 500 })
