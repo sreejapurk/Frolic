@@ -26,8 +26,8 @@ export async function POST(req: NextRequest) {
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
        RETURNING *`,
       [id, data.title, session.studioName, data.category, data.price, data.level,
-       data.duration, data.date, data.time, data.spots, data.spots,
-       data.distance, data.rating || '4.9', data.image, data.instructor, data.room, data.room_maps_url || null, session.studioId, data.recurring ?? false]
+       data.duration || '', data.date, data.time, data.spots, data.spots,
+       data.distance || '', data.rating || '4.9', data.image || '', data.instructor, data.room, data.room_maps_url || null, session.studioId, data.recurring ?? false]
     )
     return NextResponse.json(result.rows[0])
   } catch (error) {
