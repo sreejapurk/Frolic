@@ -22,8 +22,8 @@ export async function POST(req: NextRequest) {
     const data = await req.json()
     const id = uuidv4()
     const result = await query(
-      `INSERT INTO classes (id, title, studio, category, price, level, duration, date, time, spots, spots_left, distance, rating, image, instructor, room, room_maps_url, studio_user_id, recurring)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+      `INSERT INTO classes (id, title, studio, category, price, level, duration, date, time, spots, spots_left, distance, rating, image, instructor, room, room_maps_url, studio_user_id, recurring, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, 'active')
        RETURNING *`,
       [id, data.title, session.studioName, data.category, data.price, data.level,
        data.duration || '', data.date, data.time, data.spots, data.spots,
