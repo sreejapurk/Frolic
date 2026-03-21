@@ -1,5 +1,6 @@
 'use client'
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import * as XLSX from 'xlsx'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
@@ -155,10 +156,12 @@ export default function StudioDashboard() {
   const [stripeStatus, setStripeStatus] = useState<any>(null)
   const [stripeDismissed, setStripeDismissed] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [tab, setTab] = useState<'classes' | 'add' | 'edit' | 'earnings'>('classes')
+  const [tab, setTab] = useState<'classes' | 'add' | 'edit' | 'earnings' | 'import'>('classes')
   const [newClass, setNewClass] = useState({ ...EMPTY_CLASS })
   const [editingClass, setEditingClass] = useState<any>(null)
   const [saving, setSaving] = useState(false)
+  const [importRows, setImportRows] = useState<any[]>([])
+  const [importing, setImporting] = useState(false)
 
   useEffect(() => {
     loadClasses()
@@ -229,6 +232,61 @@ export default function StudioDashboard() {
     loadClasses()
   }
 
+  const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      const data = new Uint8Array(ev.target?.result as ArrayBuffer)
+      const workbook = XLSX.read(data, { type: 'array' })
+      const sheet = workbook.Sheets[workbook.SheetNames[0]]
+      const rows: any[] = XLSX.utils.sheet_to_json(sheet, { defval: '' })
+      const mapped = rows.map(r => ({
+        title: r['Class Title'] || r['title'] || '',
+        instructor: r['Instructor'] || r['instructor'] || '',
+        room: r['Location'] || r['room'] || '',
+        price: String(r['Price'] || r['price'] || ''),
+        spots: String(r['Spots'] || r['spots'] || ''),
+        date: r['Date'] || r['date'] || '',
+        time: r['Time'] || r['time'] || '',
+        category: r['Category'] || r['category'] || 'Sports',
+        level: r['Level'] || r['level'] || 'Beginner',
+        recurring: (r['Recurring'] || r['recurring'] || '').toString().toLowerCase() === 'yes',
+        image: '', room_maps_url: '', rating: '4.9',
+      }))
+      setImportRows(mapped)
+    }
+    reader.readAsArrayBuffer(file)
+  }
+
+  const downloadTemplate = () => {
+    const ws = XLSX.utils.aoa_to_sheet([
+      ['Class Title', 'Instructor', 'Location', 'Price', 'Spots', 'Date', 'Time', 'Category', 'Level', 'Recurring'],
+      ['Yoga Flow', 'Jane Smith', '123 Main St', '25', '15', 'Mon, Mar 24', '9:00 AM', 'Sports', 'Beginner', 'Yes'],
+    ])
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Classes')
+    XLSX.writeFile(wb, 'frolic-classes-template.xlsx')
+  }
+
+  const handleBulkImport = async () => {
+    setImporting(true)
+    let success = 0
+    for (const row of importRows) {
+      const res = await fetch('/api/studio/classes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(row),
+      })
+      if (res.ok) success++
+    }
+    setImporting(false)
+    setImportRows([])
+    setTab('classes')
+    loadClasses()
+    alert(`Imported ${success} of ${importRows.length} classes successfully.`)
+  }
+
   const tabBtn = (t: typeof tab, label: string) => (
     <button onClick={() => handleTabChange(t)} style={{ padding: '8px 16px', borderRadius: '999px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', border: 'none', backgroundColor: tab === t ? '#F97316' : 'transparent', color: 'white' }}>
       {label}
@@ -244,6 +302,7 @@ export default function StudioDashboard() {
           {tabBtn('classes', 'My Classes')}
           {tabBtn('earnings', '💰 Earnings')}
           {tabBtn('add', '+ Add Class')}
+          {tabBtn('import', '📥 Import')}
         </div>
         <button onClick={handleLogout} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.2)', color: '#9CA3AF', padding: '8px 16px', borderRadius: '999px', fontSize: '14px', cursor: 'pointer' }}>Log Out</button>
       </nav>
@@ -354,6 +413,64 @@ export default function StudioDashboard() {
           <div style={{ maxWidth: '600px' }}>
             <h2 style={{ color: 'white', fontWeight: '900', fontSize: '24px', marginBottom: '24px' }}>Edit Class</h2>
             <ClassForm data={editingClass} setData={setEditingClass} onSave={handleEdit} saving={saving} saveLabel="Save Changes" />
+          </div>
+        )}
+
+        {tab === 'import' && (
+          <div>
+            <h2 style={{ color: 'white', fontWeight: '900', fontSize: '24px', marginBottom: '8px' }}>Import Classes from Excel</h2>
+            <p style={{ color: '#9CA3AF', fontSize: '14px', marginBottom: '24px' }}>Upload an .xlsx or .csv file to bulk add classes. Download the template to get started.</p>
+
+            <div style={{ display: 'flex', gap: '12px', marginBottom: '32px', flexWrap: 'wrap' }}>
+              <button onClick={downloadTemplate} style={{ backgroundColor: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: 'white', padding: '10px 20px', borderRadius: '10px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
+                Download Template
+              </button>
+              <label style={{ backgroundColor: '#F97316', border: 'none', color: 'white', padding: '10px 20px', borderRadius: '10px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
+                Upload Excel / CSV
+                <input type="file" accept=".xlsx,.xls,.csv" onChange={handleImportFile} style={{ display: 'none' }} />
+              </label>
+            </div>
+
+            {importRows.length > 0 && (
+              <>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                  <p style={{ color: '#9CA3AF', fontSize: '14px' }}>{importRows.length} class{importRows.length !== 1 ? 'es' : ''} ready to import — review and edit below</p>
+                  <button onClick={() => setImportRows([])} style={{ background: 'none', border: 'none', color: '#6B7280', fontSize: '13px', cursor: 'pointer' }}>Clear</button>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
+                  {importRows.map((row, i) => (
+                    <div key={i} style={{ backgroundColor: '#1A2332', borderRadius: '12px', padding: '20px', border: '1px solid rgba(255,255,255,0.1)', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px' }}>
+                      {[
+                        { label: 'Class Title', key: 'title' },
+                        { label: 'Instructor', key: 'instructor' },
+                        { label: 'Location', key: 'room' },
+                        { label: 'Price ($)', key: 'price' },
+                        { label: 'Spots', key: 'spots' },
+                        { label: 'Date', key: 'date' },
+                        { label: 'Time', key: 'time' },
+                        { label: 'Category', key: 'category' },
+                        { label: 'Level', key: 'level' },
+                      ].map(f => (
+                        <div key={f.key}>
+                          <label style={{ color: '#6B7280', fontSize: '11px', display: 'block', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{f.label}</label>
+                          <input
+                            value={row[f.key]}
+                            onChange={e => setImportRows(rows => rows.map((r, j) => j === i ? { ...r, [f.key]: e.target.value } : r))}
+                            style={{ width: '100%', backgroundColor: '#0F1624', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '8px 12px', color: 'white', outline: 'none', fontSize: '13px', boxSizing: 'border-box' as const }}
+                          />
+                        </div>
+                      ))}
+                      <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+                        <button onClick={() => setImportRows(rows => rows.filter((_, j) => j !== i))} style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#F87171', padding: '8px 14px', borderRadius: '8px', fontSize: '13px', cursor: 'pointer' }}>Remove</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <button onClick={handleBulkImport} disabled={importing} style={{ backgroundColor: '#F97316', border: 'none', color: 'white', padding: '16px 32px', borderRadius: '12px', fontWeight: 'bold', fontSize: '16px', cursor: importing ? 'not-allowed' : 'pointer', opacity: importing ? 0.7 : 1 }}>
+                  {importing ? 'Importing...' : `Import ${importRows.length} Class${importRows.length !== 1 ? 'es' : ''}`}
+                </button>
+              </>
+            )}
           </div>
         )}
       </div>
