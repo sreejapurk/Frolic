@@ -162,6 +162,10 @@ export default function StudioDashboard() {
   const [saving, setSaving] = useState(false)
   const [importRows, setImportRows] = useState<any[]>([])
   const [importing, setImporting] = useState(false)
+  const [rawColumns, setRawColumns] = useState<string[]>([])
+  const [columnMap, setColumnMap] = useState<Record<string, string>>({})
+  const [rawRows, setRawRows] = useState<any[]>([])
+  const [importStep, setImportStep] = useState<'upload' | 'map' | 'preview'>('upload')
 
   useEffect(() => {
     loadClasses()
@@ -185,6 +189,7 @@ export default function StudioDashboard() {
   const handleTabChange = (t: typeof tab) => {
     setTab(t)
     if (t === 'earnings' && !earnings) loadEarnings()
+    if (t !== 'import') { setImportStep('upload'); setImportRows([]); setRawRows([]); setRawColumns([]) }
   }
 
   const handleStripeConnect = async () => {
@@ -232,6 +237,29 @@ export default function StudioDashboard() {
     loadClasses()
   }
 
+  const FROLIC_FIELDS = [
+    { key: 'title', label: 'Class Title', hints: ['title', 'class', 'name', 'class name', 'class title', 'course'] },
+    { key: 'instructor', label: 'Instructor', hints: ['instructor', 'teacher', 'coach', 'trainer', 'staff', 'facilitator'] },
+    { key: 'room', label: 'Location', hints: ['location', 'room', 'venue', 'address', 'place', 'studio', 'where'] },
+    { key: 'price', label: 'Price ($)', hints: ['price', 'cost', 'fee', 'amount', 'rate', 'charge'] },
+    { key: 'spots', label: 'Total Spots', hints: ['spots', 'capacity', 'seats', 'max', 'size', 'limit', 'students', 'participants'] },
+    { key: 'date', label: 'Date', hints: ['date', 'day', 'when', 'start date', 'class date'] },
+    { key: 'time', label: 'Time', hints: ['time', 'start time', 'start', 'hour', 'schedule'] },
+    { key: 'category', label: 'Category', hints: ['category', 'type', 'class type', 'genre', 'subject'] },
+    { key: 'level', label: 'Level', hints: ['level', 'difficulty', 'skill', 'skill level', 'experience'] },
+  ]
+
+  const autoDetectMapping = (columns: string[]) => {
+    const map: Record<string, string> = {}
+    for (const field of FROLIC_FIELDS) {
+      const match = columns.find(col =>
+        field.hints.some(hint => col.toLowerCase().trim().includes(hint))
+      )
+      if (match) map[field.key] = match
+    }
+    return map
+  }
+
   const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -241,32 +269,31 @@ export default function StudioDashboard() {
       const workbook = XLSX.read(data, { type: 'array' })
       const sheet = workbook.Sheets[workbook.SheetNames[0]]
       const rows: any[] = XLSX.utils.sheet_to_json(sheet, { defval: '' })
-      const mapped = rows.map(r => ({
-        title: r['Class Title'] || r['title'] || '',
-        instructor: r['Instructor'] || r['instructor'] || '',
-        room: r['Location'] || r['room'] || '',
-        price: String(r['Price'] || r['price'] || ''),
-        spots: String(r['Spots'] || r['spots'] || ''),
-        date: r['Date'] || r['date'] || '',
-        time: r['Time'] || r['time'] || '',
-        category: r['Category'] || r['category'] || 'Sports',
-        level: r['Level'] || r['level'] || 'Beginner',
-        recurring: (r['Recurring'] || r['recurring'] || '').toString().toLowerCase() === 'yes',
-        image: '', room_maps_url: '', rating: '4.9',
-      }))
-      setImportRows(mapped)
+      if (rows.length === 0) return
+      const cols = Object.keys(rows[0])
+      setRawColumns(cols)
+      setRawRows(rows)
+      setColumnMap(autoDetectMapping(cols))
+      setImportStep('map')
     }
     reader.readAsArrayBuffer(file)
   }
 
-  const downloadTemplate = () => {
-    const ws = XLSX.utils.aoa_to_sheet([
-      ['Class Title', 'Instructor', 'Location', 'Price', 'Spots', 'Date', 'Time', 'Category', 'Level', 'Recurring'],
-      ['Yoga Flow', 'Jane Smith', '123 Main St', '25', '15', 'Mon, Mar 24', '9:00 AM', 'Sports', 'Beginner', 'Yes'],
-    ])
-    const wb = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(wb, ws, 'Classes')
-    XLSX.writeFile(wb, 'frolic-classes-template.xlsx')
+  const applyMapping = () => {
+    const mapped = rawRows.map(r => ({
+      title: String(r[columnMap['title']] || ''),
+      instructor: String(r[columnMap['instructor']] || ''),
+      room: String(r[columnMap['room']] || ''),
+      price: String(r[columnMap['price']] || ''),
+      spots: String(r[columnMap['spots']] || ''),
+      date: String(r[columnMap['date']] || ''),
+      time: String(r[columnMap['time']] || ''),
+      category: String(r[columnMap['category']] || 'Sports'),
+      level: String(r[columnMap['level']] || 'Beginner'),
+      recurring: false, image: '', room_maps_url: '', rating: '4.9',
+    }))
+    setImportRows(mapped)
+    setImportStep('preview')
   }
 
   const handleBulkImport = async () => {
@@ -418,39 +445,57 @@ export default function StudioDashboard() {
 
         {tab === 'import' && (
           <div>
-            <h2 style={{ color: 'white', fontWeight: '900', fontSize: '24px', marginBottom: '8px' }}>Import Classes from Excel</h2>
-            <p style={{ color: '#9CA3AF', fontSize: '14px', marginBottom: '24px' }}>Upload an .xlsx or .csv file to bulk add classes. Download the template to get started.</p>
+            <h2 style={{ color: 'white', fontWeight: '900', fontSize: '24px', marginBottom: '8px' }}>Import Classes</h2>
+            <p style={{ color: '#9CA3AF', fontSize: '14px', marginBottom: '32px' }}>Upload any existing Excel or CSV file — we'll detect your columns and map them automatically.</p>
 
-            <div style={{ display: 'flex', gap: '12px', marginBottom: '32px', flexWrap: 'wrap' }}>
-              <button onClick={downloadTemplate} style={{ backgroundColor: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: 'white', padding: '10px 20px', borderRadius: '10px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
-                Download Template
-              </button>
-              <label style={{ backgroundColor: '#F97316', border: 'none', color: 'white', padding: '10px 20px', borderRadius: '10px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
-                Upload Excel / CSV
+            {importStep === 'upload' && (
+              <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '2px dashed rgba(249,115,22,0.4)', borderRadius: '16px', padding: '48px 24px', cursor: 'pointer', backgroundColor: 'rgba(249,115,22,0.04)', gap: '12px' }}>
+                <span style={{ fontSize: '40px' }}>📂</span>
+                <span style={{ color: 'white', fontWeight: '700', fontSize: '18px' }}>Click to upload your Excel or CSV file</span>
+                <span style={{ color: '#6B7280', fontSize: '14px' }}>Supports .xlsx, .xls, .csv — any format works</span>
                 <input type="file" accept=".xlsx,.xls,.csv" onChange={handleImportFile} style={{ display: 'none' }} />
               </label>
-            </div>
+            )}
 
-            {importRows.length > 0 && (
+            {importStep === 'map' && (
+              <div>
+                <p style={{ color: '#9CA3AF', fontSize: '14px', marginBottom: '24px' }}>We detected your columns below. Match each one to the right Frolic field — we've auto-filled what we could.</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '28px' }}>
+                  {FROLIC_FIELDS.map(field => (
+                    <div key={field.key} style={{ display: 'grid', gridTemplateColumns: '160px 1fr', alignItems: 'center', gap: '16px' }}>
+                      <label style={{ color: 'white', fontSize: '14px', fontWeight: '600' }}>{field.label}</label>
+                      <select
+                        value={columnMap[field.key] || ''}
+                        onChange={e => setColumnMap(m => ({ ...m, [field.key]: e.target.value }))}
+                        style={{ ...inputStyle, color: columnMap[field.key] ? 'white' : '#6B7280' }}
+                      >
+                        <option value="">— skip this field —</option>
+                        {rawColumns.map(col => <option key={col} value={col}>{col}</option>)}
+                      </select>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button onClick={() => { setImportStep('upload'); setRawRows([]); setRawColumns([]) }} style={{ backgroundColor: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: 'white', padding: '12px 24px', borderRadius: '10px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
+                    Back
+                  </button>
+                  <button onClick={applyMapping} style={{ backgroundColor: '#F97316', border: 'none', color: 'white', padding: '12px 28px', borderRadius: '10px', fontSize: '14px', fontWeight: '700', cursor: 'pointer' }}>
+                    Preview {rawRows.length} Class{rawRows.length !== 1 ? 'es' : ''} →
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {importStep === 'preview' && importRows.length > 0 && (
               <>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                  <p style={{ color: '#9CA3AF', fontSize: '14px' }}>{importRows.length} class{importRows.length !== 1 ? 'es' : ''} ready to import — review and edit below</p>
-                  <button onClick={() => setImportRows([])} style={{ background: 'none', border: 'none', color: '#6B7280', fontSize: '13px', cursor: 'pointer' }}>Clear</button>
+                  <p style={{ color: '#9CA3AF', fontSize: '14px' }}>{importRows.length} class{importRows.length !== 1 ? 'es' : ''} ready — review and edit before importing</p>
+                  <button onClick={() => setImportStep('map')} style={{ background: 'none', border: 'none', color: '#6B7280', fontSize: '13px', cursor: 'pointer' }}>← Back to mapping</button>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
                   {importRows.map((row, i) => (
                     <div key={i} style={{ backgroundColor: '#1A2332', borderRadius: '12px', padding: '20px', border: '1px solid rgba(255,255,255,0.1)', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px' }}>
-                      {[
-                        { label: 'Class Title', key: 'title' },
-                        { label: 'Instructor', key: 'instructor' },
-                        { label: 'Location', key: 'room' },
-                        { label: 'Price ($)', key: 'price' },
-                        { label: 'Spots', key: 'spots' },
-                        { label: 'Date', key: 'date' },
-                        { label: 'Time', key: 'time' },
-                        { label: 'Category', key: 'category' },
-                        { label: 'Level', key: 'level' },
-                      ].map(f => (
+                      {FROLIC_FIELDS.map(f => (
                         <div key={f.key}>
                           <label style={{ color: '#6B7280', fontSize: '11px', display: 'block', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{f.label}</label>
                           <input
