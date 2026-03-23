@@ -53,11 +53,6 @@ export default function AdminPage() {
     loadData()
   }
 
-  const restoreClass = async (id: string) => {
-    await fetch(`/api/admin/classes/${id}/restore`, { method: 'POST' })
-    loadData()
-  }
-
   const handleAddClass = async () => {
     const res = await fetch('/api/classes', {
       method: 'POST',
@@ -113,31 +108,18 @@ export default function AdminPage() {
             <h2 style={{ color: 'white', fontWeight: '900', fontSize: '24px', marginBottom: '24px' }}>Classes ({classes.length})</h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
               {classes.map(c => (
-                <div key={c.id} style={{ backgroundColor: '#1A2332', borderRadius: '12px', padding: '20px', border: `1px solid ${c.status === 'deleted' ? 'rgba(239,68,68,0.3)' : 'rgba(255,255,255,0.1)'}` }}>
-                  {c.image && <img src={c.image} alt={c.title} style={{ width: '100%', height: '128px', objectFit: 'cover', borderRadius: '8px', marginBottom: '12px', opacity: c.status === 'deleted' ? 0.5 : 1 }} />}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
-                    <h3 style={{ color: c.status === 'deleted' ? '#6B7280' : 'white', fontWeight: 'bold' }}>{c.title}</h3>
-                    <span style={{ fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '999px', backgroundColor: c.status === 'deleted' ? 'rgba(239,68,68,0.15)' : 'rgba(34,197,94,0.15)', color: c.status === 'deleted' ? '#F87171' : '#4ADE80', whiteSpace: 'nowrap', marginLeft: '8px' }}>
-                      {c.status === 'deleted' ? 'Deleted' : 'Active'}
-                    </span>
-                  </div>
+                <div key={c.id} style={{ backgroundColor: '#1A2332', borderRadius: '12px', padding: '20px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                  {c.image && <img src={c.image} alt={c.title} style={{ width: '100%', height: '128px', objectFit: 'cover', borderRadius: '8px', marginBottom: '12px' }} />}
+                  <h3 style={{ color: 'white', fontWeight: 'bold', marginBottom: '4px' }}>{c.title}</h3>
                   <p style={{ color: '#9CA3AF', fontSize: '14px', marginBottom: '8px' }}>{c.studio}</p>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                     <span style={{ color: '#F97316', fontWeight: 'bold' }}>${c.price}</span>
                     <span style={{ color: '#9CA3AF', fontSize: '14px' }}>{c.spots_left} spots left</span>
                   </div>
                   <p style={{ color: '#6B7280', fontSize: '14px', marginBottom: '12px' }}>{c.date} • {c.time}</p>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    {c.status === 'deleted' ? (
-                      <button onClick={() => restoreClass(c.id)} style={{ flex: 1, backgroundColor: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', color: '#4ADE80', padding: '8px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
-                        Restore
-                      </button>
-                    ) : (
-                      <button onClick={() => deleteClass(c.id)} style={{ flex: 1, backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#F87171', padding: '8px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
-                        Delete
-                      </button>
-                    )}
-                  </div>
+                  <button onClick={() => deleteClass(c.id)} style={{ width: '100%', backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#F87171', padding: '8px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
+                    Delete
+                  </button>
                 </div>
               ))}
               {classes.length === 0 && <p style={{ color: '#6B7280' }}>No classes yet. Add one!</p>}
