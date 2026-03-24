@@ -37,12 +37,7 @@ export async function GET() {
       "SELECT * FROM classes WHERE status IS DISTINCT FROM 'deleted' ORDER BY created_at DESC",
       []
     )
-    const rows = result.rows.map((c: any) => {
-      if (c.recurring) {
-        return { ...c, date: nextOccurrence(c.date) }
-      }
-      return c
-    })
+    const rows = result.rows.map((c: any) => ({ ...c, date: nextOccurrence(c.date) }))
     return NextResponse.json(rows)
   } catch (error) {
     console.error('Error fetching classes:', error)

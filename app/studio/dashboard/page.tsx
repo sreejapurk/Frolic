@@ -131,17 +131,6 @@ function ClassForm({ data, setData, onSave, saving, saveLabel }: any) {
           </select>
         </div>
       </div>
-      <div>
-        <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '10px' }}>Recurring Class?</label>
-        <div style={{ display: 'flex', gap: '12px' }}>
-          {[{ label: 'Yes — repeats weekly at the same day & time', value: true }, { label: 'No — one-time class', value: false }].map(opt => (
-            <button key={String(opt.value)} type="button" onClick={() => setData((d: any) => ({ ...d, recurring: opt.value }))}
-              style={{ flex: 1, padding: '10px 14px', borderRadius: '10px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', border: data.recurring === opt.value ? '2px solid #F97316' : '1px solid rgba(255,255,255,0.15)', backgroundColor: data.recurring === opt.value ? 'rgba(249,115,22,0.15)' : 'transparent', color: data.recurring === opt.value ? '#F97316' : '#9CA3AF' }}>
-              {opt.label}
-            </button>
-          ))}
-        </div>
-      </div>
       <button onClick={onSave} disabled={saving} style={{ width: '100%', backgroundColor: '#F97316', border: 'none', color: 'white', padding: '16px', borderRadius: '16px', fontWeight: 'bold', fontSize: '18px', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1, marginTop: '8px' }}>
         {saving ? 'Saving...' : saveLabel}
       </button>
