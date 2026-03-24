@@ -226,6 +226,12 @@ export default function StudioDashboard() {
     loadClasses()
   }
 
+  const handleDuplicate = (c: any) => {
+    const { id, spots_left, created_at, studio_user_id, ...rest } = c
+    setNewClass({ ...EMPTY_CLASS, ...rest, time: '' })
+    setTab('add')
+  }
+
   const FROLIC_FIELDS = [
     { key: 'title', label: 'Class Title', hints: ['title', 'class', 'name', 'class name', 'class title', 'course'] },
     { key: 'instructor', label: 'Instructor', hints: ['instructor', 'teacher', 'coach', 'trainer', 'staff', 'facilitator'] },
@@ -366,6 +372,7 @@ export default function StudioDashboard() {
                     <p style={{ color: '#6B7280', fontSize: '14px', marginBottom: '12px' }}>{c.date} • {c.time}</p>
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <button onClick={() => { setEditingClass({ ...c }); setTab('edit') }} style={{ flex: 1, backgroundColor: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.3)', color: '#F97316', padding: '8px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>Edit</button>
+                      <button onClick={() => handleDuplicate(c)} style={{ flex: 1, backgroundColor: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.3)', color: '#818CF8', padding: '8px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>Duplicate</button>
                       <button onClick={() => handleDelete(c.id)} style={{ flex: 1, backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#F87171', padding: '8px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>Delete</button>
                     </div>
                   </div>
