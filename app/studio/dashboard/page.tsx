@@ -8,7 +8,7 @@ import Link from 'next/link'
 const EMPTY_CLASS = {
   title: '', category: 'Sports', price: '', level: 'Beginner',
   date: '', time: '', spots: '',
-  rating: '4.9', image: '', instructor: '', room: '', room_maps_url: '', recurring: false,
+  rating: '4.9', image: '', instructor: '', room: '', room_maps_url: '', recurring: false, description: '',
 }
 
 const inputStyle = { width: '100%', backgroundColor: '#0F1624', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '12px 16px', color: 'white', outline: 'none', fontSize: '14px', boxSizing: 'border-box' as const }
@@ -102,6 +102,10 @@ function ClassForm({ data, setData, onSave, saving, saveLabel }: any) {
           <input type={field.type || 'text'} value={data[field.key]} onChange={e => setData((d: any) => ({ ...d, [field.key]: e.target.value }))} style={inputStyle} />
         </div>
       ))}
+      <div>
+        <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Description</label>
+        <textarea value={data.description || ''} onChange={e => setData((d: any) => ({ ...d, description: e.target.value }))} placeholder="Describe what students can expect..." rows={3} style={{ ...inputStyle, resize: 'vertical' as const }} />
+      </div>
       <div>
         <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Location</label>
         <LocationInput
