@@ -182,10 +182,27 @@ function ClassForm({ data, setData, onSave, saving, saveLabel }: any) {
         </div>
         <div>
           <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Subcategory</label>
-          <select value={data.subcategory || ''} onChange={e => setData((d: any) => ({ ...d, subcategory: e.target.value }))} style={inputStyle}>
+          <select
+            value={(SUBCATEGORIES[data.category] || []).includes(data.subcategory) ? data.subcategory : data.subcategory ? '__other__' : ''}
+            onChange={e => {
+              if (e.target.value === '__other__') setData((d: any) => ({ ...d, subcategory: '__other__' }))
+              else setData((d: any) => ({ ...d, subcategory: e.target.value }))
+            }}
+            style={inputStyle}
+          >
             <option value="">— Select —</option>
             {(SUBCATEGORIES[data.category] || []).map((s: string) => <option key={s}>{s}</option>)}
+            <option value="__other__">Other (specify below)</option>
           </select>
+          {(data.subcategory === '__other__' || (data.subcategory && !(SUBCATEGORIES[data.category] || []).includes(data.subcategory))) && (
+            <input
+              type="text"
+              value={data.subcategory === '__other__' ? '' : data.subcategory || ''}
+              onChange={e => setData((d: any) => ({ ...d, subcategory: e.target.value }))}
+              placeholder="e.g. Cello, Badminton, Breakdance..."
+              style={{ ...inputStyle, marginTop: '8px' }}
+            />
+          )}
         </div>
       </div>
       <div>
