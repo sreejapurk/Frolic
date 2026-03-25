@@ -26,12 +26,18 @@ function CheckoutForm({ classData, classId }: { classData: any; classId: string 
   const [processing, setProcessing] = useState(false)
   const [cardError, setCardError] = useState('')
   const [form, setForm] = useState({ firstName: '', lastName: '', email: '', phone: '' })
+  const locationOptions: string[] = classData.location_types || (classData.location_type ? [classData.location_type] : [])
+  const [selectedLocation, setSelectedLocation] = useState(locationOptions[0] || '')
 
   const handleChange = (e: any) => setForm(f => ({ ...f, [e.target.name]: e.target.value }))
 
   const handleSubmit = async () => {
     if (!form.firstName || !form.lastName || !form.email) {
       alert('Please fill in all required fields')
+      return
+    }
+    if (locationOptions.length > 1 && !selectedLocation) {
+      alert('Please select a location preference')
       return
     }
     if (!stripe || !elements) return
@@ -79,6 +85,7 @@ function CheckoutForm({ classData, classId }: { classData: any; classId: string 
             email: form.email,
             phone: form.phone,
             amount: classData.price + 2,
+            locationPreference: selectedLocation,
             stripePaymentId: result.paymentIntent?.id,
           }),
         })
@@ -97,6 +104,25 @@ function CheckoutForm({ classData, classId }: { classData: any; classId: string 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        {locationOptions.length > 1 && (
+          <div style={{ backgroundColor: '#1A2332', borderRadius: '16px', padding: '24px', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <h2 style={{ color: 'white', fontWeight: 'bold', fontSize: '20px', marginBottom: '8px' }}>Where would you like the class?</h2>
+            <p style={{ color: '#9CA3AF', fontSize: '14px', marginBottom: '16px' }}>This instructor offers multiple options — pick one.</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {locationOptions.map((opt: string) => {
+                const label = opt === 'online' ? '🌐 Online' : opt === 'residence' ? '🏠 At my home' : opt === 'location' ? `📍 At the instructor's location${classData.room ? ` — ${classData.room}` : ''}` : opt
+                const selected = selectedLocation === opt
+                return (
+                  <button key={opt} type="button" onClick={() => setSelectedLocation(opt)}
+                    style={{ textAlign: 'left', padding: '14px 16px', borderRadius: '12px', cursor: 'pointer', border: selected ? '2px solid #F97316' : '1px solid rgba(255,255,255,0.1)', backgroundColor: selected ? 'rgba(249,115,22,0.08)' : 'transparent', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ width: '18px', height: '18px', borderRadius: '50%', border: selected ? '2px solid #F97316' : '2px solid rgba(255,255,255,0.2)', backgroundColor: selected ? '#F97316' : 'transparent', flexShrink: 0 }} />
+                    <span style={{ color: selected ? '#F97316' : 'white', fontWeight: '600', fontSize: '14px' }}>{label}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
         <div style={{ backgroundColor: '#1A2332', borderRadius: '16px', padding: '24px', border: '1px solid rgba(255,255,255,0.1)' }}>
           <h2 style={{ color: 'white', fontWeight: 'bold', fontSize: '20px', marginBottom: '20px' }}>Personal Information</h2>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
@@ -147,7 +173,11 @@ function CheckoutForm({ classData, classId }: { classData: any; classId: string 
           <h3 style={{ color: 'white', fontWeight: 'bold', fontSize: '20px', marginBottom: '4px' }}>{classData.title}</h3>
           <p style={{ color: '#9CA3AF', fontSize: '14px', marginBottom: '20px' }}>{classData.studio}</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '14px', marginBottom: '20px' }}>
-            {[['Date & Time', `${classData.date} at ${classData.time}`], ['Location', classData.studio], ['Duration', classData.duration], ['Level', classData.level]].map(([label, value]) => (
+            {[
+              ['Date & Time', `${classData.date} at ${classData.time}`],
+              ['Location', selectedLocation === 'online' ? 'Online' : selectedLocation === 'residence' ? 'At your home' : classData.room || classData.studio],
+              ['Level', classData.level]
+            ].map(([label, value]) => (
               <div key={label} style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ color: '#9CA3AF' }}>{label}:</span>
                 <span style={{ color: 'white', textAlign: 'right' }}>{value}</span>
