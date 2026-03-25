@@ -30,7 +30,11 @@ export default function HomePage() {
     setActiveSubcategory('')
   }
 
-  const subcategories = activeCategory !== 'All' ? (SUBCATEGORIES[activeCategory] || []) : []
+  const subcategories = activeCategory !== 'All'
+    ? (SUBCATEGORIES[activeCategory] || []).filter(sub =>
+        classes.some(c => c.category === activeCategory && c.subcategory === sub)
+      )
+    : []
 
   const filtered = useMemo(() => {
     return classes.filter(c => {
