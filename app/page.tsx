@@ -31,9 +31,7 @@ export default function HomePage() {
   }
 
   const subcategories = activeCategory !== 'All'
-    ? (SUBCATEGORIES[activeCategory] || []).filter(sub =>
-        classes.some(c => c.category === activeCategory && c.subcategory === sub)
-      )
+    ? [...new Set(classes.filter(c => c.category === activeCategory && c.subcategory).map(c => c.subcategory))]
     : []
 
   const filtered = useMemo(() => {
