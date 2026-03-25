@@ -21,6 +21,9 @@ interface ClassCardProps {
   location_types?: string[]
   room?: string
   room_maps_url?: string
+  price_location?: number
+  price_online?: number
+  price_residence?: number
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -30,9 +33,15 @@ const CATEGORY_COLORS: Record<string, string> = {
 }
 
 export default function ClassCard(props: ClassCardProps) {
-  const { id, title, studio, price, level, duration, date, time, spots_left, distance, rating, image, category, instructor, description, location_types, room, room_maps_url } = props
+  const { id, title, studio, price, level, duration, date, time, spots_left, distance, rating, image, category, instructor, description, location_types, room, room_maps_url, price_location, price_online, price_residence } = props
 
+  const locationPriceMap: Record<string, number | undefined> = { location: price_location, online: price_online, residence: price_residence }
   const types: string[] = location_types || []
+  const perLocationPrices = types.map(t => locationPriceMap[t]).filter((p): p is number => p != null && p > 0)
+  const displayPrice = perLocationPrices.length > 0
+    ? (perLocationPrices.length > 1 ? `From $${Math.min(...perLocationPrices)}` : `$${perLocationPrices[0]}`)
+    : `$${price}`
+
   const locationTags = [
     types.includes('online') ? '🌐 Online' : null,
     types.includes('residence') ? '🏠 At your home' : null,
@@ -65,7 +74,7 @@ export default function ClassCard(props: ClassCardProps) {
 
         {/* Price badge */}
         <div style={{ position: 'absolute', top: '12px', right: '12px', background: '#F97316', color: 'white', fontSize: '15px', fontWeight: '800', padding: '5px 12px', borderRadius: '9999px', boxShadow: '0 2px 12px rgba(249,115,22,0.4)' }}>
-          ${price}
+          {displayPrice}
         </div>
 
         {/* Category badge */}

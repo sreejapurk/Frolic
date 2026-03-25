@@ -29,6 +29,13 @@ function CheckoutForm({ classData, classId }: { classData: any; classId: string 
   const locationOptions: string[] = classData.location_types || (classData.location_type ? [classData.location_type] : [])
   const [selectedLocation, setSelectedLocation] = useState(locationOptions[0] || '')
 
+  const locationPrice = (loc: string): number => {
+    if (loc === 'location' && classData.price_location) return Number(classData.price_location)
+    if (loc === 'online' && classData.price_online) return Number(classData.price_online)
+    if (loc === 'residence' && classData.price_residence) return Number(classData.price_residence)
+    return Number(classData.price) || 0
+  }
+
   const handleChange = (e: any) => setForm(f => ({ ...f, [e.target.name]: e.target.value }))
 
   const handleSubmit = async () => {
@@ -47,11 +54,12 @@ function CheckoutForm({ classData, classId }: { classData: any; classId: string 
     setProcessing(true)
     setCardError('')
     try {
+      const basePrice = locationPrice(selectedLocation)
       const res = await fetch('/api/create-payment-intent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          amount: (classData.price + 2) * 100,
+          amount: (basePrice + 2) * 100,
           classId,
           className: classData.title,
           customerInfo: form,
@@ -84,7 +92,7 @@ function CheckoutForm({ classData, classId }: { classData: any; classId: string 
             lastName: form.lastName,
             email: form.email,
             phone: form.phone,
-            amount: classData.price + 2,
+            amount: basePrice + 2,
             locationPreference: selectedLocation,
             stripePaymentId: result.paymentIntent?.id,
           }),
@@ -98,7 +106,7 @@ function CheckoutForm({ classData, classId }: { classData: any; classId: string 
     }
   }
 
-  const total = classData.price + 2
+  const total = locationPrice(selectedLocation) + 2
   const inputStyle = { width: '100%', backgroundColor: '#0F1624', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '12px 16px', color: 'white', outline: 'none', fontSize: '14px' }
 
   return (
@@ -112,11 +120,15 @@ function CheckoutForm({ classData, classId }: { classData: any; classId: string 
               {locationOptions.map((opt: string) => {
                 const label = opt === 'online' ? '🌐 Online' : opt === 'residence' ? '🏠 At my home' : opt === 'location' ? `📍 At the instructor's location${classData.room ? ` — ${classData.room}` : ''}` : opt
                 const selected = selectedLocation === opt
+                const price = locationPrice(opt)
                 return (
                   <button key={opt} type="button" onClick={() => setSelectedLocation(opt)}
-                    style={{ textAlign: 'left', padding: '14px 16px', borderRadius: '12px', cursor: 'pointer', border: selected ? '2px solid #F97316' : '1px solid rgba(255,255,255,0.1)', backgroundColor: selected ? 'rgba(249,115,22,0.08)' : 'transparent', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{ width: '18px', height: '18px', borderRadius: '50%', border: selected ? '2px solid #F97316' : '2px solid rgba(255,255,255,0.2)', backgroundColor: selected ? '#F97316' : 'transparent', flexShrink: 0 }} />
-                    <span style={{ color: selected ? '#F97316' : 'white', fontWeight: '600', fontSize: '14px' }}>{label}</span>
+                    style={{ textAlign: 'left', padding: '14px 16px', borderRadius: '12px', cursor: 'pointer', border: selected ? '2px solid #F97316' : '1px solid rgba(255,255,255,0.1)', backgroundColor: selected ? 'rgba(249,115,22,0.08)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div style={{ width: '18px', height: '18px', borderRadius: '50%', border: selected ? '2px solid #F97316' : '2px solid rgba(255,255,255,0.2)', backgroundColor: selected ? '#F97316' : 'transparent', flexShrink: 0 }} />
+                      <span style={{ color: selected ? '#F97316' : 'white', fontWeight: '600', fontSize: '14px' }}>{label}</span>
+                    </div>
+                    <span style={{ color: selected ? '#F97316' : '#9CA3AF', fontWeight: '700', fontSize: '15px' }}>${price}</span>
                   </button>
                 )
               })}
@@ -186,7 +198,7 @@ function CheckoutForm({ classData, classId }: { classData: any; classId: string 
           </div>
           <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '20px', display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', marginBottom: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: '#9CA3AF' }}>Class fee:</span><span style={{ color: 'white' }}>${classData.price}</span>
+              <span style={{ color: '#9CA3AF' }}>Class fee:</span><span style={{ color: 'white' }}>${locationPrice(selectedLocation)}</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span style={{ color: '#9CA3AF' }}>Service fee:</span><span style={{ color: 'white' }}>$2.00</span>
