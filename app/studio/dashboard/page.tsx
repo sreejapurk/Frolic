@@ -8,7 +8,7 @@ import Link from 'next/link'
 const EMPTY_CLASS = {
   title: '', category: 'Sports', price: '', level: 'Beginner',
   date: '', time: '', spots: '',
-  rating: '4.9', image: '', instructor: '', room: '', room_maps_url: '', recurring: false, description: '',
+  rating: '4.9', image: '', instructor: '', room: '', room_maps_url: '', recurring: false, description: '', location_type: 'location', location_types: [] as string[],
 }
 
 const inputStyle = { width: '100%', backgroundColor: '#0F1624', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '12px 16px', color: 'white', outline: 'none', fontSize: '14px', boxSizing: 'border-box' as const }
@@ -107,13 +107,45 @@ function ClassForm({ data, setData, onSave, saving, saveLabel }: any) {
         <textarea value={data.description || ''} onChange={e => setData((d: any) => ({ ...d, description: e.target.value }))} placeholder="Describe what students can expect..." rows={3} style={{ ...inputStyle, resize: 'vertical' as const }} />
       </div>
       <div>
-        <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Location</label>
-        <LocationInput
-          key={data.id || 'new'}
-          initialValue={data.room || ''}
-          mapsUrl={data.room_maps_url || ''}
-          onSelect={(room, url) => setData((d: any) => ({ ...d, room, room_maps_url: url }))}
-        />
+        <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Where does the class take place?</label>
+        <p style={{ color: '#6B7280', fontSize: '12px', marginBottom: '10px' }}>Select all that apply</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {[
+            { value: 'location', label: 'One Location', sub: 'Class is held at a fixed address' },
+            { value: 'online', label: 'Online', sub: 'Virtual class — link shared after booking' },
+            { value: 'residence', label: 'Can Come to Your Residence', sub: 'Instructor travels to the student' },
+          ].map(opt => {
+            const types: string[] = data.location_types || []
+            const selected = types.includes(opt.value)
+            const toggle = () => {
+              const next = selected ? types.filter((t: string) => t !== opt.value) : [...types, opt.value]
+              setData((d: any) => ({ ...d, location_types: next, location_type: next[0] || 'location' }))
+            }
+            return (
+              <button key={opt.value} type="button" onClick={toggle}
+                style={{ textAlign: 'left', padding: '12px 16px', borderRadius: '10px', cursor: 'pointer', border: selected ? '2px solid #F97316' : '1px solid rgba(255,255,255,0.1)', backgroundColor: selected ? 'rgba(249,115,22,0.08)' : 'transparent', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ width: '18px', height: '18px', borderRadius: '4px', border: selected ? '2px solid #F97316' : '2px solid rgba(255,255,255,0.2)', backgroundColor: selected ? '#F97316' : 'transparent', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {selected && <span style={{ color: 'white', fontSize: '11px', fontWeight: '900' }}>✓</span>}
+                </div>
+                <div>
+                  <span style={{ color: selected ? '#F97316' : 'white', fontWeight: '600', fontSize: '14px', display: 'block' }}>{opt.label}</span>
+                  <span style={{ color: '#6B7280', fontSize: '12px' }}>{opt.sub}</span>
+                </div>
+              </button>
+            )
+          })}
+        </div>
+        {(data.location_types || []).includes('location') && (
+          <div style={{ marginTop: '12px' }}>
+            <label style={{ color: '#9CA3AF', fontSize: '13px', display: 'block', marginBottom: '6px' }}>Address</label>
+            <LocationInput
+              key={data.id || 'new'}
+              initialValue={data.room || ''}
+              mapsUrl={data.room_maps_url || ''}
+              onSelect={(room, url) => setData((d: any) => ({ ...d, room, room_maps_url: url }))}
+            />
+          </div>
+        )}
       </div>
       <div>
         <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Class Image</label>

@@ -17,6 +17,10 @@ interface ClassCardProps {
   category: string
   instructor?: string
   description?: string
+  location_type?: string
+  location_types?: string[]
+  room?: string
+  room_maps_url?: string
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -26,7 +30,14 @@ const CATEGORY_COLORS: Record<string, string> = {
 }
 
 export default function ClassCard(props: ClassCardProps) {
-  const { id, title, studio, price, level, duration, date, time, spots_left, distance, rating, image, category, instructor, description } = props
+  const { id, title, studio, price, level, duration, date, time, spots_left, distance, rating, image, category, instructor, description, location_types, room, room_maps_url } = props
+
+  const types: string[] = location_types || []
+  const locationTags = [
+    types.includes('online') ? '🌐 Online' : null,
+    types.includes('residence') ? '🏠 At your home' : null,
+    types.includes('location') && room ? null : null, // shown separately with link
+  ].filter(Boolean)
   const isSoldOut = spots_left === 0
   const isLow = spots_left > 0 && spots_left <= 3
   const categoryColor = CATEGORY_COLORS[category] || '#F97316'
@@ -91,6 +102,20 @@ export default function ClassCard(props: ClassCardProps) {
         <p style={{ color: '#6B7280', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
           <span>📅</span> {date} · {time}
         </p>
+        {(types.includes('location') && room) && (
+          <p style={{ fontSize: '13px', color: '#6B7280' }}>
+            {room_maps_url
+              ? <a href={room_maps_url} target="_blank" rel="noopener noreferrer" style={{ color: '#60A5FA', textDecoration: 'none' }}>📍 {room}</a>
+              : `📍 ${room}`}
+          </p>
+        )}
+        {locationTags.length > 0 && (
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+            {locationTags.map((tag, i) => (
+              <span key={i} style={{ fontSize: '12px', color: '#9CA3AF', backgroundColor: 'rgba(255,255,255,0.06)', padding: '2px 10px', borderRadius: '999px' }}>{tag}</span>
+            ))}
+          </div>
+        )}
 
         <div style={{ marginTop: 'auto', paddingTop: '4px' }}>
           {isSoldOut ? (
