@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db'
 import { getStudioSession } from '@/lib/studio-auth'
 import { v4 as uuidv4 } from 'uuid'
+import { generateAndStoreImage } from '@/lib/generate-image'
 
 export async function GET() {
   const session = await getStudioSession()
@@ -21,13 +22,20 @@ export async function POST(req: NextRequest) {
   try {
     const data = await req.json()
     const id = uuidv4()
+    // Auto-generate image if none provided
+    let image = data.image || ''
+    if (!image) {
+      const generated = await generateAndStoreImage(data.title || '', data.category || '', data.subcategory || '')
+      if (generated) image = generated
+    }
+
     const result = await query(
       `INSERT INTO classes (id, title, studio, category, subcategory, price, level, duration, date, time, spots, spots_left, distance, rating, image, instructor, room, room_maps_url, studio_user_id, recurring, status, description, location_type, location_types, price_location, price_online, price_residence)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, 'active', $21, $22, $23, $24, $25, $26)
        RETURNING *`,
       [id, data.title, session.studioName, data.category, data.subcategory || null, data.price, data.level,
        data.duration || '', data.date, data.time, data.spots, data.spots,
-       data.distance || '', data.rating || '4.9', data.image || '', data.instructor, data.room, data.room_maps_url || null, session.studioId, data.recurring ?? false, data.description || null, data.location_type || 'location', data.location_types || null,
+       data.distance || '', data.rating || '4.9', image, data.instructor, data.room, data.room_maps_url || null, session.studioId, data.recurring ?? false, data.description || null, data.location_type || 'location', data.location_types || null,
        data.price_location || null, data.price_online || null, data.price_residence || null]
     )
     return NextResponse.json(result.rows[0])
