@@ -5,10 +5,16 @@ import ClassCard from '@/components/ClassCard'
 
 const CATEGORIES = ['All', 'Sports', 'Music', 'Dance']
 
+const SUBCATEGORIES: Record<string, string[]> = {
+  Music: ['Piano', 'Guitar', 'Vocals', 'Drums', 'Violin', 'Flute', 'Ukulele', 'Bass', 'Saxophone', 'Trumpet', 'Keyboard', 'Harp'],
+  Sports: ['Basketball', 'Soccer', 'Tennis', 'Swimming', 'Yoga', 'Pilates', 'Boxing', 'Martial Arts', 'Golf', 'Running', 'Cycling', 'CrossFit', 'Gymnastics', 'Skating'],
+  Dance: ['Ballet', 'Hip Hop', 'Salsa', 'Contemporary', 'Ballroom', 'Jazz', 'Tap', 'K-Pop', 'Zumba', 'Swing', 'Belly Dance', 'Flamenco'],
+}
 
 export default function HomePage() {
   const [classes, setClasses] = useState<any[]>([])
   const [activeCategory, setActiveCategory] = useState('All')
+  const [activeSubcategory, setActiveSubcategory] = useState('')
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
 
@@ -19,16 +25,25 @@ export default function HomePage() {
       .catch(() => setLoading(false))
   }, [])
 
+  const handleCategoryChange = (cat: string) => {
+    setActiveCategory(cat)
+    setActiveSubcategory('')
+  }
+
+  const subcategories = activeCategory !== 'All' ? (SUBCATEGORIES[activeCategory] || []) : []
+
   const filtered = useMemo(() => {
     return classes.filter(c => {
       const matchCat = activeCategory === 'All' || c.category === activeCategory
+      const matchSub = !activeSubcategory || c.subcategory === activeSubcategory
       const matchSearch = !search ||
         c.title?.toLowerCase().includes(search.toLowerCase()) ||
         c.studio?.toLowerCase().includes(search.toLowerCase()) ||
-        c.instructor?.toLowerCase().includes(search.toLowerCase())
-      return matchCat && matchSearch
+        c.instructor?.toLowerCase().includes(search.toLowerCase()) ||
+        c.subcategory?.toLowerCase().includes(search.toLowerCase())
+      return matchCat && matchSub && matchSearch
     })
-  }, [classes, activeCategory, search])
+  }, [classes, activeCategory, activeSubcategory, search])
 
   return (
     <main style={{ minHeight: '100vh', backgroundColor: '#0A0F1A' }}>
@@ -73,11 +88,11 @@ export default function HomePage() {
       {/* Classes section */}
       <section className="section" style={{ padding: '40px 24px 80px' }}>
         {/* Category filters */}
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '32px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '8px', marginBottom: subcategories.length > 0 ? '12px' : '32px', flexWrap: 'wrap' }}>
           {CATEGORIES.map(cat => (
             <button
               key={cat}
-              onClick={() => setActiveCategory(cat)}
+              onClick={() => handleCategoryChange(cat)}
               style={{
                 padding: '9px 20px',
                 borderRadius: '9999px',
@@ -96,11 +111,52 @@ export default function HomePage() {
           ))}
         </div>
 
+        {/* Subcategory filters */}
+        {subcategories.length > 0 && (
+          <div style={{ display: 'flex', gap: '6px', marginBottom: '32px', flexWrap: 'wrap', paddingLeft: '4px' }}>
+            <button
+              onClick={() => setActiveSubcategory('')}
+              style={{
+                padding: '6px 14px',
+                borderRadius: '9999px',
+                fontSize: '13px',
+                fontWeight: '500',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                border: !activeSubcategory ? '1px solid #F97316' : '1px solid rgba(255,255,255,0.08)',
+                backgroundColor: !activeSubcategory ? 'rgba(249,115,22,0.12)' : 'rgba(255,255,255,0.03)',
+                color: !activeSubcategory ? '#F97316' : '#6B7280',
+              }}
+            >
+              All {activeCategory}
+            </button>
+            {subcategories.map(sub => (
+              <button
+                key={sub}
+                onClick={() => setActiveSubcategory(sub === activeSubcategory ? '' : sub)}
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: '9999px',
+                  fontSize: '13px',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  border: activeSubcategory === sub ? '1px solid #F97316' : '1px solid rgba(255,255,255,0.08)',
+                  backgroundColor: activeSubcategory === sub ? 'rgba(249,115,22,0.12)' : 'rgba(255,255,255,0.03)',
+                  color: activeSubcategory === sub ? '#F97316' : '#6B7280',
+                }}
+              >
+                {sub}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Header row */}
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '8px' }}>
           <div>
             <h2 style={{ fontSize: '26px', fontWeight: '800', color: 'white', letterSpacing: '-0.5px', margin: 0 }}>
-              {activeCategory === 'All' ? 'All Classes' : `${activeCategory} Classes`}
+              {activeSubcategory ? `${activeSubcategory} Classes` : activeCategory === 'All' ? 'All Classes' : `${activeCategory} Classes`}
             </h2>
           </div>
           {!loading && (

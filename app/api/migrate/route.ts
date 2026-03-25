@@ -14,6 +14,7 @@ export async function GET() {
     await query(`ALTER TABLE classes ADD COLUMN IF NOT EXISTS price_location NUMERIC`)
     await query(`ALTER TABLE classes ADD COLUMN IF NOT EXISTS price_online NUMERIC`)
     await query(`ALTER TABLE classes ADD COLUMN IF NOT EXISTS price_residence NUMERIC`)
+    await query(`ALTER TABLE classes ADD COLUMN IF NOT EXISTS subcategory TEXT`)
     await query(`UPDATE classes SET status = 'active' WHERE status IS NULL OR status = '' OR status = 'deleted'`)
     return NextResponse.json({ message: 'Migration successful' })
   } catch (error) {

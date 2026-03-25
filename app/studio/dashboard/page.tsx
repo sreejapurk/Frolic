@@ -6,10 +6,16 @@ import Link from 'next/link'
 
 
 const EMPTY_CLASS = {
-  title: '', category: 'Sports', price: '', level: 'Beginner',
+  title: '', category: 'Sports', subcategory: '', price: '', level: 'Beginner',
   date: '', time: '', spots: '',
   rating: '4.9', image: '', instructor: '', room: '', room_maps_url: '', recurring: false, description: '', location_type: 'location', location_types: [] as string[],
   price_location: '', price_online: '', price_residence: '',
+}
+
+const SUBCATEGORIES: Record<string, string[]> = {
+  Music: ['Piano', 'Guitar', 'Vocals', 'Drums', 'Violin', 'Flute', 'Ukulele', 'Bass', 'Saxophone', 'Trumpet', 'Keyboard', 'Harp'],
+  Sports: ['Basketball', 'Soccer', 'Tennis', 'Swimming', 'Yoga', 'Pilates', 'Boxing', 'Martial Arts', 'Golf', 'Running', 'Cycling', 'CrossFit', 'Gymnastics', 'Skating'],
+  Dance: ['Ballet', 'Hip Hop', 'Salsa', 'Contemporary', 'Ballroom', 'Jazz', 'Tap', 'K-Pop', 'Zumba', 'Swing', 'Belly Dance', 'Flamenco'],
 }
 
 const inputStyle = { width: '100%', backgroundColor: '#0F1624', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '12px 16px', color: 'white', outline: 'none', fontSize: '14px', boxSizing: 'border-box' as const }
@@ -170,16 +176,23 @@ function ClassForm({ data, setData, onSave, saving, saveLabel }: any) {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
         <div>
           <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Category</label>
-          <select value={data.category} onChange={e => setData((d: any) => ({ ...d, category: e.target.value }))} style={inputStyle}>
+          <select value={data.category} onChange={e => setData((d: any) => ({ ...d, category: e.target.value, subcategory: '' }))} style={inputStyle}>
             {['Sports', 'Music', 'Dance'].map(c => <option key={c}>{c}</option>)}
           </select>
         </div>
         <div>
-          <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Level</label>
-          <select value={data.level} onChange={e => setData((d: any) => ({ ...d, level: e.target.value }))} style={inputStyle}>
-            {['Beginner', 'Intermediate', 'Advanced', 'All Levels', 'Kids'].map(l => <option key={l}>{l}</option>)}
+          <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Subcategory</label>
+          <select value={data.subcategory || ''} onChange={e => setData((d: any) => ({ ...d, subcategory: e.target.value }))} style={inputStyle}>
+            <option value="">— Select —</option>
+            {(SUBCATEGORIES[data.category] || []).map((s: string) => <option key={s}>{s}</option>)}
           </select>
         </div>
+      </div>
+      <div>
+        <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Level</label>
+        <select value={data.level} onChange={e => setData((d: any) => ({ ...d, level: e.target.value }))} style={inputStyle}>
+          {['Beginner', 'Intermediate', 'Advanced', 'All Levels', 'Kids'].map(l => <option key={l}>{l}</option>)}
+        </select>
       </div>
       <button onClick={onSave} disabled={saving} style={{ width: '100%', backgroundColor: '#F97316', border: 'none', color: 'white', padding: '16px', borderRadius: '16px', fontWeight: 'bold', fontSize: '18px', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1, marginTop: '8px' }}>
         {saving ? 'Saving...' : saveLabel}
