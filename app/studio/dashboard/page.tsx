@@ -225,7 +225,7 @@ export default function StudioDashboard() {
   const [stripeStatus, setStripeStatus] = useState<any>(null)
   const [stripeDismissed, setStripeDismissed] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [tab, setTab] = useState<'classes' | 'add' | 'edit' | 'earnings' | 'import'>('classes')
+  const [tab, setTab] = useState<'classes' | 'add' | 'edit' | 'earnings'>('classes')
   const [newClass, setNewClass] = useState({ ...EMPTY_CLASS })
   const [editingClass, setEditingClass] = useState<any>(null)
   const [saving, setSaving] = useState(false)
@@ -258,7 +258,7 @@ export default function StudioDashboard() {
   const handleTabChange = (t: typeof tab) => {
     setTab(t)
     if (t === 'earnings' && !earnings) loadEarnings()
-    if (t !== 'import') { setImportStep('upload'); setImportRows([]); setRawRows([]); setRawColumns([]) }
+    if (t !== 'add') { setImportStep('upload'); setImportRows([]); setRawRows([]); setRawColumns([]) }
   }
 
   const handleStripeConnect = async () => {
@@ -404,7 +404,6 @@ export default function StudioDashboard() {
           {tabBtn('classes', 'My Classes')}
           {tabBtn('earnings', '💰 Earnings')}
           {tabBtn('add', '+ Add Class')}
-          {tabBtn('import', '📥 Import')}
         </div>
         <button onClick={handleLogout} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.2)', color: '#9CA3AF', padding: '8px 16px', borderRadius: '999px', fontSize: '14px', cursor: 'pointer' }}>Log Out</button>
       </nav>
@@ -508,29 +507,23 @@ export default function StudioDashboard() {
         {tab === 'add' && (
           <div style={{ maxWidth: '600px' }}>
             <h2 style={{ color: 'white', fontWeight: '900', fontSize: '24px', marginBottom: '24px' }}>Add New Class</h2>
-            <ClassForm data={newClass} setData={setNewClass} onSave={handleAdd} saving={saving} saveLabel="Add Class" />
-          </div>
-        )}
 
-        {tab === 'edit' && editingClass && (
-          <div style={{ maxWidth: '600px' }}>
-            <h2 style={{ color: 'white', fontWeight: '900', fontSize: '24px', marginBottom: '24px' }}>Edit Class</h2>
-            <ClassForm data={editingClass} setData={setEditingClass} onSave={handleEdit} saving={saving} saveLabel="Save Changes" />
-          </div>
-        )}
-
-        {tab === 'import' && (
-          <div>
-            <h2 style={{ color: 'white', fontWeight: '900', fontSize: '24px', marginBottom: '8px' }}>Import Classes</h2>
-            <p style={{ color: '#9CA3AF', fontSize: '14px', marginBottom: '32px' }}>Upload any existing Excel or CSV file — we'll detect your columns and map them automatically.</p>
-
+            {/* Import from Excel */}
             {importStep === 'upload' && (
-              <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '2px dashed rgba(249,115,22,0.4)', borderRadius: '16px', padding: '48px 24px', cursor: 'pointer', backgroundColor: 'rgba(249,115,22,0.04)', gap: '12px' }}>
-                <span style={{ fontSize: '40px' }}>📂</span>
-                <span style={{ color: 'white', fontWeight: '700', fontSize: '18px' }}>Click to upload your Excel or CSV file</span>
-                <span style={{ color: '#6B7280', fontSize: '14px' }}>Supports .xlsx, .xls, .csv — any format works</span>
-                <input type="file" accept=".xlsx,.xls,.csv" onChange={handleImportFile} style={{ display: 'none' }} />
-              </label>
+              <>
+                <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '2px dashed rgba(249,115,22,0.4)', borderRadius: '16px', padding: '28px 24px', cursor: 'pointer', backgroundColor: 'rgba(249,115,22,0.04)', gap: '8px', marginBottom: '24px' }}>
+                  <span style={{ fontSize: '28px' }}>📂</span>
+                  <span style={{ color: 'white', fontWeight: '700', fontSize: '16px' }}>Import from Excel</span>
+                  <span style={{ color: '#6B7280', fontSize: '13px' }}>Upload any .xlsx, .xls or .csv — we'll map the columns automatically</span>
+                  <input type="file" accept=".xlsx,.xls,.csv" onChange={handleImportFile} style={{ display: 'none' }} />
+                </label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+                  <div style={{ flex: 1, height: '1px', backgroundColor: 'rgba(255,255,255,0.08)' }} />
+                  <span style={{ color: '#4B5563', fontSize: '13px' }}>or fill in manually</span>
+                  <div style={{ flex: 1, height: '1px', backgroundColor: 'rgba(255,255,255,0.08)' }} />
+                </div>
+                <ClassForm data={newClass} setData={setNewClass} onSave={handleAdd} saving={saving} saveLabel="Add Class" />
+              </>
             )}
 
             {importStep === 'map' && (
@@ -540,11 +533,7 @@ export default function StudioDashboard() {
                   {FROLIC_FIELDS.map(field => (
                     <div key={field.key} style={{ display: 'grid', gridTemplateColumns: '160px 1fr', alignItems: 'center', gap: '16px' }}>
                       <label style={{ color: 'white', fontSize: '14px', fontWeight: '600' }}>{field.label}</label>
-                      <select
-                        value={columnMap[field.key] || ''}
-                        onChange={e => setColumnMap(m => ({ ...m, [field.key]: e.target.value }))}
-                        style={{ ...inputStyle, color: columnMap[field.key] ? 'white' : '#6B7280' }}
-                      >
+                      <select value={columnMap[field.key] || ''} onChange={e => setColumnMap(m => ({ ...m, [field.key]: e.target.value }))} style={{ ...inputStyle, color: columnMap[field.key] ? 'white' : '#6B7280' }}>
                         <option value="">— skip this field —</option>
                         {rawColumns.map(col => <option key={col} value={col}>{col}</option>)}
                       </select>
@@ -552,12 +541,8 @@ export default function StudioDashboard() {
                   ))}
                 </div>
                 <div style={{ display: 'flex', gap: '12px' }}>
-                  <button onClick={() => { setImportStep('upload'); setRawRows([]); setRawColumns([]) }} style={{ backgroundColor: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: 'white', padding: '12px 24px', borderRadius: '10px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
-                    Back
-                  </button>
-                  <button onClick={applyMapping} style={{ backgroundColor: '#F97316', border: 'none', color: 'white', padding: '12px 28px', borderRadius: '10px', fontSize: '14px', fontWeight: '700', cursor: 'pointer' }}>
-                    Preview {rawRows.length} Class{rawRows.length !== 1 ? 'es' : ''} →
-                  </button>
+                  <button onClick={() => { setImportStep('upload'); setRawRows([]); setRawColumns([]) }} style={{ backgroundColor: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: 'white', padding: '12px 24px', borderRadius: '10px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>Back</button>
+                  <button onClick={applyMapping} style={{ backgroundColor: '#F97316', border: 'none', color: 'white', padding: '12px 28px', borderRadius: '10px', fontSize: '14px', fontWeight: '700', cursor: 'pointer' }}>Preview {rawRows.length} Class{rawRows.length !== 1 ? 'es' : ''} →</button>
                 </div>
               </div>
             )}
@@ -574,11 +559,7 @@ export default function StudioDashboard() {
                       {FROLIC_FIELDS.map(f => (
                         <div key={f.key}>
                           <label style={{ color: '#6B7280', fontSize: '11px', display: 'block', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{f.label}</label>
-                          <input
-                            value={row[f.key]}
-                            onChange={e => setImportRows(rows => rows.map((r, j) => j === i ? { ...r, [f.key]: e.target.value } : r))}
-                            style={{ width: '100%', backgroundColor: '#0F1624', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '8px 12px', color: 'white', outline: 'none', fontSize: '13px', boxSizing: 'border-box' as const }}
-                          />
+                          <input value={row[f.key]} onChange={e => setImportRows(rows => rows.map((r, j) => j === i ? { ...r, [f.key]: e.target.value } : r))} style={{ width: '100%', backgroundColor: '#0F1624', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '8px 12px', color: 'white', outline: 'none', fontSize: '13px', boxSizing: 'border-box' as const }} />
                         </div>
                       ))}
                       <div style={{ display: 'flex', alignItems: 'flex-end' }}>
@@ -594,6 +575,14 @@ export default function StudioDashboard() {
             )}
           </div>
         )}
+
+        {tab === 'edit' && editingClass && (
+          <div style={{ maxWidth: '600px' }}>
+            <h2 style={{ color: 'white', fontWeight: '900', fontSize: '24px', marginBottom: '24px' }}>Edit Class</h2>
+            <ClassForm data={editingClass} setData={setEditingClass} onSave={handleEdit} saving={saving} saveLabel="Save Changes" />
+          </div>
+        )}
+
       </div>
     </div>
   )
