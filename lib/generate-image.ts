@@ -68,8 +68,8 @@ export async function generateAndStoreImage(title: string, category: string, sub
       [b64, mimeType]
     )
     return `/api/images/${result.rows[0].id}`
-  } catch (err) {
-    console.error('Image generation failed:', err)
-    return null
+  } catch (err: any) {
+    console.error('Image generation failed:', err?.message || err)
+    throw err
   }
 }

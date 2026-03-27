@@ -13,17 +13,21 @@ export async function GET() {
   )
 
   let success = 0
-  const errors: string[] = []
+  const errors: { title: string, error: string }[] = []
 
   for (const row of result.rows) {
-    const imageUrl = await generateAndStoreImage(row.title || '', row.category || '', row.subcategory || '')
-    if (imageUrl) {
-      await query(`UPDATE classes SET image = $1 WHERE id = $2`, [imageUrl, row.id])
-      success++
-    } else {
-      errors.push(row.title)
+    try {
+      const imageUrl = await generateAndStoreImage(row.title || '', row.category || '', row.subcategory || '')
+      if (imageUrl) {
+        await query(`UPDATE classes SET image = $1 WHERE id = $2`, [imageUrl, row.id])
+        success++
+      } else {
+        errors.push({ title: row.title, error: 'returned null' })
+      }
+    } catch (err: any) {
+      errors.push({ title: row.title, error: err?.message || String(err) })
     }
   }
 
-  return NextResponse.json({ generated: success, total: result.rows.length, failed: errors })
+  return NextResponse.json({ generated: success, total: result.rows.length, errors })
 }
