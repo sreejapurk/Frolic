@@ -94,7 +94,7 @@ export default function ClassCard(props: ClassCardProps) {
         <div>
           <h3 style={{ color: 'white', fontWeight: '800', fontSize: '17px', marginBottom: '4px', lineHeight: '1.3', letterSpacing: '-0.2px' }}>{title}</h3>
           <p style={{ color: '#9CA3AF', fontSize: '13px', fontWeight: '500' }}>{studio}{instructor ? ` · ${instructor}` : ''}</p>
-          {description && <p style={{ color: '#6B7280', fontSize: '13px', marginTop: '6px', lineHeight: '1.5', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' }}>{description}</p>}
+          {description && <p style={{ color: '#6B7280', fontSize: '13px', marginTop: '6px', lineHeight: '1.5' }}>{description}</p>}
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
