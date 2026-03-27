@@ -13,11 +13,11 @@ export default function ForStudiosPage() {
     <main style={{ minHeight: '100vh', backgroundColor: '#0F1624' }}>
       <Navbar />
       <section style={{ maxWidth: '900px', margin: '0 auto', padding: '64px 24px' }}>
-        <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginBottom: '64px' }}>
-          <Link href="/studio/login" style={{ backgroundColor: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: 'white', padding: '14px 32px', borderRadius: '12px', fontWeight: '700', fontSize: '16px', textDecoration: 'none' }}>
+        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '64px' }}>
+          <Link href="/studio/login" style={{ backgroundColor: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: '#9CA3AF', padding: '8px 18px', borderRadius: '9px', fontWeight: '600', fontSize: '14px', textDecoration: 'none' }}>
             Studio Login
           </Link>
-          <Link href="/studio/signup" style={{ backgroundColor: '#F97316', border: 'none', color: 'white', padding: '14px 32px', borderRadius: '12px', fontWeight: '700', fontSize: '16px', textDecoration: 'none' }}>
+          <Link href="/studio/signup" style={{ backgroundColor: '#F97316', border: 'none', color: 'white', padding: '8px 18px', borderRadius: '9px', fontWeight: '700', fontSize: '14px', textDecoration: 'none' }}>
             List Your Studio
           </Link>
         </div>
