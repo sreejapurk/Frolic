@@ -25,60 +25,57 @@ export default function Navbar() {
 
   return (
     <nav className="navbar">
-      <div className="section" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '64px' }}>
-        <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '22px', fontWeight: '900', color: 'white', letterSpacing: '-0.5px' }}>
-            Frolic
-          </span>
+      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '56px', gap: '8px' }}>
+
+        {/* Logo */}
+        <Link href="/" style={{ textDecoration: 'none', flexShrink: 0 }}>
+          <span style={{ fontSize: '20px', fontWeight: '900', color: 'white', letterSpacing: '-0.5px' }}>Frolic</span>
         </Link>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(255,255,255,0.04)', borderRadius: '12px', padding: '4px', border: '1px solid rgba(255,255,255,0.08)' }}>
-          <Link
-            href="/"
-            style={{ padding: '7px 18px', borderRadius: '9px', fontSize: '14px', fontWeight: '600', textDecoration: 'none', transition: 'all 0.2s ease', backgroundColor: !isStudios ? '#F97316' : 'transparent', color: !isStudios ? 'white' : '#9CA3AF' }}
-          >
+        {/* Center toggle */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '2px', background: 'rgba(255,255,255,0.04)', borderRadius: '10px', padding: '3px', border: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>
+          <Link href="/" style={{ padding: '5px 12px', borderRadius: '7px', fontSize: '13px', fontWeight: '600', textDecoration: 'none', whiteSpace: 'nowrap', backgroundColor: !isStudios ? '#F97316' : 'transparent', color: !isStudios ? 'white' : '#9CA3AF' }}>
             Search
           </Link>
-          <Link
-            href="/for-studios"
-            style={{ padding: '7px 18px', borderRadius: '9px', fontSize: '14px', fontWeight: '600', textDecoration: 'none', transition: 'all 0.2s ease', backgroundColor: isStudios ? '#F97316' : 'transparent', color: isStudios ? 'white' : '#9CA3AF' }}
-          >
+          <Link href="/for-studios" style={{ padding: '5px 12px', borderRadius: '7px', fontSize: '13px', fontWeight: '600', textDecoration: 'none', whiteSpace: 'nowrap', backgroundColor: isStudios ? '#F97316' : 'transparent', color: isStudios ? 'white' : '#9CA3AF' }}>
             For Studios
           </Link>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        {/* Right buttons */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
           {isStudios ? (
             <>
-              <Link href="/studio/login" style={{ textDecoration: 'none', fontSize: '14px', fontWeight: '600', color: '#9CA3AF', padding: '8px 16px', borderRadius: '9px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                Studio Login
+              <Link href="/studio/login" style={{ textDecoration: 'none', fontSize: '13px', fontWeight: '600', color: '#9CA3AF', padding: '6px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', whiteSpace: 'nowrap' }}>
+                Log In
               </Link>
-              <Link href="/studio/signup" style={{ background: '#F97316', color: 'white', padding: '8px 18px', borderRadius: '9px', fontSize: '14px', fontWeight: '700', textDecoration: 'none' }}>
-                List Your Studio
+              <Link href="/studio/signup" style={{ background: '#F97316', color: 'white', padding: '6px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: '700', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                Sign Up
               </Link>
             </>
           ) : checked && (
             customer ? (
               <>
-                <Link href="/account" style={{ textDecoration: 'none', fontSize: '14px', fontWeight: '600', color: '#9CA3AF', padding: '8px 16px', borderRadius: '9px' }}>
+                <Link href="/account" style={{ textDecoration: 'none', fontSize: '13px', fontWeight: '600', color: '#9CA3AF', padding: '6px 12px', borderRadius: '8px', whiteSpace: 'nowrap' }}>
                   Hi, {customer.first_name}
                 </Link>
-                <button onClick={handleLogout} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.15)', color: '#9CA3AF', padding: '8px 16px', borderRadius: '9px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
+                <button onClick={handleLogout} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.15)', color: '#9CA3AF', padding: '6px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap' }}>
                   Log Out
                 </button>
               </>
             ) : (
               <>
-                <Link href="/login" style={{ textDecoration: 'none', fontSize: '14px', fontWeight: '600', color: '#9CA3AF', padding: '8px 16px', borderRadius: '9px' }}>
+                <Link href="/login" style={{ textDecoration: 'none', fontSize: '13px', fontWeight: '600', color: '#9CA3AF', padding: '6px 12px', borderRadius: '8px', whiteSpace: 'nowrap' }}>
                   Log In
                 </Link>
-                <Link href="/signup" style={{ background: '#F97316', color: 'white', padding: '8px 18px', borderRadius: '9px', fontSize: '14px', fontWeight: '700', textDecoration: 'none' }}>
+                <Link href="/signup" style={{ background: '#F97316', color: 'white', padding: '6px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: '700', textDecoration: 'none', whiteSpace: 'nowrap' }}>
                   Sign Up
                 </Link>
               </>
             )
           )}
         </div>
+
       </div>
     </nav>
   )
