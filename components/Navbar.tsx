@@ -48,34 +48,31 @@ export default function Navbar() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          {checked && (
+          {isStudios ? (
+            <>
+              <Link href="/studio/login" style={{ textDecoration: 'none', fontSize: '14px', fontWeight: '600', color: '#9CA3AF', padding: '8px 16px', borderRadius: '9px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                Studio Login
+              </Link>
+              <Link href="/studio/signup" style={{ background: '#F97316', color: 'white', padding: '8px 18px', borderRadius: '9px', fontSize: '14px', fontWeight: '700', textDecoration: 'none' }}>
+                List Your Studio
+              </Link>
+            </>
+          ) : checked && (
             customer ? (
               <>
-                <Link
-                  href="/account"
-                  style={{ textDecoration: 'none', fontSize: '14px', fontWeight: '600', color: '#9CA3AF', padding: '8px 16px', borderRadius: '9px', transition: 'color 0.2s' }}
-                >
+                <Link href="/account" style={{ textDecoration: 'none', fontSize: '14px', fontWeight: '600', color: '#9CA3AF', padding: '8px 16px', borderRadius: '9px' }}>
                   Hi, {customer.first_name}
                 </Link>
-                <button
-                  onClick={handleLogout}
-                  style={{ background: 'none', border: '1px solid rgba(255,255,255,0.15)', color: '#9CA3AF', padding: '8px 16px', borderRadius: '9px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}
-                >
+                <button onClick={handleLogout} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.15)', color: '#9CA3AF', padding: '8px 16px', borderRadius: '9px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
                   Log Out
                 </button>
               </>
             ) : (
               <>
-                <Link
-                  href="/login"
-                  style={{ textDecoration: 'none', fontSize: '14px', fontWeight: '600', color: '#9CA3AF', padding: '8px 16px', borderRadius: '9px' }}
-                >
+                <Link href="/login" style={{ textDecoration: 'none', fontSize: '14px', fontWeight: '600', color: '#9CA3AF', padding: '8px 16px', borderRadius: '9px' }}>
                   Log In
                 </Link>
-                <Link
-                  href="/signup"
-                  style={{ background: '#F97316', color: 'white', padding: '8px 18px', borderRadius: '9px', fontSize: '14px', fontWeight: '700', textDecoration: 'none' }}
-                >
+                <Link href="/signup" style={{ background: '#F97316', color: 'white', padding: '8px 18px', borderRadius: '9px', fontSize: '14px', fontWeight: '700', textDecoration: 'none' }}>
                   Sign Up
                 </Link>
               </>
