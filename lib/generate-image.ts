@@ -56,12 +56,22 @@ export async function generateAndStoreImage(title: string, category: string, sub
     const encoded = encodeURIComponent(prompt)
     const url = `https://image.pollinations.ai/prompt/${encoded}?width=1024&height=768&nologo=true&enhance=true`
 
-    const res = await fetch(url, { signal: AbortSignal.timeout(60000) })
-    if (!res.ok) return null
+    const res = await fetch(url)
+    if (!res.ok) {
+      console.error(`Pollinations returned ${res.status} for prompt: ${prompt.slice(0, 80)}`)
+      return null
+    }
+
+    const contentType = res.headers.get('content-type') || ''
+    if (!contentType.startsWith('image/')) {
+      const text = await res.text()
+      console.error(`Pollinations returned non-image content-type: ${contentType}, body: ${text.slice(0, 200)}`)
+      return null
+    }
 
     const buffer = await res.arrayBuffer()
     const b64 = Buffer.from(buffer).toString('base64')
-    const mimeType = res.headers.get('content-type') || 'image/jpeg'
+    const mimeType = contentType
 
     const result = await query(
       'INSERT INTO images (data, mime_type) VALUES ($1, $2) RETURNING id',

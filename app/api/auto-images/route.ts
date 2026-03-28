@@ -22,7 +22,7 @@ export async function GET() {
         await query(`UPDATE classes SET image = $1 WHERE id = $2`, [imageUrl, row.id])
         success++
       } else {
-        errors.push({ title: row.title, error: 'returned null' })
+        errors.push({ title: row.title, error: 'generate-image returned null — check server logs' })
       }
     } catch (err: any) {
       errors.push({ title: row.title, error: err?.message || String(err) })
