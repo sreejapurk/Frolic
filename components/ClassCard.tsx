@@ -1,5 +1,26 @@
 'use client'
 import Link from 'next/link'
+import { useState } from 'react'
+
+function ExpandableDescription({ description }: { description: string }) {
+  const [expanded, setExpanded] = useState(false)
+  const limit = 80
+  const isLong = description.length > limit
+
+  return (
+    <p style={{ color: '#6B7280', fontSize: '13px', marginTop: '6px', lineHeight: '1.5' }}>
+      {expanded || !isLong ? description : `${description.slice(0, limit).trimEnd()}...`}
+      {isLong && (
+        <button
+          onClick={e => { e.preventDefault(); setExpanded(v => !v) }}
+          style={{ background: 'none', border: 'none', color: '#F97316', fontSize: '12px', fontWeight: '600', cursor: 'pointer', padding: '0 0 0 4px' }}
+        >
+          {expanded ? 'less' : 'more'}
+        </button>
+      )}
+    </p>
+  )
+}
 
 interface ClassCardProps {
   id: string
@@ -94,7 +115,7 @@ export default function ClassCard(props: ClassCardProps) {
         <div>
           <h3 style={{ color: 'white', fontWeight: '800', fontSize: '17px', marginBottom: '4px', lineHeight: '1.3', letterSpacing: '-0.2px' }}>{title}</h3>
           <p style={{ color: '#9CA3AF', fontSize: '13px', fontWeight: '500' }}>{studio}{instructor ? ` · ${instructor}` : ''}</p>
-          {description && <p style={{ color: '#6B7280', fontSize: '13px', marginTop: '6px', lineHeight: '1.5' }}>{description}</p>}
+          {description && <ExpandableDescription description={description} />}
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
