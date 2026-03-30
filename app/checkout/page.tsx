@@ -113,9 +113,9 @@ function CheckoutForm({ classData, classId }: { classData: any; classId: string 
         })
         router.push(`/booking-confirmation?orderId=${orderId}&classId=${classId}`)
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
-      alert('Payment failed. Please try again.')
+      alert(`Payment failed: ${err?.message || err}`)
       setProcessing(false)
     }
   }
