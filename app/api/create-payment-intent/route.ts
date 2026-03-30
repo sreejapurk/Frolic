@@ -36,7 +36,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Only apply Stripe Connect split if studio has connected their account
-    if (studioStripeAccount && studioOnboarded) {
+    // Skip in test mode (test keys can't transfer to live Connect accounts)
+    const isTestMode = process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_')
+    if (studioStripeAccount && studioOnboarded && !isTestMode) {
       intentParams.application_fee_amount = applicationFee
       intentParams.transfer_data = { destination: studioStripeAccount }
     }
