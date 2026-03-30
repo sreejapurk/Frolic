@@ -7,29 +7,35 @@ export async function GET(req: NextRequest) {
 
   if (regenerate) {
     await query(`UPDATE classes SET image = NULL WHERE status IS DISTINCT FROM 'deleted'`, [])
+    return NextResponse.json({ message: 'Images cleared. Now call /api/auto-images repeatedly until remaining reaches 0.' })
   }
 
+  // Process one image at a time to avoid timeouts
   const result = await query(
-    `SELECT id, title, category, subcategory FROM classes WHERE (image IS NULL OR image = '') AND status IS DISTINCT FROM 'deleted'`,
+    `SELECT id, title, category, subcategory FROM classes WHERE (image IS NULL OR image = '') AND status IS DISTINCT FROM 'deleted' LIMIT 1`,
     []
   )
 
-  let success = 0
-  const errors: { title: string, error: string }[] = []
+  const remaining = await query(
+    `SELECT COUNT(*) as count FROM classes WHERE (image IS NULL OR image = '') AND status IS DISTINCT FROM 'deleted'`,
+    []
+  )
+  const totalRemaining = parseInt(remaining.rows[0].count)
 
-  for (const row of result.rows) {
-    try {
-      const imageUrl = await generateAndStoreImage(row.title || '', row.category || '', row.subcategory || '')
-      if (imageUrl) {
-        await query(`UPDATE classes SET image = $1 WHERE id = $2`, [imageUrl, row.id])
-        success++
-      } else {
-        errors.push({ title: row.title, error: 'generate-image returned null — check server logs' })
-      }
-    } catch (err: any) {
-      errors.push({ title: row.title, error: err?.message || String(err) })
-    }
+  if (result.rows.length === 0) {
+    return NextResponse.json({ done: true, message: 'All images generated!' })
   }
 
-  return NextResponse.json({ generated: success, total: result.rows.length, errors })
+  const row = result.rows[0]
+  try {
+    const imageUrl = await generateAndStoreImage(row.title || '', row.category || '', row.subcategory || '')
+    if (imageUrl) {
+      await query(`UPDATE classes SET image = $1 WHERE id = $2`, [imageUrl, row.id])
+      return NextResponse.json({ generated: row.title, remaining: totalRemaining - 1 })
+    } else {
+      return NextResponse.json({ error: 'Image generation returned null', title: row.title, remaining: totalRemaining }, { status: 500 })
+    }
+  } catch (err: any) {
+    return NextResponse.json({ error: err?.message || String(err), title: row.title, remaining: totalRemaining }, { status: 500 })
+  }
 }
