@@ -1,10 +1,12 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db'
 import { generateAndStoreImage } from '@/lib/generate-image'
 
-export async function GET() {
-  if (!process.env.OPENAI_API_KEY) {
-    return NextResponse.json({ error: 'OPENAI_API_KEY not set' }, { status: 500 })
+export async function GET(req: NextRequest) {
+  const regenerate = req.nextUrl.searchParams.get('regenerate') === 'true'
+
+  if (regenerate) {
+    await query(`UPDATE classes SET image = NULL WHERE status IS DISTINCT FROM 'deleted'`, [])
   }
 
   const result = await query(

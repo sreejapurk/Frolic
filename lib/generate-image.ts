@@ -47,14 +47,14 @@ function buildPrompt(title: string, category: string, subcategory: string): stri
   }
 
   const base = prompts[subject] || prompts[category] || `${subject} class in a warm natural setting, candid and realistic`
-  return `${base}, photorealistic, shot on Sony A7, 35mm lens, natural lighting, no text, no watermarks, cinematic`
+  return `${base}, photorealistic documentary photography, shot on Sony A7III 35mm f/1.8, authentic candid moment, natural imperfect lighting, real people not models, no studio backdrop, no text, no watermarks, no logos`
 }
 
 export async function generateAndStoreImage(title: string, category: string, subcategory: string): Promise<string | null> {
   try {
     const prompt = buildPrompt(title, category, subcategory)
     const encoded = encodeURIComponent(prompt)
-    const url = `https://image.pollinations.ai/prompt/${encoded}?width=1024&height=768&nologo=true&enhance=true`
+    const url = `https://image.pollinations.ai/prompt/${encoded}?width=1024&height=768&model=flux&nologo=true&enhance=true`
 
     const res = await fetch(url)
     if (!res.ok) {
