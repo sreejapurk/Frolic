@@ -67,6 +67,33 @@ export async function GET() {
     await query(`ALTER TABLE classes ADD COLUMN IF NOT EXISTS price_online NUMERIC`)
     await query(`ALTER TABLE classes ADD COLUMN IF NOT EXISTS price_residence NUMERIC`)
     await query(`ALTER TABLE classes ADD COLUMN IF NOT EXISTS subcategory TEXT`)
+    await query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS slot_id UUID`)
+    await query(`
+      CREATE TABLE IF NOT EXISTS class_slots (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        class_id UUID REFERENCES classes(id) ON DELETE CASCADE,
+        date TEXT NOT NULL,
+        time TEXT NOT NULL,
+        duration TEXT DEFAULT '60 min',
+        spots INT DEFAULT 10,
+        spots_left INT DEFAULT 10,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `)
+    // Migrate existing classes to have one slot each
+    await query(`
+      INSERT INTO class_slots (class_id, date, time, duration, spots, spots_left)
+      SELECT id, date, time,
+        CASE WHEN duration IS NULL OR duration = '' THEN '60 min' ELSE duration END,
+        CASE WHEN spots IS NULL OR spots = 0 THEN 10 ELSE spots END,
+        CASE WHEN spots_left IS NULL OR spots_left = 0 THEN
+          CASE WHEN spots IS NULL OR spots = 0 THEN 10 ELSE spots END
+        ELSE spots_left END
+      FROM classes
+      WHERE status IS DISTINCT FROM 'deleted'
+        AND date IS NOT NULL AND date != ''
+        AND id NOT IN (SELECT DISTINCT class_id FROM class_slots)
+    `)
     await query(`UPDATE classes SET status = 'active' WHERE status IS NULL OR status = '' OR status = 'deleted'`)
 
     // Auto-detect subcategories for classes that don't have one yet

@@ -28,6 +28,9 @@ function CheckoutForm({ classData, classId }: { classData: any; classId: string 
   const [form, setForm] = useState({ firstName: '', lastName: '', email: '', phone: '' })
   const locationOptions: string[] = classData.location_types || (classData.location_type ? [classData.location_type] : [])
   const [selectedLocation, setSelectedLocation] = useState(locationOptions[0] || '')
+  const availableSlots = (classData.slots || []).filter((s: any) => s.spots_left > 0)
+  const hasSlots = availableSlots.length > 0
+  const [selectedSlot, setSelectedSlot] = useState<any>(availableSlots[0] || null)
 
   const locationPrice = (loc: string): number => {
     if (loc === 'location' && classData.price_location) return Number(classData.price_location)
@@ -41,6 +44,10 @@ function CheckoutForm({ classData, classId }: { classData: any; classId: string 
   const handleSubmit = async () => {
     if (!form.firstName || !form.lastName || !form.email) {
       alert('Please fill in all required fields')
+      return
+    }
+    if (hasSlots && !selectedSlot) {
+      alert('Please select a time slot')
       return
     }
     if (locationOptions.length > 1 && !selectedLocation) {
@@ -94,6 +101,7 @@ function CheckoutForm({ classData, classId }: { classData: any; classId: string 
             phone: form.phone,
             amount: basePrice + 2,
             locationPreference: selectedLocation,
+            slotId: selectedSlot?.id || null,
             stripePaymentId: result.paymentIntent?.id,
           }),
         })
@@ -112,6 +120,29 @@ function CheckoutForm({ classData, classId }: { classData: any; classId: string 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        {hasSlots && availableSlots.length > 1 && (
+          <div style={{ backgroundColor: '#1A2332', borderRadius: '16px', padding: '24px', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <h2 style={{ color: 'white', fontWeight: 'bold', fontSize: '20px', marginBottom: '8px' }}>Choose a Time Slot</h2>
+            <p style={{ color: '#9CA3AF', fontSize: '14px', marginBottom: '16px' }}>Select the date and time that works best for you.</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {availableSlots.map((slot: any) => {
+                const selected = selectedSlot?.id === slot.id
+                return (
+                  <button key={slot.id} type="button" onClick={() => setSelectedSlot(slot)}
+                    style={{ textAlign: 'left', padding: '14px 16px', borderRadius: '12px', cursor: 'pointer', border: selected ? '2px solid #F97316' : '1px solid rgba(255,255,255,0.1)', backgroundColor: selected ? 'rgba(249,115,22,0.08)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div style={{ width: '18px', height: '18px', borderRadius: '50%', border: selected ? '2px solid #F97316' : '2px solid rgba(255,255,255,0.2)', backgroundColor: selected ? '#F97316' : 'transparent', flexShrink: 0 }} />
+                      <div>
+                        <span style={{ color: selected ? '#F97316' : 'white', fontWeight: '600', fontSize: '14px', display: 'block' }}>{slot.date} at {slot.time}</span>
+                        <span style={{ color: '#6B7280', fontSize: '12px' }}>{slot.duration} · {slot.spots_left} spot{slot.spots_left !== 1 ? 's' : ''} left</span>
+                      </div>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
         {locationOptions.length > 1 && (
           <div style={{ backgroundColor: '#1A2332', borderRadius: '16px', padding: '24px', border: '1px solid rgba(255,255,255,0.1)' }}>
             <h2 style={{ color: 'white', fontWeight: 'bold', fontSize: '20px', marginBottom: '8px' }}>Where would you like the class?</h2>
@@ -186,7 +217,7 @@ function CheckoutForm({ classData, classId }: { classData: any; classId: string 
           <p style={{ color: '#9CA3AF', fontSize: '14px', marginBottom: '20px' }}>{classData.studio}</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '14px', marginBottom: '20px' }}>
             {[
-              ['Date & Time', `${classData.date} at ${classData.time}`],
+              ['Date & Time', selectedSlot ? `${selectedSlot.date} at ${selectedSlot.time}` : `${classData.date} at ${classData.time}`],
               ['Location', selectedLocation === 'online' ? 'Online' : selectedLocation === 'residence' ? 'At your home' : classData.room || classData.studio],
               ['Level', classData.level]
             ].map(([label, value]) => (

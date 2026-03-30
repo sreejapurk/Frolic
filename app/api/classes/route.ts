@@ -34,10 +34,26 @@ function nextOccurrence(dateStr: string): string {
 export async function GET() {
   try {
     const result = await query(
-      "SELECT * FROM classes WHERE status IS DISTINCT FROM 'deleted' ORDER BY created_at DESC",
+      `SELECT c.*,
+        COALESCE(
+          json_agg(
+            json_build_object('id', s.id, 'date', s.date, 'time', s.time, 'duration', s.duration, 'spots', s.spots, 'spots_left', s.spots_left)
+            ORDER BY s.time
+          ) FILTER (WHERE s.id IS NOT NULL),
+          '[]'::json
+        ) as slots
+       FROM classes c
+       LEFT JOIN class_slots s ON s.class_id = c.id
+       WHERE c.status IS DISTINCT FROM 'deleted'
+       GROUP BY c.id
+       ORDER BY c.created_at DESC`,
       []
     )
-    const rows = result.rows.map((c: any) => ({ ...c, date: nextOccurrence(c.date) }))
+    const rows = result.rows.map((c: any) => ({
+      ...c,
+      date: nextOccurrence(c.date),
+      slots: (c.slots || []).map((s: any) => ({ ...s, date: nextOccurrence(s.date) })),
+    }))
     return NextResponse.json(rows)
   } catch (error) {
     console.error('Error fetching classes:', error)

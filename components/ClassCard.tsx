@@ -22,6 +22,15 @@ function ExpandableDescription({ description }: { description: string }) {
   )
 }
 
+interface ClassSlot {
+  id: string
+  date: string
+  time: string
+  duration: string
+  spots: number
+  spots_left: number
+}
+
 interface ClassCardProps {
   id: string
   title: string
@@ -45,6 +54,7 @@ interface ClassCardProps {
   price_location?: number
   price_online?: number
   price_residence?: number
+  slots?: ClassSlot[]
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -54,7 +64,11 @@ const CATEGORY_COLORS: Record<string, string> = {
 }
 
 export default function ClassCard(props: ClassCardProps) {
-  const { id, title, studio, price, level, duration, date, time, spots_left, distance, rating, image, category, instructor, description, location_types, room, room_maps_url, price_location, price_online, price_residence } = props
+  const { id, title, studio, price, level, duration, date, time, spots_left, distance, rating, image, category, instructor, description, location_types, room, room_maps_url, price_location, price_online, price_residence, slots } = props
+
+  const availableSlots = (slots || []).filter(s => s.spots_left > 0)
+  const totalSpotsLeft = slots && slots.length > 0 ? slots.reduce((sum, s) => sum + s.spots_left, 0) : spots_left
+  const hasMultipleSlots = slots && slots.length > 1
 
   const locationPriceMap: Record<string, number | undefined> = { location: price_location, online: price_online, residence: price_residence }
   const types: string[] = location_types || []
@@ -68,8 +82,8 @@ export default function ClassCard(props: ClassCardProps) {
     types.includes('residence') ? '🏠 At your home' : null,
     types.includes('location') && room ? null : null, // shown separately with link
   ].filter(Boolean)
-  const isSoldOut = spots_left === 0
-  const isLow = spots_left > 0 && spots_left <= 3
+  const isSoldOut = totalSpotsLeft === 0
+  const isLow = totalSpotsLeft > 0 && totalSpotsLeft <= 3
   const categoryColor = CATEGORY_COLORS[category] || '#F97316'
 
   return (
@@ -129,9 +143,23 @@ export default function ClassCard(props: ClassCardProps) {
           <span style={{ color: '#9CA3AF', fontSize: '13px' }}>{duration}</span>
         </div>
 
-        <p style={{ color: '#6B7280', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span>📅</span> {date} · {time}
-        </p>
+        {hasMultipleSlots ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <p style={{ color: '#6B7280', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span>📅</span> {availableSlots.length} time slot{availableSlots.length !== 1 ? 's' : ''} available
+            </p>
+            {availableSlots.slice(0, 2).map(s => (
+              <p key={s.id} style={{ color: '#6B7280', fontSize: '12px', marginLeft: '19px' }}>
+                {s.date} · {s.time} · {s.duration}
+              </p>
+            ))}
+            {availableSlots.length > 2 && <p style={{ color: '#4B5563', fontSize: '12px', marginLeft: '19px' }}>+{availableSlots.length - 2} more</p>}
+          </div>
+        ) : (
+          <p style={{ color: '#6B7280', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span>📅</span> {slots?.[0]?.date || date} · {slots?.[0]?.time || time}
+          </p>
+        )}
         {(types.includes('location') && room) && (
           <p style={{ fontSize: '13px', color: '#6B7280' }}>
             {room_maps_url
@@ -155,7 +183,7 @@ export default function ClassCard(props: ClassCardProps) {
           ) : (
             <>
               <p style={{ fontSize: '13px', fontWeight: '600', marginBottom: '10px', color: isLow ? '#F97316' : '#4ADE80' }}>
-                {isLow ? `⚡ Only ${spots_left} spots left!` : `✓ ${spots_left} spots available`}
+                {isLow ? `⚡ Only ${totalSpotsLeft} spots left!` : `✓ ${totalSpotsLeft} spots available`}
               </p>
               <Link
                 href={`/checkout?classId=${id}`}

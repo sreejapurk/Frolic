@@ -20,8 +20,8 @@ export async function POST(req: NextRequest) {
   try {
     const data = await req.json()
     const result = await query(
-      `INSERT INTO bookings (order_id, class_id, class_name, first_name, last_name, email, phone, amount, stripe_payment_id, payment_status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'paid')
+      `INSERT INTO bookings (order_id, class_id, class_name, first_name, last_name, email, phone, amount, stripe_payment_id, payment_status, slot_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'paid', $10)
        RETURNING *`,
       [
         data.orderId,
@@ -33,13 +33,21 @@ export async function POST(req: NextRequest) {
         data.phone || null,
         data.amount,
         data.stripePaymentId || null,
+        data.slotId || null,
       ]
     )
 
-    await query(
-      `UPDATE classes SET spots_left = spots_left - 1 WHERE id = $1 AND spots_left > 0`,
-      [data.classId]
-    )
+    if (data.slotId) {
+      await query(
+        `UPDATE class_slots SET spots_left = spots_left - 1 WHERE id = $1 AND spots_left > 0`,
+        [data.slotId]
+      )
+    } else {
+      await query(
+        `UPDATE classes SET spots_left = spots_left - 1 WHERE id = $1 AND spots_left > 0`,
+        [data.classId]
+      )
+    }
 
     // Send confirmation email
     try {

@@ -5,9 +5,11 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
 
+const EMPTY_SLOT = { date: '', time: '', duration: '60 min', spots: '10' }
+
 const EMPTY_CLASS = {
   title: '', category: 'Sports', subcategory: '', price: '', level: 'Beginner',
-  date: '', time: '', spots: '',
+  slots: [{ ...EMPTY_SLOT }] as { date: string; time: string; duration: string; spots: string }[],
   rating: '4.9', image: '', instructor: '', room: '', room_maps_url: '', recurring: false, description: '', location_type: 'location', location_types: [] as string[],
   price_location: '', price_online: '', price_residence: '',
 }
@@ -99,15 +101,54 @@ function ClassForm({ data, setData, onSave, saving, saveLabel }: any) {
       {[
         { label: 'Class Title', key: 'title' },
         { label: 'Instructor', key: 'instructor' },
-        { label: 'Total Spots', key: 'spots', type: 'number' },
-        { label: 'Date (e.g. Mon, Feb 23)', key: 'date' },
-        { label: 'Time (e.g. 6:00 PM)', key: 'time' },
       ].map(field => (
         <div key={field.key}>
           <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>{field.label}</label>
-          <input type={field.type || 'text'} value={data[field.key]} onChange={e => setData((d: any) => ({ ...d, [field.key]: e.target.value }))} style={inputStyle} />
+          <input type="text" value={data[field.key]} onChange={e => setData((d: any) => ({ ...d, [field.key]: e.target.value }))} style={inputStyle} />
         </div>
       ))}
+
+      {/* Slots */}
+      <div>
+        <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Time Slots</label>
+        <p style={{ color: '#6B7280', fontSize: '12px', marginBottom: '10px' }}>Add multiple dates and times for the same class</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {(data.slots || []).map((slot: any, i: number) => (
+            <div key={i} style={{ backgroundColor: '#0F1624', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ color: '#F97316', fontSize: '13px', fontWeight: '700' }}>Slot {i + 1}</span>
+                {(data.slots || []).length > 1 && (
+                  <button type="button" onClick={() => setData((d: any) => ({ ...d, slots: d.slots.filter((_: any, j: number) => j !== i) }))}
+                    style={{ background: 'none', border: 'none', color: '#6B7280', fontSize: '18px', cursor: 'pointer', lineHeight: 1 }}>×</button>
+                )}
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <div>
+                  <label style={{ color: '#6B7280', fontSize: '12px', display: 'block', marginBottom: '4px' }}>Date (e.g. Mon, Feb 23)</label>
+                  <input value={slot.date} onChange={e => setData((d: any) => ({ ...d, slots: d.slots.map((s: any, j: number) => j === i ? { ...s, date: e.target.value } : s) }))} style={inputStyle} />
+                </div>
+                <div>
+                  <label style={{ color: '#6B7280', fontSize: '12px', display: 'block', marginBottom: '4px' }}>Time (e.g. 6:00 PM)</label>
+                  <input value={slot.time} onChange={e => setData((d: any) => ({ ...d, slots: d.slots.map((s: any, j: number) => j === i ? { ...s, time: e.target.value } : s) }))} style={inputStyle} />
+                </div>
+                <div>
+                  <label style={{ color: '#6B7280', fontSize: '12px', display: 'block', marginBottom: '4px' }}>Duration (e.g. 60 min)</label>
+                  <input value={slot.duration} onChange={e => setData((d: any) => ({ ...d, slots: d.slots.map((s: any, j: number) => j === i ? { ...s, duration: e.target.value } : s) }))} style={inputStyle} />
+                </div>
+                <div>
+                  <label style={{ color: '#6B7280', fontSize: '12px', display: 'block', marginBottom: '4px' }}>Spots</label>
+                  <input type="number" value={slot.spots} onChange={e => setData((d: any) => ({ ...d, slots: d.slots.map((s: any, j: number) => j === i ? { ...s, spots: e.target.value } : s) }))} style={inputStyle} />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <button type="button"
+          onClick={() => setData((d: any) => ({ ...d, slots: [...(d.slots || []), { ...EMPTY_SLOT }] }))}
+          style={{ marginTop: '10px', width: '100%', background: 'rgba(249,115,22,0.08)', border: '1px dashed rgba(249,115,22,0.4)', color: '#F97316', padding: '10px', borderRadius: '10px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
+          + Add Another Time Slot
+        </button>
+      </div>
       <div>
         <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Description</label>
         <textarea value={data.description || ''} onChange={e => setData((d: any) => ({ ...d, description: e.target.value }))} placeholder="Describe what students can expect..." rows={3} style={{ ...inputStyle, resize: 'vertical' as const }} />
@@ -308,7 +349,8 @@ export default function StudioDashboard() {
 
   const handleDuplicate = (c: any) => {
     const { id, spots_left, created_at, studio_user_id, ...rest } = c
-    setNewClass({ ...EMPTY_CLASS, ...rest, time: '' })
+    const slots = (c.slots || []).map((s: any) => ({ date: s.date || '', time: '', duration: s.duration || '60 min', spots: String(s.spots || 10) }))
+    setNewClass({ ...EMPTY_CLASS, ...rest, slots: slots.length > 0 ? slots : [{ ...EMPTY_SLOT }] })
     setTab('add')
   }
 
@@ -450,7 +492,7 @@ export default function StudioDashboard() {
                     </div>
                     <p style={{ color: '#6B7280', fontSize: '14px', marginBottom: '12px' }}>{c.date} • {c.time}</p>
                     <div style={{ display: 'flex', gap: '8px' }}>
-                      <button onClick={() => { setEditingClass({ ...c }); setTab('edit') }} style={{ flex: 1, backgroundColor: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.3)', color: '#F97316', padding: '8px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>Edit</button>
+                      <button onClick={() => { setEditingClass({ ...c, slots: (c.slots || []).length > 0 ? c.slots.map((s: any) => ({ ...s, spots: String(s.spots) })) : [{ date: c.date || '', time: c.time || '', duration: c.duration || '60 min', spots: String(c.spots || 10) }] }); setTab('edit') }} style={{ flex: 1, backgroundColor: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.3)', color: '#F97316', padding: '8px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>Edit</button>
                       <button onClick={() => handleDuplicate(c)} style={{ flex: 1, backgroundColor: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.3)', color: '#818CF8', padding: '8px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>Duplicate</button>
                       <button onClick={() => handleDelete(c.id)} style={{ flex: 1, backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#F87171', padding: '8px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>Delete</button>
                     </div>
