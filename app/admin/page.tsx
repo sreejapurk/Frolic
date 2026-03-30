@@ -134,7 +134,7 @@ export default function AdminPage() {
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                    {['Order ID', 'Class', 'Student', 'Email', 'Amount', 'Date'].map(h => (
+                    {['Order ID', 'Class', 'Student', 'Email', 'Amount', 'Date', ''].map(h => (
                       <th key={h} style={{ color: '#9CA3AF', fontSize: '14px', fontWeight: '600', textAlign: 'left', padding: '16px 20px' }}>{h}</th>
                     ))}
                   </tr>
@@ -148,6 +148,18 @@ export default function AdminPage() {
                       <td style={{ padding: '16px 20px', color: '#9CA3AF', fontSize: '14px' }}>{b.email}</td>
                       <td style={{ padding: '16px 20px', color: '#4ADE80', fontWeight: 'bold' }}>${b.amount}</td>
                       <td style={{ padding: '16px 20px', color: '#9CA3AF', fontSize: '14px' }}>{new Date(b.created_at).toLocaleDateString()}</td>
+                      <td style={{ padding: '16px 20px' }}>
+                        <button
+                          onClick={async () => {
+                            if (!confirm('Delete this booking and restore the spot?')) return
+                            await fetch(`/api/admin/bookings/${b.id}`, { method: 'DELETE' })
+                            loadData()
+                          }}
+                          style={{ backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#F87171', padding: '6px 14px', borderRadius: '8px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                        >
+                          Delete
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
