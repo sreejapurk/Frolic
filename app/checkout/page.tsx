@@ -72,7 +72,13 @@ function CheckoutForm({ classData, classId }: { classData: any; classId: string 
           customerInfo: form,
         }),
       })
-      const { clientSecret, orderId } = await res.json()
+      const intentData = await res.json()
+      if (!intentData.clientSecret) {
+        alert(`Payment setup failed: ${intentData.error || 'Unknown error'}`)
+        setProcessing(false)
+        return
+      }
+      const { clientSecret, orderId } = intentData
 
       const result = await stripe.confirmCardPayment(clientSecret, {
         payment_method: {
