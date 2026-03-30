@@ -55,6 +55,14 @@ function detectSubcategory(text: string): string | null {
 
 export async function GET() {
   try {
+    await query(`
+      CREATE TABLE IF NOT EXISTS images (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        data TEXT NOT NULL,
+        mime_type TEXT NOT NULL DEFAULT 'image/jpeg',
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `)
     await query(`ALTER TABLE classes ADD COLUMN IF NOT EXISTS studio_user_id UUID REFERENCES studio_users(id)`)
     await query(`ALTER TABLE studio_users ADD COLUMN IF NOT EXISTS stripe_account_id TEXT`)
     await query(`ALTER TABLE studio_users ADD COLUMN IF NOT EXISTS stripe_onboarded BOOLEAN DEFAULT false`)
