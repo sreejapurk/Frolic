@@ -2,6 +2,21 @@
 import { useState } from 'react'
 import Link from 'next/link'
 
+const EMPTY_SLOT = { date: '', time: '', duration: '60 min', spots: '10' }
+const EMPTY_CLASS = {
+  title: '', studio: '', category: 'Sports', subcategory: '', price: '', level: 'Beginner',
+  slots: [{ ...EMPTY_SLOT }] as { date: string; time: string; duration: string; spots: string }[],
+  rating: '4.9', image: '', instructor: '', room: '', room_maps_url: '', recurring: false,
+  description: '', location_type: 'location', location_types: [] as string[],
+  price_location: '', price_online: '', price_residence: '', distance: '',
+}
+
+const SUBCATEGORIES: Record<string, string[]> = {
+  Music: ['Piano', 'Guitar', 'Vocals', 'Drums', 'Violin', 'Flute', 'Ukulele', 'Bass', 'Saxophone', 'Trumpet', 'Keyboard', 'Harp'],
+  Sports: ['Basketball', 'Soccer', 'Tennis', 'Swimming', 'Yoga', 'Pilates', 'Boxing', 'Martial Arts', 'Golf', 'Running', 'Cycling', 'CrossFit', 'Gymnastics', 'Skating'],
+  Dance: ['Ballet', 'Hip Hop', 'Salsa', 'Contemporary', 'Ballroom', 'Jazz', 'Tap', 'K-Pop', 'Zumba', 'Swing', 'Belly Dance', 'Flamenco'],
+}
+
 export default function AdminPage() {
   const [authed, setAuthed] = useState(false)
   const [password, setPassword] = useState('')
@@ -11,11 +26,9 @@ export default function AdminPage() {
   const [studios, setStudios] = useState<any[]>([])
   const [tab, setTab] = useState<'classes' | 'bookings' | 'applications' | 'studios' | 'add'>('classes')
   const [loading, setLoading] = useState(false)
-  const [newClass, setNewClass] = useState({
-    title: '', studio: '', category: 'Music', price: '', level: 'Beginner',
-    duration: '60 min', date: '', time: '', spots: '', distance: '',
-    rating: '4.9', image: '', instructor: '', room: '',
-  })
+  const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [newClass, setNewClass] = useState({ ...EMPTY_CLASS })
 
   const login = async () => {
     const res = await fetch('/api/admin/auth', {
@@ -54,16 +67,34 @@ export default function AdminPage() {
   }
 
   const handleAddClass = async () => {
+    setSaving(true)
     const res = await fetch('/api/classes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(newClass),
     })
+    setSaving(false)
     if (res.ok) {
-      alert('Class added!')
+      setNewClass({ ...EMPTY_CLASS })
       setTab('classes')
       loadData()
+    } else {
+      const err = await res.json().catch(() => ({}))
+      alert('Failed to add class: ' + (err.error || res.status))
     }
+  }
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    const formData = new FormData()
+    formData.append('file', file)
+    const res = await fetch('/api/upload', { method: 'POST', body: formData })
+    const json = await res.json()
+    setUploading(false)
+    if (res.ok) setNewClass(n => ({ ...n, image: json.url }))
+    else alert(json.error || 'Upload failed')
   }
 
   const inputStyle = { width: '100%', backgroundColor: '#0F1624', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '12px 16px', color: 'white', outline: 'none', fontSize: '14px', boxSizing: 'border-box' as const }
@@ -262,45 +293,141 @@ export default function AdminPage() {
           <div style={{ maxWidth: '600px' }}>
             <h2 style={{ color: 'white', fontWeight: '900', fontSize: '24px', marginBottom: '24px' }}>Add New Class</h2>
             <div style={{ backgroundColor: '#1A2332', borderRadius: '16px', padding: '28px', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {[
-                { label: 'Class Title', key: 'title' },
-                { label: 'Studio Name', key: 'studio' },
-                { label: 'Instructor', key: 'instructor' },
-                { label: 'Room', key: 'room' },
-                { label: 'Price ($)', key: 'price', type: 'number' },
-                { label: 'Total Spots', key: 'spots', type: 'number' },
-                { label: 'Date (e.g. Mon, Feb 23)', key: 'date' },
-                { label: 'Time (e.g. 6:00 PM)', key: 'time' },
-                { label: 'Duration (e.g. 60 min)', key: 'duration' },
-                { label: 'Distance (e.g. 1.2 mi)', key: 'distance' },
-                { label: 'Image URL', key: 'image' },
-              ].map(field => (
-                <div key={field.key}>
-                  <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>{field.label}</label>
-                  <input
-                    type={field.type || 'text'}
-                    value={(newClass as any)[field.key]}
-                    onChange={e => setNewClass(n => ({ ...n, [field.key]: e.target.value }))}
-                    style={inputStyle}
-                  />
+
+              {/* Studio Name & Distance (admin-only fields) */}
+              {[{ label: 'Studio Name', key: 'studio' }, { label: 'Distance (e.g. 1.2 mi)', key: 'distance' }].map(f => (
+                <div key={f.key}>
+                  <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>{f.label}</label>
+                  <input value={(newClass as any)[f.key]} onChange={e => setNewClass(n => ({ ...n, [f.key]: e.target.value }))} style={inputStyle} />
                 </div>
               ))}
+
+              {/* Title & Instructor */}
+              {[{ label: 'Class Title', key: 'title' }, { label: 'Instructor', key: 'instructor' }].map(f => (
+                <div key={f.key}>
+                  <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>{f.label}</label>
+                  <input value={(newClass as any)[f.key]} onChange={e => setNewClass(n => ({ ...n, [f.key]: e.target.value }))} style={inputStyle} />
+                </div>
+              ))}
+
+              {/* Time Slots */}
+              <div>
+                <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Time Slots</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {newClass.slots.map((slot, i) => (
+                    <div key={i} style={{ backgroundColor: '#0F1624', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ color: '#F97316', fontSize: '13px', fontWeight: '700' }}>Slot {i + 1}</span>
+                        {newClass.slots.length > 1 && (
+                          <button type="button" onClick={() => setNewClass(n => ({ ...n, slots: n.slots.filter((_, j) => j !== i) }))}
+                            style={{ background: 'none', border: 'none', color: '#6B7280', fontSize: '18px', cursor: 'pointer' }}>×</button>
+                        )}
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                        {[{ label: 'Date (e.g. Mon, Feb 23)', key: 'date' }, { label: 'Time (e.g. 6:00 PM)', key: 'time' }, { label: 'Duration (e.g. 60 min)', key: 'duration' }, { label: 'Spots', key: 'spots' }].map(f => (
+                          <div key={f.key}>
+                            <label style={{ color: '#6B7280', fontSize: '12px', display: 'block', marginBottom: '4px' }}>{f.label}</label>
+                            <input value={(slot as any)[f.key]} onChange={e => setNewClass(n => ({ ...n, slots: n.slots.map((s, j) => j === i ? { ...s, [f.key]: e.target.value } : s) }))} style={inputStyle} />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <button type="button" onClick={() => setNewClass(n => ({ ...n, slots: [...n.slots, { ...EMPTY_SLOT }] }))}
+                  style={{ marginTop: '10px', width: '100%', background: 'rgba(249,115,22,0.08)', border: '1px dashed rgba(249,115,22,0.4)', color: '#F97316', padding: '10px', borderRadius: '10px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
+                  + Add Another Time Slot
+                </button>
+              </div>
+
+              {/* Description */}
+              <div>
+                <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Description</label>
+                <textarea value={newClass.description} onChange={e => setNewClass(n => ({ ...n, description: e.target.value }))} rows={3} style={{ ...inputStyle, resize: 'vertical' as const }} />
+              </div>
+
+              {/* Location Types */}
+              <div>
+                <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Where does the class take place?</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {[
+                    { value: 'location', label: 'One Location', priceKey: 'price_location' },
+                    { value: 'online', label: 'Online', priceKey: 'price_online' },
+                    { value: 'residence', label: 'Can Come to Residence', priceKey: 'price_residence' },
+                  ].map(opt => {
+                    const types: string[] = newClass.location_types || []
+                    const selected = types.includes(opt.value)
+                    const toggle = () => {
+                      const next = selected ? types.filter(t => t !== opt.value) : [...types, opt.value]
+                      setNewClass(n => ({ ...n, location_types: next, location_type: next[0] || 'location' }))
+                    }
+                    return (
+                      <div key={opt.value}>
+                        <button type="button" onClick={toggle}
+                          style={{ width: '100%', textAlign: 'left', padding: '12px 16px', borderRadius: '10px', cursor: 'pointer', border: selected ? '2px solid #F97316' : '1px solid rgba(255,255,255,0.1)', backgroundColor: selected ? 'rgba(249,115,22,0.08)' : 'transparent', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <div style={{ width: '18px', height: '18px', borderRadius: '4px', border: selected ? '2px solid #F97316' : '2px solid rgba(255,255,255,0.2)', backgroundColor: selected ? '#F97316' : 'transparent', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            {selected && <span style={{ color: 'white', fontSize: '11px', fontWeight: '900' }}>✓</span>}
+                          </div>
+                          <span style={{ color: selected ? '#F97316' : 'white', fontWeight: '600', fontSize: '14px' }}>{opt.label}</span>
+                        </button>
+                        {selected && (
+                          <div style={{ marginTop: '8px', paddingLeft: '12px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <label style={{ color: '#9CA3AF', fontSize: '13px', whiteSpace: 'nowrap' }}>Price ($)</label>
+                            <input type="number" value={(newClass as any)[opt.priceKey] || ''} onChange={e => setNewClass(n => ({ ...n, [opt.priceKey]: e.target.value, price: e.target.value }))} style={{ ...inputStyle, width: '120px' }} />
+                          </div>
+                        )}
+                        {selected && opt.value === 'location' && (
+                          <div style={{ marginTop: '8px', paddingLeft: '12px' }}>
+                            <label style={{ color: '#9CA3AF', fontSize: '13px', display: 'block', marginBottom: '4px' }}>Address</label>
+                            <input value={newClass.room} onChange={e => setNewClass(n => ({ ...n, room: e.target.value }))} placeholder="Enter address" style={inputStyle} />
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Image Upload */}
+              <div>
+                <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Class Image</label>
+                <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} style={{ ...inputStyle, padding: '10px 16px', cursor: 'pointer' }} />
+                {uploading && <p style={{ color: '#9CA3AF', fontSize: '13px', marginTop: '6px' }}>Uploading...</p>}
+                {newClass.image && !uploading && <img src={newClass.image} alt="preview" style={{ width: '100%', height: '120px', objectFit: 'cover', borderRadius: '8px', marginTop: '8px' }} />}
+              </div>
+
+              {/* Category, Subcategory, Level */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div>
                   <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Category</label>
-                  <select value={newClass.category} onChange={e => setNewClass(n => ({ ...n, category: e.target.value }))} style={{ ...inputStyle }}>
-                    {['Music', 'Dance', 'Sports'].map(c => <option key={c}>{c}</option>)}
+                  <select value={newClass.category} onChange={e => setNewClass(n => ({ ...n, category: e.target.value, subcategory: '' }))} style={inputStyle}>
+                    {['Sports', 'Music', 'Dance'].map(c => <option key={c}>{c}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Level</label>
-                  <select value={newClass.level} onChange={e => setNewClass(n => ({ ...n, level: e.target.value }))} style={{ ...inputStyle }}>
-                    {['Beginner', 'Intermediate', 'Advanced', 'All Levels', 'Kids'].map(l => <option key={l}>{l}</option>)}
+                  <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Subcategory</label>
+                  <select
+                    value={(SUBCATEGORIES[newClass.category] || []).includes(newClass.subcategory) ? newClass.subcategory : newClass.subcategory ? '__other__' : ''}
+                    onChange={e => setNewClass(n => ({ ...n, subcategory: e.target.value === '__other__' ? '__other__' : e.target.value }))}
+                    style={inputStyle}>
+                    <option value="">— Select —</option>
+                    {(SUBCATEGORIES[newClass.category] || []).map(s => <option key={s}>{s}</option>)}
+                    <option value="__other__">Other (specify below)</option>
                   </select>
+                  {(newClass.subcategory === '__other__' || (newClass.subcategory && !(SUBCATEGORIES[newClass.category] || []).includes(newClass.subcategory))) && (
+                    <input value={newClass.subcategory === '__other__' ? '' : newClass.subcategory} onChange={e => setNewClass(n => ({ ...n, subcategory: e.target.value }))} placeholder="e.g. Cello, Badminton..." style={{ ...inputStyle, marginTop: '8px' }} />
+                  )}
                 </div>
               </div>
-              <button onClick={handleAddClass} style={{ width: '100%', backgroundColor: '#F97316', border: 'none', color: 'white', padding: '16px', borderRadius: '16px', fontWeight: 'bold', fontSize: '18px', cursor: 'pointer', marginTop: '8px' }}>
-                Add Class
+              <div>
+                <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Level</label>
+                <select value={newClass.level} onChange={e => setNewClass(n => ({ ...n, level: e.target.value }))} style={inputStyle}>
+                  {['Beginner', 'Intermediate', 'Advanced', 'All Levels', 'Kids'].map(l => <option key={l}>{l}</option>)}
+                </select>
+              </div>
+
+              <button onClick={handleAddClass} disabled={saving} style={{ width: '100%', backgroundColor: '#F97316', border: 'none', color: 'white', padding: '16px', borderRadius: '16px', fontWeight: 'bold', fontSize: '18px', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1, marginTop: '8px' }}>
+                {saving ? 'Saving...' : 'Add Class'}
               </button>
             </div>
           </div>
