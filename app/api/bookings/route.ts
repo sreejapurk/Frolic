@@ -49,7 +49,14 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Send confirmation email
+    // Look up studio email
+    const studioResult = await query(
+      `SELECT su.email FROM classes c JOIN studio_users su ON c.studio_user_id = su.id WHERE c.id = $1`,
+      [data.classId]
+    )
+    const studioEmail = studioResult.rows[0]?.email
+
+    // Send confirmation email to customer
     try {
       await resend.emails.send({
         from: 'Frolic <hello@joinfrolic.com>',
@@ -89,8 +96,55 @@ export async function POST(req: NextRequest) {
         `,
       })
     } catch (emailError) {
-      console.error('Email send failed:', emailError)
-      // Don't fail the booking if email fails
+      console.error('Customer email send failed:', emailError)
+    }
+
+    // Send notification email to studio organizer
+    if (studioEmail) {
+      try {
+        await resend.emails.send({
+          from: 'Frolic <hello@joinfrolic.com>',
+          to: studioEmail,
+          subject: `New Booking — ${data.className}`,
+          html: `
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; background-color: #0F1624; color: white; padding: 40px; border-radius: 16px;">
+              <h1 style="color: #F97316; font-size: 28px; margin-bottom: 8px;">New booking!</h1>
+              <p style="color: #9CA3AF; font-size: 16px; margin-bottom: 32px;">Someone just booked your class.</p>
+
+              <div style="background-color: #1A2332; border-radius: 12px; padding: 24px; margin-bottom: 24px; border: 1px solid rgba(255,255,255,0.1);">
+                <h2 style="color: white; font-size: 20px; margin-bottom: 16px;">${data.className}</h2>
+                <table style="width: 100%; border-collapse: collapse;">
+                  <tr>
+                    <td style="color: #9CA3AF; padding: 8px 0; font-size: 14px;">Order ID</td>
+                    <td style="color: white; padding: 8px 0; font-size: 14px; text-align: right; font-family: monospace;">${data.orderId}</td>
+                  </tr>
+                  <tr>
+                    <td style="color: #9CA3AF; padding: 8px 0; font-size: 14px;">Customer</td>
+                    <td style="color: white; padding: 8px 0; font-size: 14px; text-align: right;">${data.firstName} ${data.lastName}</td>
+                  </tr>
+                  <tr>
+                    <td style="color: #9CA3AF; padding: 8px 0; font-size: 14px;">Email</td>
+                    <td style="color: white; padding: 8px 0; font-size: 14px; text-align: right;">${data.email}</td>
+                  </tr>
+                  ${data.phone ? `<tr>
+                    <td style="color: #9CA3AF; padding: 8px 0; font-size: 14px;">Phone</td>
+                    <td style="color: white; padding: 8px 0; font-size: 14px; text-align: right;">${data.phone}</td>
+                  </tr>` : ''}
+                  <tr style="border-top: 1px solid rgba(255,255,255,0.1);">
+                    <td style="color: white; padding: 12px 0; font-size: 16px; font-weight: bold;">Amount Paid</td>
+                    <td style="color: #F97316; padding: 12px 0; font-size: 16px; font-weight: bold; text-align: right;">$${data.amount}</td>
+                  </tr>
+                </table>
+              </div>
+
+              <p style="color: #6B7280; font-size: 13px;">Log in to your Frolic dashboard to manage your bookings.</p>
+              <p style="color: #F97316; font-size: 18px; font-weight: bold; margin-top: 24px;">Frolic</p>
+            </div>
+          `,
+        })
+      } catch (emailError) {
+        console.error('Studio email send failed:', emailError)
+      }
     }
 
     return NextResponse.json(result.rows[0])
