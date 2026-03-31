@@ -4,6 +4,7 @@ import Navbar from '@/components/Navbar'
 import ClassCard from '@/components/ClassCard'
 
 const CATEGORIES = ['All', 'Sports', 'Music', 'Dance']
+const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
 const SUBCATEGORIES: Record<string, string[]> = {
   Music: ['Piano', 'Guitar', 'Vocals', 'Drums', 'Violin', 'Flute', 'Ukulele', 'Bass', 'Saxophone', 'Trumpet', 'Keyboard', 'Harp'],
@@ -15,6 +16,7 @@ export default function HomePage() {
   const [classes, setClasses] = useState<any[]>([])
   const [activeCategory, setActiveCategory] = useState('All')
   const [activeSubcategory, setActiveSubcategory] = useState('')
+  const [activeDay, setActiveDay] = useState('')
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
 
@@ -43,9 +45,15 @@ export default function HomePage() {
         c.studio?.toLowerCase().includes(search.toLowerCase()) ||
         c.instructor?.toLowerCase().includes(search.toLowerCase()) ||
         c.subcategory?.toLowerCase().includes(search.toLowerCase())
-      return matchCat && matchSub && matchSearch
+      const matchDay = !activeDay || (() => {
+        const dates = (c.slots && c.slots.length > 0)
+          ? c.slots.map((s: any) => s.date)
+          : [c.date]
+        return dates.some((d: string) => d?.startsWith(activeDay))
+      })()
+      return matchCat && matchSub && matchSearch && matchDay
     })
-  }, [classes, activeCategory, activeSubcategory, search])
+  }, [classes, activeCategory, activeSubcategory, activeDay, search])
 
   return (
     <main style={{ minHeight: '100vh', backgroundColor: '#0A0F1A' }}>
@@ -153,6 +161,29 @@ export default function HomePage() {
             ))}
           </div>
         )}
+
+        {/* Day of week filters */}
+        <div style={{ display: 'flex', gap: '6px', marginBottom: '32px', flexWrap: 'wrap' }}>
+          {DAYS.map(day => (
+            <button
+              key={day}
+              onClick={() => setActiveDay(activeDay === day ? '' : day)}
+              style={{
+                padding: '6px 14px',
+                borderRadius: '9999px',
+                fontSize: '13px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                border: activeDay === day ? '1px solid #60A5FA' : '1px solid rgba(255,255,255,0.08)',
+                backgroundColor: activeDay === day ? 'rgba(96,165,250,0.12)' : 'rgba(255,255,255,0.03)',
+                color: activeDay === day ? '#60A5FA' : '#6B7280',
+              }}
+            >
+              {day}
+            </button>
+          ))}
+        </div>
 
         {/* Header row */}
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '8px' }}>
