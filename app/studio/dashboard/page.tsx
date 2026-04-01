@@ -154,6 +154,10 @@ function ClassForm({ data, setData, onSave, saving, saveLabel }: any) {
         <textarea value={data.description || ''} onChange={e => setData((d: any) => ({ ...d, description: e.target.value }))} placeholder="Describe what students can expect..." rows={3} style={{ ...inputStyle, resize: 'vertical' as const }} />
       </div>
       <div>
+        <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Instructor Background</label>
+        <textarea value={data.instructor_background || ''} onChange={e => setData((d: any) => ({ ...d, instructor_background: e.target.value }))} placeholder="Share your qualifications, experience, certifications..." rows={3} style={{ ...inputStyle, resize: 'vertical' as const }} />
+      </div>
+      <div>
         <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Where does the class take place?</label>
         <p style={{ color: '#6B7280', fontSize: '12px', marginBottom: '10px' }}>Select all that apply</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>

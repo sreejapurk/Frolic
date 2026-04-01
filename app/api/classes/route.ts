@@ -74,14 +74,14 @@ export async function POST(req: NextRequest) {
     const spots = parseInt(firstSlot.spots || data.spots || '10') || 10
 
     const result = await query(
-      `INSERT INTO classes (id, title, studio, category, subcategory, price, level, duration, date, time, spots, spots_left, distance, rating, image, instructor, room, room_maps_url, recurring, status, description, location_type, location_types, price_location, price_online, price_residence)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, 'active', $20, $21, $22, $23, $24, $25)
+      `INSERT INTO classes (id, title, studio, category, subcategory, price, level, duration, date, time, spots, spots_left, distance, rating, image, instructor, room, room_maps_url, recurring, status, description, location_type, location_types, price_location, price_online, price_residence, instructor_background)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, 'active', $20, $21, $22, $23, $24, $25, $26)
        RETURNING *`,
       [id, data.title, data.studio, data.category, data.subcategory || null, data.price, data.level,
        duration, date, time, spots, spots,
        data.distance || '', data.rating || '4.9', data.image || '', data.instructor, data.room || null, data.room_maps_url || null,
        data.recurring ?? false, data.description || null, data.location_type || 'location', data.location_types || null,
-       data.price_location || null, data.price_online || null, data.price_residence || null]
+       data.price_location || null, data.price_online || null, data.price_residence || null, data.instructor_background || null]
     )
 
     for (const slot of slots) {

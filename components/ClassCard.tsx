@@ -47,6 +47,7 @@ interface ClassCardProps {
   category: string
   instructor?: string
   description?: string
+  instructor_background?: string
   location_type?: string
   location_types?: string[]
   room?: string
@@ -64,7 +65,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 }
 
 export default function ClassCard(props: ClassCardProps) {
-  const { id, title, studio, price, level, duration, date, time, spots_left, distance, rating, image, category, instructor, description, location_types, room, room_maps_url, price_location, price_online, price_residence, slots } = props
+  const { id, title, studio, price, level, duration, date, time, spots_left, distance, rating, image, category, instructor, description, instructor_background, location_types, room, room_maps_url, price_location, price_online, price_residence, slots } = props
 
   const availableSlots = (slots || []).filter(s => s.spots_left > 0)
   const totalSpotsLeft = slots && slots.length > 0 ? slots.reduce((sum, s) => sum + s.spots_left, 0) : spots_left
@@ -130,6 +131,12 @@ export default function ClassCard(props: ClassCardProps) {
           <h3 style={{ color: 'white', fontWeight: '800', fontSize: '17px', marginBottom: '4px', lineHeight: '1.3', letterSpacing: '-0.2px' }}>{title}</h3>
           <p style={{ color: '#9CA3AF', fontSize: '13px', fontWeight: '500' }}>{studio}{instructor ? ` · ${instructor}` : ''}</p>
           {description && <ExpandableDescription description={description} />}
+          {instructor_background && (
+            <div style={{ marginTop: '6px' }}>
+              <p style={{ color: '#6B7280', fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '2px' }}>Instructor Background</p>
+              <ExpandableDescription description={instructor_background} />
+            </div>
+          )}
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

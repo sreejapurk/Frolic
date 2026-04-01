@@ -345,6 +345,10 @@ export default function AdminPage() {
                 <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Description</label>
                 <textarea value={newClass.description} onChange={e => setNewClass(n => ({ ...n, description: e.target.value }))} rows={3} style={{ ...inputStyle, resize: 'vertical' as const }} />
               </div>
+              <div>
+                <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Instructor Background</label>
+                <textarea value={(newClass as any).instructor_background || ''} onChange={e => setNewClass(n => ({ ...n, instructor_background: e.target.value }))} rows={3} style={{ ...inputStyle, resize: 'vertical' as const }} />
+              </div>
 
               {/* Location Types */}
               <div>

@@ -75,6 +75,7 @@ export async function GET() {
     await query(`ALTER TABLE classes ADD COLUMN IF NOT EXISTS price_online NUMERIC`)
     await query(`ALTER TABLE classes ADD COLUMN IF NOT EXISTS price_residence NUMERIC`)
     await query(`ALTER TABLE classes ADD COLUMN IF NOT EXISTS subcategory TEXT`)
+    await query(`ALTER TABLE classes ADD COLUMN IF NOT EXISTS instructor_background TEXT`)
     await query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS slot_id UUID`)
     await query(`
       CREATE TABLE IF NOT EXISTS class_slots (
