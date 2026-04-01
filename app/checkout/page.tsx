@@ -26,11 +26,26 @@ function CheckoutForm({ classData, classId }: { classData: any; classId: string 
   const [processing, setProcessing] = useState(false)
   const [cardError, setCardError] = useState('')
   const [form, setForm] = useState({ firstName: '', lastName: '', email: '', phone: '' })
+  const [savedCards, setSavedCards] = useState<any[]>([])
+  const [selectedSavedCard, setSelectedSavedCard] = useState<string | null>(null)
+  const [useNewCard, setUseNewCard] = useState(false)
   const locationOptions: string[] = classData.location_types || (classData.location_type ? [classData.location_type] : [])
   const [selectedLocation, setSelectedLocation] = useState(locationOptions[0] || '')
   const availableSlots = (classData.slots || []).filter((s: any) => s.spots_left > 0)
   const hasSlots = availableSlots.length > 0
   const [selectedSlot, setSelectedSlot] = useState<any>(availableSlots[0] || null)
+
+  useEffect(() => {
+    fetch('/api/customer/payment-methods')
+      .then(r => r.json())
+      .then(d => {
+        if (d.methods?.length > 0) {
+          setSavedCards(d.methods)
+          setSelectedSavedCard(d.methods[0].id)
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   const locationPrice = (loc: string): number => {
     if (loc === 'location' && classData.price_location) return Number(classData.price_location)
@@ -54,9 +69,13 @@ function CheckoutForm({ classData, classId }: { classData: any; classId: string 
       alert('Please select a location preference')
       return
     }
-    if (!stripe || !elements) return
-    const cardElement = elements.getElement(CardElement)
-    if (!cardElement) return
+    const usingSavedCard = savedCards.length > 0 && !useNewCard && selectedSavedCard
+    if (!stripe) return
+    if (!usingSavedCard) {
+      if (!elements) return
+      const cardElement = elements.getElement(CardElement)
+      if (!cardElement) return
+    }
 
     setProcessing(true)
     setCardError('')
@@ -70,6 +89,7 @@ function CheckoutForm({ classData, classId }: { classData: any; classId: string 
           classId,
           className: classData.title,
           customerInfo: form,
+          savedPaymentMethodId: usingSavedCard ? selectedSavedCard : undefined,
         }),
       })
       const intentData = await res.json()
@@ -80,15 +100,16 @@ function CheckoutForm({ classData, classId }: { classData: any; classId: string 
       }
       const { clientSecret, orderId } = intentData
 
-      const result = await stripe.confirmCardPayment(clientSecret, {
-        payment_method: {
-          card: cardElement,
-          billing_details: {
-            name: `${form.firstName} ${form.lastName}`,
-            email: form.email,
-          },
-        },
-      })
+      const result = await stripe.confirmCardPayment(clientSecret,
+        usingSavedCard
+          ? { payment_method: selectedSavedCard! }
+          : {
+              payment_method: {
+                card: elements!.getElement(CardElement)!,
+                billing_details: { name: `${form.firstName} ${form.lastName}`, email: form.email },
+              },
+            }
+      )
 
       if (result.error) {
         setCardError(result.error.message || 'Payment failed')
@@ -196,11 +217,40 @@ function CheckoutForm({ classData, classId }: { classData: any; classId: string 
 
         <div style={{ backgroundColor: '#1A2332', borderRadius: '16px', padding: '24px', border: '1px solid rgba(255,255,255,0.1)' }}>
           <h2 style={{ color: 'white', fontWeight: 'bold', fontSize: '20px', marginBottom: '20px' }}>Payment Information</h2>
-          <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '8px' }}>Card Details</label>
-          <div style={{ backgroundColor: '#0F1624', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '14px 16px' }}>
-            <CardElement options={cardElementOptions} onChange={() => setCardError('')} />
-          </div>
-          {cardError && <p style={{ color: '#F87171', fontSize: '13px', marginTop: '8px' }}>{cardError}</p>}
+
+          {savedCards.length > 0 && !useNewCard ? (
+            <div>
+              <p style={{ color: '#9CA3AF', fontSize: '14px', marginBottom: '12px' }}>Saved cards</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
+                {savedCards.map(card => (
+                  <button key={card.id} type="button" onClick={() => setSelectedSavedCard(card.id)}
+                    style={{ textAlign: 'left', padding: '12px 16px', borderRadius: '12px', cursor: 'pointer', border: selectedSavedCard === card.id ? '2px solid #F97316' : '1px solid rgba(255,255,255,0.1)', backgroundColor: selectedSavedCard === card.id ? 'rgba(249,115,22,0.08)' : 'transparent', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ width: '16px', height: '16px', borderRadius: '50%', border: selectedSavedCard === card.id ? '2px solid #F97316' : '2px solid rgba(255,255,255,0.2)', backgroundColor: selectedSavedCard === card.id ? '#F97316' : 'transparent', flexShrink: 0 }} />
+                    <span style={{ color: 'white', fontSize: '14px', fontWeight: '600', textTransform: 'capitalize' }}>{card.brand} •••• {card.last4}</span>
+                    <span style={{ color: '#6B7280', fontSize: '13px', marginLeft: 'auto' }}>Expires {card.exp_month}/{card.exp_year}</span>
+                  </button>
+                ))}
+              </div>
+              <button type="button" onClick={() => { setUseNewCard(true); setSelectedSavedCard(null) }}
+                style={{ background: 'none', border: 'none', color: '#F97316', fontSize: '13px', fontWeight: '600', cursor: 'pointer', padding: 0 }}>
+                + Use a different card
+              </button>
+            </div>
+          ) : (
+            <div>
+              {savedCards.length > 0 && (
+                <button type="button" onClick={() => { setUseNewCard(false); setSelectedSavedCard(savedCards[0].id) }}
+                  style={{ background: 'none', border: 'none', color: '#9CA3AF', fontSize: '13px', cursor: 'pointer', padding: 0, marginBottom: '12px', display: 'block' }}>
+                  ← Use saved card
+                </button>
+              )}
+              <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '8px' }}>Card Details</label>
+              <div style={{ backgroundColor: '#0F1624', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '14px 16px' }}>
+                <CardElement options={cardElementOptions} onChange={() => setCardError('')} />
+              </div>
+              {cardError && <p style={{ color: '#F87171', fontSize: '13px', marginTop: '8px' }}>{cardError}</p>}
+            </div>
+          )}
           <p style={{ color: '#6B7280', fontSize: '12px', marginTop: '12px' }}>
             Your card details are securely processed by Stripe. Frolic never stores your card information.
           </p>
