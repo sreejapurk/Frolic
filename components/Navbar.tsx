@@ -44,6 +44,9 @@ export default function Navbar() {
 
         {/* Right buttons */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+          <a href="mailto:hello@joinfrolic.com" style={{ textDecoration: 'none', fontSize: '13px', fontWeight: '600', color: '#9CA3AF', padding: '6px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', whiteSpace: 'nowrap' }}>
+            Contact
+          </a>
           {isStudios ? (
             <>
               <Link href="/studio/login" style={{ textDecoration: 'none', fontSize: '13px', fontWeight: '600', color: '#9CA3AF', padding: '6px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', whiteSpace: 'nowrap' }}>
