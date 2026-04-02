@@ -108,15 +108,33 @@ function ClassForm({ data, setData, onSave, saving, saveLabel }: any) {
         </div>
       ))}
 
+      {/* Recurring toggle */}
+      <div>
+        <button type="button" onClick={() => setData((d: any) => ({ ...d, recurring: !d.recurring }))}
+          style={{ width: '100%', textAlign: 'left', padding: '14px 16px', borderRadius: '12px', cursor: 'pointer', border: data.recurring ? '2px solid #F97316' : '1px solid rgba(255,255,255,0.1)', backgroundColor: data.recurring ? 'rgba(249,115,22,0.08)' : 'transparent', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ width: '18px', height: '18px', borderRadius: '4px', border: data.recurring ? '2px solid #F97316' : '2px solid rgba(255,255,255,0.2)', backgroundColor: data.recurring ? '#F97316' : 'transparent', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {data.recurring && <span style={{ color: 'white', fontSize: '11px', fontWeight: '900' }}>✓</span>}
+          </div>
+          <div>
+            <span style={{ color: data.recurring ? '#F97316' : 'white', fontWeight: '600', fontSize: '14px', display: 'block' }}>Recurring class</span>
+            <span style={{ color: '#6B7280', fontSize: '12px' }}>This class repeats on a weekly schedule</span>
+          </div>
+        </button>
+      </div>
+
       {/* Slots */}
       <div>
-        <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Time Slots</label>
-        <p style={{ color: '#6B7280', fontSize: '12px', marginBottom: '10px' }}>Add multiple dates and times for the same class</p>
+        <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>
+          {data.recurring ? 'Weekly Schedule' : 'Time Slots'}
+        </label>
+        <p style={{ color: '#6B7280', fontSize: '12px', marginBottom: '10px' }}>
+          {data.recurring ? 'Set the day(s) and time(s) this class runs each week' : 'Add one or more dates and times for this class'}
+        </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {(data.slots || []).map((slot: any, i: number) => (
             <div key={i} style={{ backgroundColor: '#0F1624', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ color: '#F97316', fontSize: '13px', fontWeight: '700' }}>Slot {i + 1}</span>
+                <span style={{ color: '#F97316', fontSize: '13px', fontWeight: '700' }}>{data.recurring ? `Weekly slot ${i + 1}` : `Slot ${i + 1}`}</span>
                 {(data.slots || []).length > 1 && (
                   <button type="button" onClick={() => setData((d: any) => ({ ...d, slots: d.slots.filter((_: any, j: number) => j !== i) }))}
                     style={{ background: 'none', border: 'none', color: '#6B7280', fontSize: '18px', cursor: 'pointer', lineHeight: 1 }}>×</button>
@@ -124,8 +142,20 @@ function ClassForm({ data, setData, onSave, saving, saveLabel }: any) {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div>
-                  <label style={{ color: '#6B7280', fontSize: '12px', display: 'block', marginBottom: '4px' }}>Date (e.g. Mon, Feb 23)</label>
-                  <input value={slot.date} onChange={e => setData((d: any) => ({ ...d, slots: d.slots.map((s: any, j: number) => j === i ? { ...s, date: e.target.value } : s) }))} style={inputStyle} />
+                  {data.recurring ? (
+                    <>
+                      <label style={{ color: '#6B7280', fontSize: '12px', display: 'block', marginBottom: '4px' }}>Day of week</label>
+                      <select value={slot.date} onChange={e => setData((d: any) => ({ ...d, slots: d.slots.map((s: any, j: number) => j === i ? { ...s, date: e.target.value } : s) }))} style={inputStyle}>
+                        <option value="">— Select day —</option>
+                        {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => <option key={d} value={d}>{d}</option>)}
+                      </select>
+                    </>
+                  ) : (
+                    <>
+                      <label style={{ color: '#6B7280', fontSize: '12px', display: 'block', marginBottom: '4px' }}>Date (e.g. Mon, Feb 23)</label>
+                      <input value={slot.date} onChange={e => setData((d: any) => ({ ...d, slots: d.slots.map((s: any, j: number) => j === i ? { ...s, date: e.target.value } : s) }))} style={inputStyle} />
+                    </>
+                  )}
                 </div>
                 <div>
                   <label style={{ color: '#6B7280', fontSize: '12px', display: 'block', marginBottom: '4px' }}>Time (e.g. 6:00 PM)</label>
@@ -146,7 +176,7 @@ function ClassForm({ data, setData, onSave, saving, saveLabel }: any) {
         <button type="button"
           onClick={() => setData((d: any) => ({ ...d, slots: [...(d.slots || []), { ...EMPTY_SLOT }] }))}
           style={{ marginTop: '10px', width: '100%', background: 'rgba(249,115,22,0.08)', border: '1px dashed rgba(249,115,22,0.4)', color: '#F97316', padding: '10px', borderRadius: '10px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
-          + Add Another Time Slot
+          {data.recurring ? '+ Add Another Day' : '+ Add Another Time Slot'}
         </button>
       </div>
       <div>
