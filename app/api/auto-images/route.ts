@@ -4,10 +4,15 @@ import { generateAndStoreImage } from '@/lib/generate-image'
 
 export async function GET(req: NextRequest) {
   const regenerate = req.nextUrl.searchParams.get('regenerate') === 'true'
+  const titleFilter = req.nextUrl.searchParams.get('title')
 
   if (regenerate) {
     await query(`UPDATE classes SET image = NULL WHERE status IS DISTINCT FROM 'deleted'`, [])
     return NextResponse.json({ message: 'Images cleared. Now call /api/auto-images repeatedly until remaining reaches 0.' })
+  }
+
+  if (titleFilter) {
+    await query(`UPDATE classes SET image = NULL WHERE LOWER(title) LIKE LOWER($1) AND status IS DISTINCT FROM 'deleted'`, [`%${titleFilter}%`])
   }
 
   // Process one image at a time to avoid timeouts
