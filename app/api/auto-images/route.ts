@@ -38,9 +38,13 @@ export async function GET(req: NextRequest) {
       await query(`UPDATE classes SET image = $1 WHERE id = $2`, [imageUrl, row.id])
       return NextResponse.json({ generated: row.title, remaining: totalRemaining - 1 })
     } else {
-      return NextResponse.json({ error: 'Image generation returned null', title: row.title, remaining: totalRemaining }, { status: 500 })
+      // Skip this class to avoid infinite loop
+      await query(`UPDATE classes SET image = 'skip' WHERE id = $1`, [row.id])
+      return NextResponse.json({ skipped: row.title, error: 'returned null', remaining: totalRemaining - 1 })
     }
   } catch (err: any) {
-    return NextResponse.json({ error: err?.message || String(err), title: row.title, remaining: totalRemaining }, { status: 500 })
+    // Skip this class to avoid infinite loop
+    await query(`UPDATE classes SET image = 'skip' WHERE id = $1`, [row.id])
+    return NextResponse.json({ skipped: row.title, error: err?.message || String(err), remaining: totalRemaining - 1 })
   }
 }
