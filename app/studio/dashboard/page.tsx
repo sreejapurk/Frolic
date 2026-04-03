@@ -147,22 +147,39 @@ function ClassForm({ data, setData, onSave, saving, saveLabel }: any) {
                 </div>
               )}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                <div>
-                  {data.recurring ? (
-                    <>
+                {data.recurring && (
+                  <div style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                    <div>
                       <label style={{ color: '#6B7280', fontSize: '12px', display: 'block', marginBottom: '4px' }}>Day of week</label>
-                      <select value={slot.date} onChange={e => setData((d: any) => ({ ...d, slots: d.slots.map((s: any, j: number) => j === i ? { ...s, date: e.target.value } : s) }))} style={inputStyle}>
+                      <select value={slot.day || slot.date} onChange={e => setData((d: any) => ({ ...d, slots: d.slots.map((s: any, j: number) => j === i ? { ...s, day: e.target.value, date: s.start_date || e.target.value } : s) }))} style={inputStyle}>
                         <option value="">— Select day —</option>
                         {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => <option key={d} value={d}>{d}</option>)}
                       </select>
-                    </>
-                  ) : (
-                    <>
-                      <label style={{ color: '#6B7280', fontSize: '12px', display: 'block', marginBottom: '4px' }}>Date (e.g. Mon, Feb 23)</label>
-                      <input value={slot.date} onChange={e => setData((d: any) => ({ ...d, slots: d.slots.map((s: any, j: number) => j === i ? { ...s, date: e.target.value } : s) }))} style={inputStyle} />
-                    </>
-                  )}
+                    </div>
+                    <div>
+                      <label style={{ color: '#6B7280', fontSize: '12px', display: 'block', marginBottom: '4px' }}>Start date</label>
+                      <input
+                        type="date"
+                        value={slot.start_date || ''}
+                        onChange={e => {
+                          const raw = e.target.value // "2025-04-07"
+                          const d = raw ? new Date(raw + 'T00:00:00') : null
+                          const SHORT_D = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
+                          const SHORT_M = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+                          const formatted = d ? `${SHORT_D[d.getDay()]}, ${SHORT_M[d.getMonth()]} ${d.getDate()}` : ''
+                          setData((prev: any) => ({ ...prev, slots: prev.slots.map((s: any, j: number) => j === i ? { ...s, start_date: raw, date: formatted || s.day || s.date } : s) }))
+                        }}
+                        style={inputStyle}
+                      />
+                    </div>
+                  </div>
+                )}
+                {!data.recurring && (
+                <div>
+                  <label style={{ color: '#6B7280', fontSize: '12px', display: 'block', marginBottom: '4px' }}>Date (e.g. Mon, Feb 23)</label>
+                  <input value={slot.date} onChange={e => setData((d: any) => ({ ...d, slots: d.slots.map((s: any, j: number) => j === i ? { ...s, date: e.target.value } : s) }))} style={inputStyle} />
                 </div>
+                )}
                 <div>
                   <label style={{ color: '#6B7280', fontSize: '12px', display: 'block', marginBottom: '4px' }}>Time (e.g. 6:00 PM)</label>
                   <input value={slot.time} onChange={e => setData((d: any) => ({ ...d, slots: d.slots.map((s: any, j: number) => j === i ? { ...s, time: e.target.value } : s) }))} style={inputStyle} />

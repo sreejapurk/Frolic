@@ -23,6 +23,23 @@ function nextOccurrence(dateStr: string): string {
 
   const today = new Date()
   today.setHours(0, 0, 0, 0)
+
+  // Try to parse a specific date from the string (e.g. "Mon, Apr 7")
+  // If that date is in the future, show it directly as the start date
+  const parts = dateStr.trim().split(/[\s,]+/).filter(Boolean)
+  if (parts.length >= 3) {
+    const parsed = new Date(`${parts[1]} ${parts[2]}, ${today.getFullYear()}`)
+    if (!isNaN(parsed.getTime())) {
+      if (parsed < today) parsed.setFullYear(today.getFullYear() + 1)
+      if (parsed >= today) {
+        // If still in the future, show it as the actual start date
+        if (parsed > today) {
+          return `${SHORT_DAYS[parsed.getDay()]}, ${SHORT_MONTHS[parsed.getMonth()]} ${parsed.getDate()}`
+        }
+      }
+    }
+  }
+
   const currentDay = today.getDay()
   let daysAhead = targetDay - currentDay
   if (daysAhead < 0) daysAhead += 7 // roll to next week if day has passed
