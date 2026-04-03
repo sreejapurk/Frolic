@@ -78,6 +78,7 @@ export async function GET() {
     await query(`ALTER TABLE customers ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT`)
     await query(`ALTER TABLE classes ADD COLUMN IF NOT EXISTS instructor_background TEXT`)
     await query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS slot_id UUID`)
+    await query(`ALTER TABLE class_slots ADD COLUMN IF NOT EXISTS spots_reset_at TIMESTAMP`)
     await query(`
       CREATE TABLE IF NOT EXISTS class_slots (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
