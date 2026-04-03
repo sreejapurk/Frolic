@@ -121,36 +121,23 @@ function ClassForm({ data, setData, onSave, saving, saveLabel }: any) {
           </div>
         </button>
 
-        {/* Recurring type selector */}
         {data.recurring && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '10px' }}>
-            {[
-              { value: 'same', label: 'Same day & time', sub: 'Repeats at the exact same time every week' },
-              { value: 'multiple', label: 'Multiple times/week', sub: 'Different days or times each week' },
-            ].map(opt => (
-              <button key={opt.value} type="button" onClick={() => setData((d: any) => ({ ...d, recurringType: opt.value, slots: opt.value === 'same' ? [d.slots?.[0] || { ...EMPTY_SLOT }] : d.slots }))}
-                style={{ textAlign: 'left', padding: '12px 14px', borderRadius: '10px', cursor: 'pointer', border: (data.recurringType || 'same') === opt.value ? '2px solid #F97316' : '1px solid rgba(255,255,255,0.1)', backgroundColor: (data.recurringType || 'same') === opt.value ? 'rgba(249,115,22,0.08)' : 'transparent' }}>
-                <span style={{ color: (data.recurringType || 'same') === opt.value ? '#F97316' : 'white', fontWeight: '600', fontSize: '13px', display: 'block', marginBottom: '2px' }}>{opt.label}</span>
-                <span style={{ color: '#6B7280', fontSize: '11px' }}>{opt.sub}</span>
-              </button>
-            ))}
-          </div>
+          <p style={{ color: '#6B7280', fontSize: '12px', marginTop: '8px', paddingLeft: '4px' }}>
+            Add one or more weekly time slots below — each will repeat every week automatically.
+          </p>
         )}
       </div>
 
       {/* Slots */}
       <div>
         <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>
-          {data.recurring && (data.recurringType || 'same') === 'same' ? 'Weekly time' : data.recurring ? 'Weekly schedule' : 'Time Slots'}
+          {data.recurring ? 'Weekly Schedule' : 'Time Slots'}
         </label>
         <p style={{ color: '#6B7280', fontSize: '12px', marginBottom: '10px' }}>
-          {data.recurring && (data.recurringType || 'same') === 'same'
-            ? 'Pick the day and time — it will repeat every week automatically'
-            : data.recurring ? 'Add each day this class runs per week'
-            : 'Add one or more dates and times for this class'}
+          {data.recurring ? 'Add each day & time this class runs — all slots repeat weekly' : 'Add one or more dates and times for this class'}
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {(data.slots || []).slice(0, data.recurring && (data.recurringType || 'same') === 'same' ? 1 : undefined).map((slot: any, i: number) => (
+          {(data.slots || []).map((slot: any, i: number) => (
             <div key={i} style={{ backgroundColor: '#0F1624', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {(data.slots || []).length > 1 && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -192,13 +179,11 @@ function ClassForm({ data, setData, onSave, saving, saveLabel }: any) {
             </div>
           ))}
         </div>
-        {(!data.recurring || (data.recurringType || 'same') === 'multiple') && (
-          <button type="button"
-            onClick={() => setData((d: any) => ({ ...d, slots: [...(d.slots || []), { ...EMPTY_SLOT }] }))}
-            style={{ marginTop: '10px', width: '100%', background: 'rgba(249,115,22,0.08)', border: '1px dashed rgba(249,115,22,0.4)', color: '#F97316', padding: '10px', borderRadius: '10px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
-            {data.recurring ? '+ Add Another Day' : '+ Add Another Time Slot'}
-          </button>
-        )}
+        <button type="button"
+          onClick={() => setData((d: any) => ({ ...d, slots: [...(d.slots || []), { ...EMPTY_SLOT }] }))}
+          style={{ marginTop: '10px', width: '100%', background: 'rgba(249,115,22,0.08)', border: '1px dashed rgba(249,115,22,0.4)', color: '#F97316', padding: '10px', borderRadius: '10px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
+          {data.recurring ? '+ Add Another Day' : '+ Add Another Time Slot'}
+        </button>
       </div>
       <div>
         <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Description</label>
