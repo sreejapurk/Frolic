@@ -34,15 +34,19 @@ function nextOccurrence(dateStr: string): string {
 export async function GET() {
   try {
     // Auto-reset spots for recurring class slots that are 7+ days old
-    await query(`
-      UPDATE class_slots s
-      SET spots_left = s.spots, spots_reset_at = NOW()
-      FROM classes c
-      WHERE s.class_id = c.id
-        AND c.recurring = true
-        AND c.status IS DISTINCT FROM 'deleted'
-        AND (s.spots_reset_at IS NULL OR s.spots_reset_at < NOW() - INTERVAL '7 days')
-    `)
+    try {
+      await query(`
+        UPDATE class_slots s
+        SET spots_left = s.spots, spots_reset_at = NOW()
+        FROM classes c
+        WHERE s.class_id = c.id
+          AND c.recurring = true
+          AND c.status IS DISTINCT FROM 'deleted'
+          AND (s.spots_reset_at IS NULL OR s.spots_reset_at < NOW() - INTERVAL '7 days')
+      `)
+    } catch (e) {
+      console.error('Spot reset skipped:', e)
+    }
 
     const result = await query(
       `SELECT c.*,
