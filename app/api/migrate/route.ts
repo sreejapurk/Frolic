@@ -105,6 +105,10 @@ export async function GET() {
         AND id NOT IN (SELECT DISTINCT class_id FROM class_slots)
     `)
     await query(`UPDATE classes SET status = 'active' WHERE status IS NULL OR status = '' OR status = 'deleted'`)
+    // Mark all existing classes as recurring so they roll over each week
+    await query(`UPDATE classes SET recurring = true WHERE status IS DISTINCT FROM 'deleted'`)
+    // Reset spots_left on all slots so recurring classes refill each week
+    await query(`UPDATE class_slots SET spots_left = spots WHERE spots_left = 0`)
 
     // Auto-detect subcategories for classes that don't have one yet
     const untagged = await query(

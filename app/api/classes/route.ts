@@ -25,7 +25,7 @@ function nextOccurrence(dateStr: string): string {
   today.setHours(0, 0, 0, 0)
   const currentDay = today.getDay()
   let daysAhead = targetDay - currentDay
-  if (daysAhead <= 0) daysAhead += 7 // always show next upcoming, not today
+  if (daysAhead < 0) daysAhead += 7 // roll to next week if day has passed
   const next = new Date(today)
   next.setDate(today.getDate() + daysAhead)
   return `${SHORT_DAYS[next.getDay()]}, ${SHORT_MONTHS[next.getMonth()]} ${next.getDate()}`
