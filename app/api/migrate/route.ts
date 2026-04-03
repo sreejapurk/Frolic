@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db'
 
 const SUBCATEGORY_KEYWORDS: Record<string, string[]> = {
@@ -53,7 +53,11 @@ function detectSubcategory(text: string): string | null {
   return null
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const secret = req.nextUrl.searchParams.get('secret')
+  if (!secret || secret !== process.env.ADMIN_SECRET) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
   try {
     await query(`
       CREATE TABLE IF NOT EXISTS images (

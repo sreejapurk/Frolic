@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db'
 
 export async function GET(req: NextRequest) {
+  const secret = req.nextUrl.searchParams.get('secret')
+  if (!secret || secret !== process.env.ADMIN_SECRET) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
   const instructor = req.nextUrl.searchParams.get('instructor')
   if (!instructor) return NextResponse.json({ error: 'instructor param required' }, { status: 400 })
 
@@ -17,6 +21,10 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const secret = req.nextUrl.searchParams.get('secret')
+  if (!secret || secret !== process.env.ADMIN_SECRET) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
   const { instructor } = await req.json()
   if (!instructor) return NextResponse.json({ error: 'instructor required' }, { status: 400 })
 
