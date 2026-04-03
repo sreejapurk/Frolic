@@ -24,11 +24,13 @@ export default function AdminPage() {
   const [bookings, setBookings] = useState<any[]>([])
   const [applications, setApplications] = useState<any[]>([])
   const [studios, setStudios] = useState<any[]>([])
-  const [tab, setTab] = useState<'classes' | 'bookings' | 'applications' | 'studios' | 'add'>('classes')
+  const [tab, setTab] = useState<'classes' | 'bookings' | 'applications' | 'studios' | 'add' | 'reschedule'>('classes')
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [newClass, setNewClass] = useState({ ...EMPTY_CLASS })
+  const [reschedule, setReschedule] = useState({ instructor: '', oldDay: '', newDay: '', oldTime: '', newTime: '' })
+  const [rescheduling, setRescheduling] = useState(false)
 
   const login = async () => {
     const res = await fetch('/api/admin/auth', {
@@ -123,9 +125,9 @@ export default function AdminPage() {
       <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', backgroundColor: '#1A2332', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
         <Link href="/" style={{ color: 'white', fontWeight: 'bold', fontSize: '20px', textDecoration: 'none' }}>Frolic Admin</Link>
         <div style={{ display: 'flex', gap: '12px' }}>
-          {(['classes', 'bookings', 'applications', 'studios', 'add'] as const).map(t => (
+          {(['classes', 'bookings', 'applications', 'studios', 'add', 'reschedule'] as const).map(t => (
             <button key={t} onClick={() => setTab(t)} style={{ padding: '8px 16px', borderRadius: '999px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', border: 'none', backgroundColor: tab === t ? '#F97316' : 'transparent', color: 'white' }}>
-              {t === 'add' ? '+ Add Class' : t === 'studios' ? 'Studios' : t.charAt(0).toUpperCase() + t.slice(1)}
+              {t === 'add' ? '+ Add Class' : t === 'reschedule' ? 'Reschedule' : t === 'studios' ? 'Studios' : t.charAt(0).toUpperCase() + t.slice(1)}
             </button>
           ))}
         </div>
@@ -285,6 +287,77 @@ export default function AdminPage() {
                 </tbody>
               </table>
               {studios.length === 0 && <p style={{ color: '#6B7280', textAlign: 'center', padding: '48px' }}>No studio accounts yet</p>}
+            </div>
+          </div>
+        )}
+
+        {tab === 'reschedule' && (
+          <div style={{ maxWidth: '560px' }}>
+            <h2 style={{ color: 'white', fontWeight: '900', fontSize: '24px', marginBottom: '8px' }}>Bulk Reschedule</h2>
+            <p style={{ color: '#9CA3AF', fontSize: '14px', marginBottom: '24px' }}>Update the schedule for all classes by an instructor at once. Leave fields blank to update all their slots regardless of current day/time.</p>
+            <div style={{ backgroundColor: '#1A2332', borderRadius: '16px', padding: '28px', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Instructor name <span style={{ color: '#F97316' }}>*</span></label>
+                <input value={reschedule.instructor} onChange={e => setReschedule(r => ({ ...r, instructor: e.target.value }))} placeholder="e.g. Ira Klein" style={inputStyle} />
+              </div>
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '16px' }}>
+                <p style={{ color: '#9CA3AF', fontSize: '13px', marginBottom: '12px', fontWeight: '600' }}>Current schedule (optional — leave blank to match all)</p>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div>
+                    <label style={{ color: '#6B7280', fontSize: '13px', display: 'block', marginBottom: '6px' }}>Current day</label>
+                    <select value={reschedule.oldDay} onChange={e => setReschedule(r => ({ ...r, oldDay: e.target.value }))} style={inputStyle}>
+                      <option value="">Any day</option>
+                      {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => <option key={d}>{d}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ color: '#6B7280', fontSize: '13px', display: 'block', marginBottom: '6px' }}>Current time</label>
+                    <input value={reschedule.oldTime} onChange={e => setReschedule(r => ({ ...r, oldTime: e.target.value }))} placeholder="e.g. 6:00 PM" style={inputStyle} />
+                  </div>
+                </div>
+              </div>
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '16px' }}>
+                <p style={{ color: '#9CA3AF', fontSize: '13px', marginBottom: '12px', fontWeight: '600' }}>New schedule</p>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div>
+                    <label style={{ color: '#6B7280', fontSize: '13px', display: 'block', marginBottom: '6px' }}>New day</label>
+                    <select value={reschedule.newDay} onChange={e => setReschedule(r => ({ ...r, newDay: e.target.value }))} style={inputStyle}>
+                      <option value="">No change</option>
+                      {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => <option key={d}>{d}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ color: '#6B7280', fontSize: '13px', display: 'block', marginBottom: '6px' }}>New time</label>
+                    <input value={reschedule.newTime} onChange={e => setReschedule(r => ({ ...r, newTime: e.target.value }))} placeholder="e.g. 7:00 PM" style={inputStyle} />
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={async () => {
+                  if (!reschedule.instructor) { alert('Enter an instructor name'); return }
+                  if (!reschedule.newDay && !reschedule.newTime) { alert('Enter a new day or time'); return }
+                  if (!confirm(`Update all classes for "${reschedule.instructor}"?`)) return
+                  setRescheduling(true)
+                  const res = await fetch('/api/admin/reschedule', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(reschedule),
+                  })
+                  const data = await res.json()
+                  setRescheduling(false)
+                  if (res.ok) {
+                    alert(`Updated ${data.updated} slot(s) across ${data.classes} class(es)`)
+                    setReschedule({ instructor: '', oldDay: '', newDay: '', oldTime: '', newTime: '' })
+                    loadData()
+                  } else {
+                    alert(data.error || 'Failed to reschedule')
+                  }
+                }}
+                disabled={rescheduling}
+                style={{ width: '100%', backgroundColor: '#F97316', border: 'none', color: 'white', padding: '14px', borderRadius: '12px', fontWeight: 'bold', fontSize: '16px', cursor: rescheduling ? 'not-allowed' : 'pointer', opacity: rescheduling ? 0.7 : 1 }}
+              >
+                {rescheduling ? 'Updating...' : 'Apply Reschedule'}
+              </button>
             </div>
           </div>
         )}
