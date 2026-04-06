@@ -3,6 +3,29 @@ import { useState } from 'react'
 import Link from 'next/link'
 
 const EMPTY_SLOT = { date: '', time: '', duration: '60 min', spots: '10' }
+
+const TIME_OPTIONS = (() => {
+  const times: string[] = []
+  for (let h = 6; h <= 22; h++) {
+    for (const m of [0, 30]) {
+      if (h === 22 && m === 30) continue
+      const hour = h % 12 === 0 ? 12 : h % 12
+      const ampm = h < 12 ? 'AM' : 'PM'
+      times.push(`${hour}:${m === 0 ? '00' : '30'} ${ampm}`)
+    }
+  }
+  return times
+})()
+
+const DURATION_OPTIONS = ['30 min', '45 min', '60 min', '75 min', '90 min', '2 hours', '2.5 hours', '3 hours']
+
+function formatDateValue(raw: string) {
+  const d = raw ? new Date(raw + 'T00:00:00') : null
+  if (!d) return ''
+  const SHORT_D = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
+  const SHORT_M = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+  return `${SHORT_D[d.getDay()]}, ${SHORT_M[d.getMonth()]} ${d.getDate()}`
+}
 const EMPTY_CLASS = {
   title: '', studio: '', category: 'Sports', subcategory: '', price: '', level: 'Beginner',
   slots: [{ ...EMPTY_SLOT }] as { date: string; time: string; duration: string; spots: string }[],
@@ -375,12 +398,33 @@ export default function AdminPage() {
                         {editingClass.slots.length > 1 && <button type="button" onClick={() => setEditingClass((c: any) => ({ ...c, slots: c.slots.filter((_: any, j: number) => j !== i) }))} style={{ background: 'none', border: 'none', color: '#6B7280', fontSize: '18px', cursor: 'pointer' }}>×</button>}
                       </div>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                        {[{ label: 'Day / Date', key: 'date' }, { label: 'Time', key: 'time' }, { label: 'Duration', key: 'duration' }, { label: 'Spots', key: 'spots' }].map(f => (
-                          <div key={f.key}>
-                            <label style={{ color: '#6B7280', fontSize: '12px', display: 'block', marginBottom: '4px' }}>{f.label}</label>
-                            <input value={slot[f.key] || ''} onChange={e => setEditingClass((c: any) => ({ ...c, slots: c.slots.map((s: any, j: number) => j === i ? { ...s, [f.key]: e.target.value } : s) }))} style={inputStyle} />
-                          </div>
-                        ))}
+                        <div>
+                          <label style={{ color: '#6B7280', fontSize: '12px', display: 'block', marginBottom: '4px' }}>Day / Date</label>
+                          <input
+                            type="date"
+                            value={slot.rawDate || ''}
+                            onChange={e => setEditingClass((c: any) => ({ ...c, slots: c.slots.map((s: any, j: number) => j === i ? { ...s, rawDate: e.target.value, date: formatDateValue(e.target.value) || s.date } : s) }))}
+                            style={inputStyle}
+                          />
+                          {slot.date && <p style={{ color: '#6B7280', fontSize: '11px', marginTop: '3px' }}>{slot.date}</p>}
+                        </div>
+                        <div>
+                          <label style={{ color: '#6B7280', fontSize: '12px', display: 'block', marginBottom: '4px' }}>Time</label>
+                          <select value={slot.time || ''} onChange={e => setEditingClass((c: any) => ({ ...c, slots: c.slots.map((s: any, j: number) => j === i ? { ...s, time: e.target.value } : s) }))} style={inputStyle}>
+                            <option value="">— Select time —</option>
+                            {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label style={{ color: '#6B7280', fontSize: '12px', display: 'block', marginBottom: '4px' }}>Duration</label>
+                          <select value={slot.duration || '60 min'} onChange={e => setEditingClass((c: any) => ({ ...c, slots: c.slots.map((s: any, j: number) => j === i ? { ...s, duration: e.target.value } : s) }))} style={inputStyle}>
+                            {DURATION_OPTIONS.map(d => <option key={d} value={d}>{d}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label style={{ color: '#6B7280', fontSize: '12px', display: 'block', marginBottom: '4px' }}>Spots</label>
+                          <input value={slot.spots || ''} onChange={e => setEditingClass((c: any) => ({ ...c, slots: c.slots.map((s: any, j: number) => j === i ? { ...s, spots: e.target.value } : s) }))} style={inputStyle} />
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -577,12 +621,27 @@ export default function AdminPage() {
                         )}
                       </div>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                        {[{ label: 'Date (e.g. Mon, Feb 23)', key: 'date' }, { label: 'Time (e.g. 6:00 PM)', key: 'time' }, { label: 'Duration (e.g. 60 min)', key: 'duration' }, { label: 'Spots', key: 'spots' }].map(f => (
-                          <div key={f.key}>
-                            <label style={{ color: '#6B7280', fontSize: '12px', display: 'block', marginBottom: '4px' }}>{f.label}</label>
-                            <input value={(slot as any)[f.key]} onChange={e => setNewClass(n => ({ ...n, slots: n.slots.map((s, j) => j === i ? { ...s, [f.key]: e.target.value } : s) }))} style={inputStyle} />
-                          </div>
-                        ))}
+                        <div>
+                          <label style={{ color: '#6B7280', fontSize: '12px', display: 'block', marginBottom: '4px' }}>Date</label>
+                          <input type="date" value={(slot as any).rawDate || ''} onChange={e => setNewClass(n => ({ ...n, slots: n.slots.map((s, j) => j === i ? { ...s, rawDate: e.target.value, date: formatDateValue(e.target.value) } : s) }))} style={inputStyle} />
+                        </div>
+                        <div>
+                          <label style={{ color: '#6B7280', fontSize: '12px', display: 'block', marginBottom: '4px' }}>Time</label>
+                          <select value={(slot as any).time || ''} onChange={e => setNewClass(n => ({ ...n, slots: n.slots.map((s, j) => j === i ? { ...s, time: e.target.value } : s) }))} style={inputStyle}>
+                            <option value="">— Select time —</option>
+                            {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label style={{ color: '#6B7280', fontSize: '12px', display: 'block', marginBottom: '4px' }}>Duration</label>
+                          <select value={(slot as any).duration || '60 min'} onChange={e => setNewClass(n => ({ ...n, slots: n.slots.map((s, j) => j === i ? { ...s, duration: e.target.value } : s) }))} style={inputStyle}>
+                            {DURATION_OPTIONS.map(d => <option key={d} value={d}>{d}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label style={{ color: '#6B7280', fontSize: '12px', display: 'block', marginBottom: '4px' }}>Spots</label>
+                          <input value={(slot as any).spots || ''} onChange={e => setNewClass(n => ({ ...n, slots: n.slots.map((s, j) => j === i ? { ...s, spots: e.target.value } : s) }))} style={inputStyle} />
+                        </div>
                       </div>
                     </div>
                   ))}
