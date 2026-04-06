@@ -149,7 +149,29 @@ export default function AdminPage() {
                     <span style={{ color: '#F97316', fontWeight: 'bold' }}>${c.price}</span>
                     <span style={{ color: '#9CA3AF', fontSize: '14px' }}>{c.spots_left} spots left</span>
                   </div>
-                  <p style={{ color: '#6B7280', fontSize: '14px', marginBottom: '12px' }}>{c.date} • {c.time}</p>
+                  <p style={{ color: '#6B7280', fontSize: '14px', marginBottom: '8px' }}>{c.date} • {c.time}</p>
+                  <div style={{ marginBottom: '10px' }}>
+                    <label style={{ color: '#6B7280', fontSize: '12px', display: 'block', marginBottom: '4px' }}>
+                      {c.studio_user_id ? '✓ Linked to studio' : 'Assign to studio'}
+                    </label>
+                    <select
+                      value={c.studio_user_id || ''}
+                      onChange={async e => {
+                        await fetch(`/api/admin/classes/${c.id}/assign`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ studio_user_id: e.target.value || null }),
+                        })
+                        loadData()
+                      }}
+                      style={{ width: '100%', backgroundColor: '#0F1624', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '8px 12px', color: 'white', fontSize: '13px' }}
+                    >
+                      <option value="">— Unlinked —</option>
+                      {studios.map((s: any) => (
+                        <option key={s.id} value={s.id}>{s.studio_name} ({s.email})</option>
+                      ))}
+                    </select>
+                  </div>
                   <button onClick={() => deleteClass(c.id)} style={{ width: '100%', backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#F87171', padding: '8px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
                     Delete
                   </button>
@@ -366,6 +388,25 @@ export default function AdminPage() {
           <div style={{ maxWidth: '600px' }}>
             <h2 style={{ color: 'white', fontWeight: '900', fontSize: '24px', marginBottom: '24px' }}>Add New Class</h2>
             <div style={{ backgroundColor: '#1A2332', borderRadius: '16px', padding: '28px', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+              {/* Assign to studio account */}
+              <div>
+                <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Assign to Studio Account</label>
+                <select
+                  value={(newClass as any).studio_user_id || ''}
+                  onChange={e => {
+                    const selected = studios.find((s: any) => s.id === e.target.value)
+                    setNewClass(n => ({ ...n, studio_user_id: e.target.value, studio: selected?.studio_name || n.studio }))
+                  }}
+                  style={inputStyle}
+                >
+                  <option value="">— No account (unlinked) —</option>
+                  {studios.map((s: any) => (
+                    <option key={s.id} value={s.id}>{s.studio_name} ({s.email})</option>
+                  ))}
+                </select>
+                <p style={{ color: '#6B7280', fontSize: '12px', marginTop: '6px' }}>Linking a class to an account lets that studio see and edit it in their dashboard.</p>
+              </div>
 
               {/* Studio Name & Distance (admin-only fields) */}
               {[{ label: 'Studio Name', key: 'studio' }, { label: 'Distance (e.g. 1.2 mi)', key: 'distance' }].map(f => (
