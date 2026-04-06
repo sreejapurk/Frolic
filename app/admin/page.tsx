@@ -24,11 +24,12 @@ export default function AdminPage() {
   const [bookings, setBookings] = useState<any[]>([])
   const [applications, setApplications] = useState<any[]>([])
   const [studios, setStudios] = useState<any[]>([])
-  const [tab, setTab] = useState<'classes' | 'bookings' | 'applications' | 'studios' | 'add' | 'reschedule'>('classes')
+  const [tab, setTab] = useState<'classes' | 'bookings' | 'applications' | 'studios' | 'add' | 'edit' | 'reschedule'>('classes')
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [newClass, setNewClass] = useState({ ...EMPTY_CLASS })
+  const [editingClass, setEditingClass] = useState<any>(null)
   const [reschedule, setReschedule] = useState({ instructor: '', oldDay: '', newDay: '', oldTime: '', newTime: '' })
   const [rescheduling, setRescheduling] = useState(false)
 
@@ -86,6 +87,18 @@ export default function AdminPage() {
     }
   }
 
+  const handleEditSave = async () => {
+    setSaving(true)
+    const res = await fetch(`/api/admin/classes/${editingClass.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(editingClass),
+    })
+    setSaving(false)
+    if (res.ok) { setTab('classes'); setEditingClass(null); loadData() }
+    else alert('Failed to save changes')
+  }
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -130,6 +143,11 @@ export default function AdminPage() {
               {t === 'add' ? '+ Add Class' : t === 'reschedule' ? 'Reschedule' : t === 'studios' ? 'Studios' : t.charAt(0).toUpperCase() + t.slice(1)}
             </button>
           ))}
+          {tab === 'edit' && (
+            <button style={{ padding: '8px 16px', borderRadius: '999px', fontSize: '14px', fontWeight: '600', border: 'none', backgroundColor: '#F97316', color: 'white' }}>
+              Editing Class
+            </button>
+          )}
         </div>
       </nav>
 
@@ -172,9 +190,17 @@ export default function AdminPage() {
                       ))}
                     </select>
                   </div>
-                  <button onClick={() => deleteClass(c.id)} style={{ width: '100%', backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#F87171', padding: '8px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
-                    Delete
-                  </button>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button onClick={() => {
+                      setEditingClass({ ...c, slots: (c.slots || []).length > 0 ? c.slots.map((s: any) => ({ ...s, spots: String(s.spots) })) : [{ date: c.date || '', time: c.time || '', duration: c.duration || '60 min', spots: String(c.spots || 10) }] })
+                      setTab('edit')
+                    }} style={{ flex: 1, backgroundColor: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.3)', color: '#F97316', padding: '8px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
+                      Edit
+                    </button>
+                    <button onClick={() => deleteClass(c.id)} style={{ flex: 1, backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#F87171', padding: '8px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
+                      Delete
+                    </button>
+                  </div>
                 </div>
               ))}
               {classes.length === 0 && <p style={{ color: '#6B7280' }}>No classes yet. Add one!</p>}
@@ -309,6 +335,119 @@ export default function AdminPage() {
                 </tbody>
               </table>
               {studios.length === 0 && <p style={{ color: '#6B7280', textAlign: 'center', padding: '48px' }}>No studio accounts yet</p>}
+            </div>
+          </div>
+        )}
+
+        {tab === 'edit' && editingClass && (
+          <div style={{ maxWidth: '600px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
+              <button onClick={() => { setTab('classes'); setEditingClass(null) }} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.15)', color: '#9CA3AF', padding: '8px 16px', borderRadius: '999px', fontSize: '14px', cursor: 'pointer' }}>← Back</button>
+              <h2 style={{ color: 'white', fontWeight: '900', fontSize: '24px' }}>Edit Class</h2>
+            </div>
+            <div style={{ backgroundColor: '#1A2332', borderRadius: '16px', padding: '28px', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+              {/* Assign to studio */}
+              <div>
+                <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Studio Account</label>
+                <select value={editingClass.studio_user_id || ''} onChange={e => { const s = studios.find((x: any) => x.id === e.target.value); setEditingClass((c: any) => ({ ...c, studio_user_id: e.target.value, studio: s?.studio_name || c.studio })) }} style={inputStyle}>
+                  <option value="">— Unlinked —</option>
+                  {studios.map((s: any) => <option key={s.id} value={s.id}>{s.studio_name} ({s.email})</option>)}
+                </select>
+              </div>
+
+              {/* Basic fields */}
+              {[{ label: 'Class Title', key: 'title' }, { label: 'Studio Name', key: 'studio' }, { label: 'Instructor', key: 'instructor' }, { label: 'Distance (e.g. 1.2 mi)', key: 'distance' }].map(f => (
+                <div key={f.key}>
+                  <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>{f.label}</label>
+                  <input value={editingClass[f.key] || ''} onChange={e => setEditingClass((c: any) => ({ ...c, [f.key]: e.target.value }))} style={inputStyle} />
+                </div>
+              ))}
+
+              {/* Time Slots */}
+              <div>
+                <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Time Slots</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {(editingClass.slots || []).map((slot: any, i: number) => (
+                    <div key={i} style={{ backgroundColor: '#0F1624', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ color: '#F97316', fontSize: '13px', fontWeight: '700' }}>Slot {i + 1}</span>
+                        {editingClass.slots.length > 1 && <button type="button" onClick={() => setEditingClass((c: any) => ({ ...c, slots: c.slots.filter((_: any, j: number) => j !== i) }))} style={{ background: 'none', border: 'none', color: '#6B7280', fontSize: '18px', cursor: 'pointer' }}>×</button>}
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                        {[{ label: 'Day / Date', key: 'date' }, { label: 'Time', key: 'time' }, { label: 'Duration', key: 'duration' }, { label: 'Spots', key: 'spots' }].map(f => (
+                          <div key={f.key}>
+                            <label style={{ color: '#6B7280', fontSize: '12px', display: 'block', marginBottom: '4px' }}>{f.label}</label>
+                            <input value={slot[f.key] || ''} onChange={e => setEditingClass((c: any) => ({ ...c, slots: c.slots.map((s: any, j: number) => j === i ? { ...s, [f.key]: e.target.value } : s) }))} style={inputStyle} />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <button type="button" onClick={() => setEditingClass((c: any) => ({ ...c, slots: [...(c.slots || []), { date: '', time: '', duration: '60 min', spots: '10' }] }))}
+                  style={{ marginTop: '10px', width: '100%', background: 'rgba(249,115,22,0.08)', border: '1px dashed rgba(249,115,22,0.4)', color: '#F97316', padding: '10px', borderRadius: '10px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
+                  + Add Another Slot
+                </button>
+              </div>
+
+              {/* Description & Instructor Background */}
+              {[{ label: 'Description', key: 'description' }, { label: 'Instructor Background', key: 'instructor_background' }].map(f => (
+                <div key={f.key}>
+                  <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>{f.label}</label>
+                  <textarea value={editingClass[f.key] || ''} onChange={e => setEditingClass((c: any) => ({ ...c, [f.key]: e.target.value }))} rows={3} style={{ ...inputStyle, resize: 'vertical' as const }} />
+                </div>
+              ))}
+
+              {/* Video URL */}
+              <div>
+                <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Video URL</label>
+                <input type="url" value={editingClass.video_url || ''} onChange={e => setEditingClass((c: any) => ({ ...c, video_url: e.target.value }))} placeholder="Instagram Reel or YouTube link..." style={inputStyle} />
+              </div>
+
+              {/* Image */}
+              <div>
+                <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Image URL</label>
+                <input value={editingClass.image || ''} onChange={e => setEditingClass((c: any) => ({ ...c, image: e.target.value }))} placeholder="https://..." style={inputStyle} />
+                {editingClass.image && <img src={editingClass.image} alt="preview" style={{ width: '100%', height: '120px', objectFit: 'cover', borderRadius: '8px', marginTop: '8px' }} />}
+              </div>
+
+              {/* Category, Subcategory, Level, Price */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                {[{ label: 'Category', key: 'category', options: ['Sports', 'Music', 'Dance'] }, { label: 'Level', key: 'level', options: ['Beginner', 'Intermediate', 'Advanced', 'All Levels', 'Kids'] }].map(f => (
+                  <div key={f.key}>
+                    <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>{f.label}</label>
+                    <select value={editingClass[f.key] || ''} onChange={e => setEditingClass((c: any) => ({ ...c, [f.key]: e.target.value }))} style={inputStyle}>
+                      {f.options.map(o => <option key={o}>{o}</option>)}
+                    </select>
+                  </div>
+                ))}
+                <div>
+                  <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Subcategory</label>
+                  <input value={editingClass.subcategory || ''} onChange={e => setEditingClass((c: any) => ({ ...c, subcategory: e.target.value }))} style={inputStyle} />
+                </div>
+                <div>
+                  <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Price ($)</label>
+                  <input value={editingClass.price || ''} onChange={e => setEditingClass((c: any) => ({ ...c, price: e.target.value }))} style={inputStyle} />
+                </div>
+              </div>
+
+              {/* Location */}
+              <div>
+                <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Location</label>
+                <input value={editingClass.room || ''} onChange={e => setEditingClass((c: any) => ({ ...c, room: e.target.value }))} placeholder="Address..." style={inputStyle} />
+              </div>
+
+              {/* Recurring */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <input type="checkbox" checked={editingClass.recurring || false} onChange={e => setEditingClass((c: any) => ({ ...c, recurring: e.target.checked }))} id="edit-recurring" />
+                <label htmlFor="edit-recurring" style={{ color: '#9CA3AF', fontSize: '14px', cursor: 'pointer' }}>Recurring class (repeats weekly)</label>
+              </div>
+
+              <button onClick={handleEditSave} disabled={saving}
+                style={{ width: '100%', backgroundColor: '#F97316', border: 'none', color: 'white', padding: '16px', borderRadius: '16px', fontWeight: 'bold', fontSize: '18px', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1 }}>
+                {saving ? 'Saving...' : 'Save Changes'}
+              </button>
             </div>
           </div>
         )}
