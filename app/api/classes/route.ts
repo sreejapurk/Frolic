@@ -16,33 +16,36 @@ const SHORT_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const SHORT_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 function nextOccurrence(dateStr: string): string {
-  // Extract day of week from strings like "Mon, Mar 24" or "Monday" or "Mon"
-  const firstWord = dateStr.trim().split(/[\s,]+/)[0].toLowerCase()
-  const targetDay = DAY_NAMES[firstWord]
-  if (targetDay === undefined) return dateStr // can't parse, return as-is
-
+  if (!dateStr) return dateStr
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
-  // Try to parse a specific date from the string (e.g. "Mon, Apr 7")
-  // If that date is in the future, show it directly as the start date
-  const parts = dateStr.trim().split(/[\s,]+/).filter(Boolean)
-  if (parts.length >= 3) {
-    const parsed = new Date(`${parts[1]} ${parts[2]}, ${today.getFullYear()}`)
-    if (!isNaN(parsed.getTime())) {
-      if (parsed < today) parsed.setFullYear(today.getFullYear() + 1)
-      if (parsed >= today) {
-        // If still in the future, show it as the actual start date
-        if (parsed > today) {
-          return `${SHORT_DAYS[parsed.getDay()]}, ${SHORT_MONTHS[parsed.getMonth()]} ${parsed.getDate()}`
-        }
-      }
+  // Try to parse as a real date first (handles "Apr 7", "Mon, Apr 7", "2025-04-07", etc.)
+  const attempted = new Date(dateStr)
+  if (!isNaN(attempted.getTime())) {
+    // It's a real date — if in the future, show it; if past, roll forward by week
+    attempted.setHours(0, 0, 0, 0)
+    if (attempted >= today) {
+      return `${SHORT_DAYS[attempted.getDay()]}, ${SHORT_MONTHS[attempted.getMonth()]} ${attempted.getDate()}`
     }
+    // Past date: find next occurrence of that same day of week
+    const targetDay = attempted.getDay()
+    const currentDay = today.getDay()
+    let daysAhead = targetDay - currentDay
+    if (daysAhead <= 0) daysAhead += 7
+    const next = new Date(today)
+    next.setDate(today.getDate() + daysAhead)
+    return `${SHORT_DAYS[next.getDay()]}, ${SHORT_MONTHS[next.getMonth()]} ${next.getDate()}`
   }
+
+  // Fall back to day-name matching ("Mon", "Tuesday", etc.)
+  const firstWord = dateStr.trim().split(/[\s,]+/)[0].toLowerCase()
+  const targetDay = DAY_NAMES[firstWord]
+  if (targetDay === undefined) return dateStr
 
   const currentDay = today.getDay()
   let daysAhead = targetDay - currentDay
-  if (daysAhead < 0) daysAhead += 7 // roll to next week if day has passed
+  if (daysAhead < 0) daysAhead += 7
   const next = new Date(today)
   next.setDate(today.getDate() + daysAhead)
   return `${SHORT_DAYS[next.getDay()]}, ${SHORT_MONTHS[next.getMonth()]} ${next.getDate()}`
@@ -50,14 +53,13 @@ function nextOccurrence(dateStr: string): string {
 
 export async function GET() {
   try {
-    // Auto-reset spots for recurring class slots that are 7+ days old
+    // Auto-reset spots for all class slots that are 7+ days old
     try {
       await query(`
         UPDATE class_slots s
         SET spots_left = s.spots, spots_reset_at = NOW()
         FROM classes c
         WHERE s.class_id = c.id
-          AND c.recurring = true
           AND c.status IS DISTINCT FROM 'deleted'
           AND (s.spots_reset_at IS NULL OR s.spots_reset_at < NOW() - INTERVAL '7 days')
       `)
