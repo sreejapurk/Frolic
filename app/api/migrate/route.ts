@@ -54,7 +54,10 @@ function detectSubcategory(text: string): string | null {
 }
 
 export async function GET(req: NextRequest) {
-  // Auth temporarily disabled — re-enable after running migration
+  const secret = req.nextUrl.searchParams.get('secret')
+  if (!secret || secret !== process.env.ADMIN_SECRET) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
   try {
     await query(`
       CREATE TABLE IF NOT EXISTS images (
