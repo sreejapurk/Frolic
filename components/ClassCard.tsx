@@ -2,6 +2,17 @@
 import Link from 'next/link'
 import { useState } from 'react'
 
+function getEmbedUrl(videoUrl: string): string | null {
+  if (!videoUrl) return null
+  // YouTube
+  const ytMatch = videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/)
+  if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=0&rel=0`
+  // Instagram reel or post
+  const igMatch = videoUrl.match(/instagram\.com\/(?:reel|p)\/([A-Za-z0-9_-]+)/)
+  if (igMatch) return `https://www.instagram.com/reel/${igMatch[1]}/embed/`
+  return null
+}
+
 function ExpandableDescription({ description }: { description: string }) {
   const [expanded, setExpanded] = useState(false)
   const limit = 80
@@ -56,6 +67,7 @@ interface ClassCardProps {
   price_online?: number
   price_residence?: number
   slots?: ClassSlot[]
+  video_url?: string
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -65,7 +77,8 @@ const CATEGORY_COLORS: Record<string, string> = {
 }
 
 export default function ClassCard(props: ClassCardProps) {
-  const { id, title, studio, price, level, duration, date, time, spots_left, distance, rating, image, category, instructor, description, instructor_background, location_types, room, room_maps_url, price_location, price_online, price_residence, slots } = props
+  const { id, title, studio, price, level, duration, date, time, spots_left, distance, rating, image, category, instructor, description, instructor_background, location_types, room, room_maps_url, price_location, price_online, price_residence, slots, video_url } = props
+  const embedUrl = video_url ? getEmbedUrl(video_url) : null
 
   const availableSlots = (slots || []).filter(s => s.spots_left > 0)
   const totalSpotsLeft = slots && slots.length > 0 ? slots.reduce((sum, s) => sum + s.spots_left, 0) : spots_left
@@ -92,9 +105,16 @@ export default function ClassCard(props: ClassCardProps) {
       className="card animate-fade-up"
       style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', opacity: isSoldOut ? 0.6 : 1 }}
     >
-      {/* Image */}
-      <div style={{ position: 'relative', height: '200px', overflow: 'hidden', backgroundColor: '#0A0F1A' }}>
-        {image ? (
+      {/* Media: video or image */}
+      <div style={{ position: 'relative', height: embedUrl ? '260px' : '200px', overflow: 'hidden', backgroundColor: '#0A0F1A' }}>
+        {embedUrl ? (
+          <iframe
+            src={embedUrl}
+            style={{ width: '100%', height: '100%', border: 'none' }}
+            allow="autoplay; encrypted-media; picture-in-picture"
+            allowFullScreen
+          />
+        ) : image ? (
           <img
             src={image}
             alt={title}

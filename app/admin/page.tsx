@@ -506,9 +506,15 @@ export default function AdminPage() {
                 </div>
               </div>
 
+              {/* Video URL */}
+              <div>
+                <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Video URL <span style={{ color: '#6B7280', fontWeight: '400' }}>(optional)</span></label>
+                <input type="url" value={(newClass as any).video_url || ''} onChange={e => setNewClass(n => ({ ...n, video_url: e.target.value }))} placeholder="Instagram Reel or YouTube link..." style={inputStyle} />
+              </div>
+
               {/* Image Upload */}
               <div>
-                <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Class Image</label>
+                <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Class Image <span style={{ color: '#6B7280', fontWeight: '400' }}>(used if no video)</span></label>
                 <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} style={{ ...inputStyle, padding: '10px 16px', cursor: 'pointer' }} />
                 {uploading && <p style={{ color: '#9CA3AF', fontSize: '13px', marginTop: '6px' }}>Uploading...</p>}
                 {newClass.image && !uploading && <img src={newClass.image} alt="preview" style={{ width: '100%', height: '120px', objectFit: 'cover', borderRadius: '8px', marginTop: '8px' }} />}

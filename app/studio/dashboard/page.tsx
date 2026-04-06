@@ -266,7 +266,18 @@ function ClassForm({ data, setData, onSave, saving, saveLabel }: any) {
         )}
       </div>
       <div>
-        <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Class Image</label>
+        <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Video URL <span style={{ color: '#6B7280', fontWeight: '400' }}>(optional)</span></label>
+        <input
+          type="url"
+          value={data.video_url || ''}
+          onChange={e => setData((d: any) => ({ ...d, video_url: e.target.value }))}
+          placeholder="Paste your Instagram Reel or YouTube link..."
+          style={inputStyle}
+        />
+        <p style={{ color: '#6B7280', fontSize: '12px', marginTop: '6px' }}>e.g. https://www.instagram.com/reel/ABC123/ or https://youtu.be/ABC123</p>
+      </div>
+      <div>
+        <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Class Image <span style={{ color: '#6B7280', fontWeight: '400' }}>(used if no video)</span></label>
         <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} style={{ ...inputStyle, padding: '10px 16px', cursor: 'pointer' }} />
         {uploading && <p style={{ color: '#9CA3AF', fontSize: '13px', marginTop: '6px' }}>Uploading...</p>}
         {data.image && !uploading && <img src={data.image} alt="preview" style={{ width: '100%', height: '120px', objectFit: 'cover', borderRadius: '8px', marginTop: '8px' }} />}

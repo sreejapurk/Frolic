@@ -17,11 +17,11 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   const spots = parseInt(firstSlot.spots || data.spots || '10') || 10
 
   const result = await query(
-    `UPDATE classes SET title=$1, category=$2, subcategory=$3, price=$4, level=$5, duration=$6, date=$7, time=$8, spots=$9, distance=$10, image=$11, instructor=$12, room=$13, room_maps_url=$14, recurring=$15, description=$16, location_type=$17, location_types=$18, price_location=$19, price_online=$20, price_residence=$21, instructor_background=$22
-     WHERE id=$23 AND studio_user_id=$24 RETURNING *`,
+    `UPDATE classes SET title=$1, category=$2, subcategory=$3, price=$4, level=$5, duration=$6, date=$7, time=$8, spots=$9, distance=$10, image=$11, instructor=$12, room=$13, room_maps_url=$14, recurring=$15, description=$16, location_type=$17, location_types=$18, price_location=$19, price_online=$20, price_residence=$21, instructor_background=$22, video_url=$23
+     WHERE id=$24 AND studio_user_id=$25 RETURNING *`,
     [data.title, data.category, data.subcategory || null, data.price, data.level, duration,
      date, time, spots, data.distance, data.image, data.instructor, data.room, data.room_maps_url || null, data.recurring ?? false, data.description || null, data.location_type || 'location', data.location_types || null,
-     data.price_location || null, data.price_online || null, data.price_residence || null, data.instructor_background || null, id, session.studioId]
+     data.price_location || null, data.price_online || null, data.price_residence || null, data.instructor_background || null, data.video_url || null, id, session.studioId]
   )
 
   if (result.rows.length === 0) {

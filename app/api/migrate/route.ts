@@ -71,6 +71,7 @@ export async function GET(req: NextRequest) {
     await query(`ALTER TABLE studio_users ADD COLUMN IF NOT EXISTS stripe_account_id TEXT`)
     await query(`ALTER TABLE studio_users ADD COLUMN IF NOT EXISTS stripe_onboarded BOOLEAN DEFAULT false`)
     await query(`ALTER TABLE classes ADD COLUMN IF NOT EXISTS recurring BOOLEAN DEFAULT false`)
+    await query(`ALTER TABLE classes ADD COLUMN IF NOT EXISTS video_url TEXT`)
     await query(`ALTER TABLE classes ADD COLUMN IF NOT EXISTS room_maps_url TEXT`)
     await query(`ALTER TABLE classes ADD COLUMN IF NOT EXISTS description TEXT`)
     await query(`ALTER TABLE classes ADD COLUMN IF NOT EXISTS location_type TEXT DEFAULT 'location'`)
