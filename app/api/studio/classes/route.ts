@@ -8,6 +8,15 @@ export async function GET() {
   const session = await getStudioSession()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  // Auto-link any unowned classes that match this studio's name or instructor name
+  await query(
+    `UPDATE classes SET studio_user_id = $1
+     WHERE studio_user_id IS NULL
+       AND (LOWER(studio) = LOWER($2) OR LOWER(instructor) = LOWER($2))
+       AND status IS DISTINCT FROM 'deleted'`,
+    [session.studioId, session.studioName]
+  )
+
   const result = await query(
     `SELECT c.*,
       COALESCE(
