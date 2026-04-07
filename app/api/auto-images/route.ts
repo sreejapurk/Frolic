@@ -9,43 +9,42 @@ export async function GET(req: NextRequest) {
 
   if (regenerate) {
     await query(`UPDATE classes SET image = NULL WHERE status IS DISTINCT FROM 'deleted'`, [])
-    return NextResponse.json({ message: 'Images cleared. Now call /api/auto-images repeatedly until remaining reaches 0.' })
+    return NextResponse.json({ message: 'Images cleared. Now call /api/auto-images?all=true to regenerate all.' })
   }
 
   if (titleFilter) {
     await query(`UPDATE classes SET image = NULL WHERE LOWER(title) LIKE LOWER($1) AND status IS DISTINCT FROM 'deleted'`, [`%${titleFilter}%`])
   }
 
-  // Process one image at a time to avoid timeouts (include previously skipped)
-  const result = await query(
-    `SELECT id, title, category, subcategory FROM classes WHERE (image IS NULL OR image = '' OR image = 'skip') AND status IS DISTINCT FROM 'deleted' LIMIT 1`,
+  const allMode = req.nextUrl.searchParams.get('all') === 'true'
+
+  const pending = await query(
+    `SELECT id, title, category, subcategory FROM classes WHERE (image IS NULL OR image = '' OR image = 'skip') AND status IS DISTINCT FROM 'deleted'`,
     []
   )
 
-  const remaining = await query(
-    `SELECT COUNT(*) as count FROM classes WHERE (image IS NULL OR image = '' OR image = 'skip') AND status IS DISTINCT FROM 'deleted'`,
-    []
-  )
-  const totalRemaining = parseInt(remaining.rows[0].count)
-
-  if (result.rows.length === 0) {
+  if (pending.rows.length === 0) {
     return NextResponse.json({ done: true, message: 'All images generated!' })
   }
 
-  const row = result.rows[0]
-  try {
-    const imageUrl = await generateAndStoreImage(row.title || '', row.category || '', row.subcategory || '')
-    if (imageUrl) {
-      await query(`UPDATE classes SET image = $1 WHERE id = $2`, [imageUrl, row.id])
-      return NextResponse.json({ generated: row.title, remaining: totalRemaining - 1 })
-    } else {
-      // Skip this class to avoid infinite loop
+  const toProcess = allMode ? pending.rows : [pending.rows[0]]
+  const results: any[] = []
+
+  for (const row of toProcess) {
+    try {
+      const imageUrl = await generateAndStoreImage(row.title || '', row.category || '', row.subcategory || '')
+      if (imageUrl) {
+        await query(`UPDATE classes SET image = $1 WHERE id = $2`, [imageUrl, row.id])
+        results.push({ generated: row.title })
+      } else {
+        await query(`UPDATE classes SET image = 'skip' WHERE id = $1`, [row.id])
+        results.push({ skipped: row.title, error: 'returned null' })
+      }
+    } catch (err: any) {
       await query(`UPDATE classes SET image = 'skip' WHERE id = $1`, [row.id])
-      return NextResponse.json({ skipped: row.title, error: 'returned null', remaining: totalRemaining - 1 })
+      results.push({ skipped: row.title, error: err?.message || String(err) })
     }
-  } catch (err: any) {
-    // Skip this class to avoid infinite loop
-    await query(`UPDATE classes SET image = 'skip' WHERE id = $1`, [row.id])
-    return NextResponse.json({ skipped: row.title, error: err?.message || String(err), remaining: totalRemaining - 1 })
   }
+
+  return NextResponse.json(allMode ? { done: true, results } : results[0])
 }
