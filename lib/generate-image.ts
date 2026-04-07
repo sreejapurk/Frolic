@@ -54,18 +54,30 @@ export async function generateAndStoreImage(title: string, category: string, sub
   if (!accessKey) throw new Error('UNSPLASH_ACCESS_KEY not set')
 
   try {
-    const searchQuery = buildSearchQuery(category, subcategory)
-    const page = Math.floor(Math.random() * 3) + 1
-    const res = await fetch(
-      `https://api.unsplash.com/search/photos?query=${encodeURIComponent(searchQuery)}&per_page=20&page=${page}&orientation=landscape&content_filter=high`,
-      { headers: { Authorization: `Client-ID ${accessKey}` } }
-    )
-    if (!res.ok) throw new Error(`Unsplash API returned ${res.status}`)
+    // Try progressively simpler queries until we get results
+    const queries = [
+      buildSearchQuery(category, subcategory),
+      buildSearchQuery(category, ''),
+      category === 'Music' ? 'music class children singing' : category === 'Dance' ? 'dance class studio' : 'fitness class group',
+      'people taking a class together',
+    ]
 
-    const data = await res.json()
-    if (!data.results || data.results.length === 0) throw new Error('No photos found')
+    let photo: any = null
+    for (const searchQuery of queries) {
+      const page = Math.floor(Math.random() * 2) + 1
+      const res = await fetch(
+        `https://api.unsplash.com/search/photos?query=${encodeURIComponent(searchQuery)}&per_page=20&page=${page}&orientation=landscape&content_filter=high`,
+        { headers: { Authorization: `Client-ID ${accessKey}` } }
+      )
+      if (!res.ok) continue
+      const data = await res.json()
+      if (data.results && data.results.length > 0) {
+        photo = data.results[Math.floor(Math.random() * data.results.length)]
+        break
+      }
+    }
 
-    const photo = data.results[Math.floor(Math.random() * data.results.length)]
+    if (!photo) throw new Error('No photos found after fallbacks')
     const imageUrl = photo.urls.regular
 
     // Download and store in DB
