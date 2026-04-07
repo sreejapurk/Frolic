@@ -16,14 +16,14 @@ export async function GET(req: NextRequest) {
     await query(`UPDATE classes SET image = NULL WHERE LOWER(title) LIKE LOWER($1) AND status IS DISTINCT FROM 'deleted'`, [`%${titleFilter}%`])
   }
 
-  // Process one image at a time to avoid timeouts
+  // Process one image at a time to avoid timeouts (include previously skipped)
   const result = await query(
-    `SELECT id, title, category, subcategory FROM classes WHERE (image IS NULL OR image = '') AND status IS DISTINCT FROM 'deleted' LIMIT 1`,
+    `SELECT id, title, category, subcategory FROM classes WHERE (image IS NULL OR image = '' OR image = 'skip') AND status IS DISTINCT FROM 'deleted' LIMIT 1`,
     []
   )
 
   const remaining = await query(
-    `SELECT COUNT(*) as count FROM classes WHERE (image IS NULL OR image = '') AND status IS DISTINCT FROM 'deleted'`,
+    `SELECT COUNT(*) as count FROM classes WHERE (image IS NULL OR image = '' OR image = 'skip') AND status IS DISTINCT FROM 'deleted'`,
     []
   )
   const totalRemaining = parseInt(remaining.rows[0].count)
