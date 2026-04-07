@@ -185,19 +185,19 @@ export default function HomePage() {
           ))}
         </div>
 
-        {/* Header row */}
-        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '8px' }}>
-          <div>
+        {/* Header row — only show when filtered */}
+        {(activeCategory !== 'All' || activeSubcategory || activeDay || search) && (
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '8px' }}>
             <h2 style={{ fontSize: '26px', fontWeight: '800', color: 'white', letterSpacing: '-0.5px', margin: 0 }}>
-              {activeSubcategory ? `${activeSubcategory} Classes` : activeCategory === 'All' ? 'All Classes' : `${activeCategory} Classes`}
+              {activeSubcategory ? `${activeSubcategory} Classes` : activeCategory !== 'All' ? `${activeCategory} Classes` : 'Results'}
             </h2>
+            {!loading && (
+              <span style={{ color: '#6B7280', fontSize: '14px' }}>
+                {filtered.length} {filtered.length === 1 ? 'class' : 'classes'}
+              </span>
+            )}
           </div>
-          {!loading && (
-            <span style={{ color: '#6B7280', fontSize: '14px' }}>
-              {filtered.length} {filtered.length === 1 ? 'class' : 'classes'}
-            </span>
-          )}
-        </div>
+        )}
 
         {loading ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
@@ -205,16 +205,36 @@ export default function HomePage() {
               <div key={i} style={{ height: '380px', borderRadius: '16px', background: 'linear-gradient(90deg, #111827 25%, #1A2332 50%, #111827 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite' }} />
             ))}
           </div>
+        ) : filtered.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '80px 24px' }}>
+            <p style={{ fontSize: '40px', marginBottom: '16px' }}>🔍</p>
+            <p style={{ color: '#6B7280', fontSize: '18px', fontWeight: '600' }}>No classes found</p>
+            <p style={{ color: '#4B5563', fontSize: '14px', marginTop: '8px' }}>Try a different search or category</p>
+          </div>
+        ) : activeCategory === 'All' && !activeSubcategory && !activeDay && !search ? (
+          // Grouped by category view
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '48px' }}>
+            {['Music', 'Sports', 'Dance'].map(cat => {
+              const catClasses = filtered.filter(c => c.category === cat)
+              if (catClasses.length === 0) return null
+              return (
+                <div key={cat}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '20px' }}>
+                    <h3 style={{ color: 'white', fontSize: '20px', fontWeight: '800', letterSpacing: '-0.3px' }}>{cat}</h3>
+                    <button onClick={() => setActiveCategory(cat)} style={{ background: 'none', border: 'none', color: '#F97316', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>
+                      See all {catClasses.length} →
+                    </button>
+                  </div>
+                  <div className="class-grid stagger">
+                    {catClasses.map(c => <ClassCard key={c.id} {...c} />)}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         ) : (
           <div className="class-grid stagger">
             {filtered.map(c => <ClassCard key={c.id} {...c} />)}
-            {filtered.length === 0 && (
-              <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '80px 24px' }}>
-                <p style={{ fontSize: '40px', marginBottom: '16px' }}>🔍</p>
-                <p style={{ color: '#6B7280', fontSize: '18px', fontWeight: '600' }}>No classes found</p>
-                <p style={{ color: '#4B5563', fontSize: '14px', marginTop: '8px' }}>Try a different search or category</p>
-              </div>
-            )}
           </div>
         )}
       </section>

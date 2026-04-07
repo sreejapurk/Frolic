@@ -88,6 +88,17 @@ export async function GET() {
       date: nextOccurrence(c.date),
       slots: (c.slots || []).map((s: any) => ({ ...s, date: nextOccurrence(s.date) })),
     }))
+
+    // Sort by soonest upcoming slot date
+    const parseDate = (dateStr: string) => {
+      try { const d = new Date(dateStr); return isNaN(d.getTime()) ? Infinity : d.getTime() } catch { return Infinity }
+    }
+    rows.sort((a: any, b: any) => {
+      const aDate = a.slots?.length > 0 ? Math.min(...a.slots.map((s: any) => parseDate(s.date))) : parseDate(a.date)
+      const bDate = b.slots?.length > 0 ? Math.min(...b.slots.map((s: any) => parseDate(s.date))) : parseDate(b.date)
+      return aDate - bDate
+    })
+
     return NextResponse.json(rows)
   } catch (error) {
     console.error('Error fetching classes:', error)
