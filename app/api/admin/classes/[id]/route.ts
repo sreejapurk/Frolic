@@ -18,15 +18,17 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       duration=$7, date=$8, time=$9, spots=$10, image=$11, instructor=$12,
       room=$13, room_maps_url=$14, recurring=$15, description=$16,
       location_type=$17, location_types=$18, price_location=$19, price_online=$20,
-      price_residence=$21, instructor_background=$22, video_url=$23, distance=$24
-    WHERE id=$25`,
+      price_residence=$21, instructor_background=$22, video_url=$23, distance=$24,
+      video_urls=$25, video_thumbnail=$26
+    WHERE id=$27`,
     [data.title, data.studio, data.category, data.subcategory || null, data.price, data.level,
      duration, date, time, spots, data.image || null, data.instructor,
      data.room || null, data.room_maps_url || null, data.recurring ?? false, data.description || null,
      data.location_type || 'location', data.location_types || null,
      data.price_location || null, data.price_online || null,
      data.price_residence || null, data.instructor_background || null,
-     data.video_url || null, data.distance || '', id]
+     data.video_url || null, data.distance || '',
+     data.video_urls?.filter(Boolean) || null, data.video_thumbnail || null, id]
   )
 
   // Replace slots

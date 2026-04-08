@@ -105,6 +105,7 @@ function LocationInput({ initialValue, mapsUrl, onSelect }: { initialValue: stri
 
 function ClassForm({ data, setData, onSave, saving, saveLabel }: any) {
   const [uploading, setUploading] = useState(false)
+  const [thumbUploading, setThumbUploading] = useState(false)
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -118,6 +119,22 @@ function ClassForm({ data, setData, onSave, saving, saveLabel }: any) {
     if (res.ok) setData((d: any) => ({ ...d, image: json.url }))
     else alert(json.error || 'Upload failed')
   }
+
+  const handleThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setThumbUploading(true)
+    const formData = new FormData()
+    formData.append('file', file)
+    const res = await fetch('/api/upload', { method: 'POST', body: formData })
+    const json = await res.json()
+    setThumbUploading(false)
+    if (res.ok) setData((d: any) => ({ ...d, video_thumbnail: json.url }))
+    else alert(json.error || 'Upload failed')
+  }
+
+  // Normalise: ensure video_urls array exists, seeded from legacy video_url if needed
+  const videoUrls: string[] = data.video_urls?.length ? data.video_urls : (data.video_url ? [data.video_url] : [''])
 
   return (
     <div style={{ backgroundColor: '#1A2332', borderRadius: '16px', padding: '28px', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -295,19 +312,56 @@ function ClassForm({ data, setData, onSave, saving, saveLabel }: any) {
           </div>
         )}
       </div>
+      {/* Video URLs */}
       <div>
-        <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Video URL <span style={{ color: '#6B7280', fontWeight: '400' }}>(optional)</span></label>
-        <input
-          type="url"
-          value={data.video_url || ''}
-          onChange={e => setData((d: any) => ({ ...d, video_url: e.target.value }))}
-          placeholder="Paste your Instagram Reel or YouTube link..."
-          style={inputStyle}
-        />
-        <p style={{ color: '#6B7280', fontSize: '12px', marginTop: '6px' }}>e.g. https://www.instagram.com/reel/ABC123/ or https://youtu.be/ABC123</p>
+        <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Videos <span style={{ color: '#6B7280', fontWeight: '400' }}>(optional — Instagram Reels or YouTube)</span></label>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {videoUrls.map((url: string, i: number) => (
+            <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <input
+                type="url"
+                value={url}
+                onChange={e => {
+                  const next = [...videoUrls]
+                  next[i] = e.target.value
+                  setData((d: any) => ({ ...d, video_urls: next, video_url: next[0] || null }))
+                }}
+                placeholder="https://www.instagram.com/reel/... or https://youtu.be/..."
+                style={{ ...inputStyle, flex: 1 }}
+              />
+              {videoUrls.length > 1 && (
+                <button type="button" onClick={() => {
+                  const next = videoUrls.filter((_: string, j: number) => j !== i)
+                  setData((d: any) => ({ ...d, video_urls: next, video_url: next[0] || null }))
+                }} style={{ background: 'none', border: 'none', color: '#6B7280', fontSize: '20px', cursor: 'pointer', lineHeight: 1, flexShrink: 0 }}>×</button>
+              )}
+            </div>
+          ))}
+        </div>
+        <button type="button"
+          onClick={() => setData((d: any) => ({ ...d, video_urls: [...videoUrls, ''] }))}
+          style={{ marginTop: '8px', background: 'rgba(249,115,22,0.08)', border: '1px dashed rgba(249,115,22,0.4)', color: '#F97316', padding: '8px 16px', borderRadius: '10px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>
+          + Add Another Video
+        </button>
       </div>
+
+      {/* Video Thumbnail */}
       <div>
-        <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Class Image <span style={{ color: '#6B7280', fontWeight: '400' }}>(used if no video)</span></label>
+        <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Video Thumbnail <span style={{ color: '#6B7280', fontWeight: '400' }}>(optional — shown on card; auto-detected for YouTube)</span></label>
+        <input type="file" accept="image/*" onChange={handleThumbnailUpload} disabled={thumbUploading} style={{ ...inputStyle, padding: '10px 16px', cursor: 'pointer' }} />
+        {thumbUploading && <p style={{ color: '#9CA3AF', fontSize: '13px', marginTop: '6px' }}>Uploading...</p>}
+        {data.video_thumbnail && !thumbUploading && (
+          <div style={{ marginTop: '8px', position: 'relative', display: 'inline-block' }}>
+            <img src={data.video_thumbnail} alt="thumbnail preview" style={{ width: '160px', height: '100px', objectFit: 'cover', borderRadius: '8px' }} />
+            <button type="button" onClick={() => setData((d: any) => ({ ...d, video_thumbnail: null }))}
+              style={{ position: 'absolute', top: '4px', right: '4px', background: 'rgba(0,0,0,0.7)', border: 'none', color: 'white', borderRadius: '50%', width: '22px', height: '22px', fontSize: '14px', cursor: 'pointer', lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+          </div>
+        )}
+      </div>
+
+      {/* Class Image */}
+      <div>
+        <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Class Image <span style={{ color: '#6B7280', fontWeight: '400' }}>(used when no video is set)</span></label>
         <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} style={{ ...inputStyle, padding: '10px 16px', cursor: 'pointer' }} />
         {uploading && <p style={{ color: '#9CA3AF', fontSize: '13px', marginTop: '6px' }}>Uploading...</p>}
         {data.image && !uploading && <img src={data.image} alt="preview" style={{ width: '100%', height: '120px', objectFit: 'cover', borderRadius: '8px', marginTop: '8px' }} />}

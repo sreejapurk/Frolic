@@ -231,7 +231,8 @@ export default function AdminPage() {
                   </div>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button onClick={() => {
-                      setEditingClass({ ...c, slots: (c.slots || []).length > 0 ? c.slots.map((s: any) => ({ ...s, spots: String(s.spots) })) : [{ date: c.date || '', time: c.time || '', duration: c.duration || '60 min', spots: String(c.spots || 10) }] })
+                      const videoUrls = c.video_urls?.length ? c.video_urls : (c.video_url ? [c.video_url] : [''])
+                      setEditingClass({ ...c, slots: (c.slots || []).length > 0 ? c.slots.map((s: any) => ({ ...s, spots: String(s.spots) })) : [{ date: c.date || '', time: c.time || '', duration: c.duration || '60 min', spots: String(c.spots || 10) }], video_urls: videoUrls })
                       setTab('edit')
                     }} style={{ flex: 1, backgroundColor: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.3)', color: '#F97316', padding: '8px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
                       Edit
@@ -459,10 +460,24 @@ export default function AdminPage() {
                 </div>
               ))}
 
-              {/* Video URL */}
+              {/* Video URLs */}
               <div>
-                <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Video URL</label>
-                <input type="url" value={editingClass.video_url || ''} onChange={e => setEditingClass((c: any) => ({ ...c, video_url: e.target.value }))} placeholder="Instagram Reel or YouTube link..." style={inputStyle} />
+                <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Videos</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {(editingClass.video_urls?.length ? editingClass.video_urls : [editingClass.video_url || '']).map((url: string, i: number) => {
+                    const urls: string[] = editingClass.video_urls?.length ? editingClass.video_urls : [editingClass.video_url || '']
+                    return (
+                      <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <input type="url" value={url} onChange={e => { const next = [...urls]; next[i] = e.target.value; setEditingClass((c: any) => ({ ...c, video_urls: next, video_url: next[0] || null })) }} placeholder="Instagram Reel or YouTube link..." style={{ ...inputStyle, flex: 1 }} />
+                        {urls.length > 1 && <button type="button" onClick={() => { const next = urls.filter((_: string, j: number) => j !== i); setEditingClass((c: any) => ({ ...c, video_urls: next, video_url: next[0] || null })) }} style={{ background: 'none', border: 'none', color: '#6B7280', fontSize: '20px', cursor: 'pointer' }}>×</button>}
+                      </div>
+                    )
+                  })}
+                </div>
+                <button type="button" onClick={() => { const urls: string[] = editingClass.video_urls?.length ? editingClass.video_urls : [editingClass.video_url || '']; setEditingClass((c: any) => ({ ...c, video_urls: [...urls, ''] })) }}
+                  style={{ marginTop: '8px', background: 'rgba(249,115,22,0.08)', border: '1px dashed rgba(249,115,22,0.4)', color: '#F97316', padding: '6px 14px', borderRadius: '8px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>
+                  + Add Video
+                </button>
               </div>
 
               {/* Image */}

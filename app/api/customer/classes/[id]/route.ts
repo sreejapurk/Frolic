@@ -27,13 +27,14 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   const spots = parseInt(firstSlot.spots || data.spots || '10') || 10
 
   const result = await query(
-    `UPDATE classes SET title=$1, category=$2, subcategory=$3, price=$4, level=$5, duration=$6, date=$7, time=$8, spots=$9, image=$10, instructor=$11, room=$12, room_maps_url=$13, recurring=$14, description=$15, location_type=$16, location_types=$17, price_location=$18, price_online=$19, price_residence=$20, instructor_background=$21, video_url=$22
-     WHERE id=$23 AND studio_user_id=$24 RETURNING *`,
+    `UPDATE classes SET title=$1, category=$2, subcategory=$3, price=$4, level=$5, duration=$6, date=$7, time=$8, spots=$9, image=$10, instructor=$11, room=$12, room_maps_url=$13, recurring=$14, description=$15, location_type=$16, location_types=$17, price_location=$18, price_online=$19, price_residence=$20, instructor_background=$21, video_url=$22, video_urls=$23, video_thumbnail=$24
+     WHERE id=$25 AND studio_user_id=$26 RETURNING *`,
     [data.title, data.category, data.subcategory || null, data.price, data.level, duration,
      date, time, spots, data.image, data.instructor, data.room, data.room_maps_url || null,
      data.recurring ?? false, data.description || null, data.location_type || 'location',
      data.location_types || null, data.price_location || null, data.price_online || null,
-     data.price_residence || null, data.instructor_background || null, data.video_url || null, id, studioId]
+     data.price_residence || null, data.instructor_background || null, data.video_url || null,
+     data.video_urls?.filter(Boolean) || null, data.video_thumbnail || null, id, studioId]
   )
 
   if (result.rows.length === 0) return NextResponse.json({ error: 'Class not found' }, { status: 404 })
