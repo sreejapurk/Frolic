@@ -210,6 +210,14 @@ export default function ClassCard(props: ClassCardProps) {
             <span className="badge badge-gray">{level}</span>
             <span style={{ color: '#6B7280', fontSize: '12px' }}>·</span>
             <span style={{ color: '#9CA3AF', fontSize: '13px' }}>{duration}</span>
+            {hasVideo && (
+              <button
+                onClick={openModal}
+                style={{ background: 'rgba(225,48,108,0.12)', border: '1px solid rgba(225,48,108,0.3)', color: '#E1306C', fontSize: '12px', fontWeight: '700', padding: '3px 10px', borderRadius: '9999px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+              >
+                ▶ Watch Video
+              </button>
+            )}
           </div>
 
           {hasMultipleSlots ? (
