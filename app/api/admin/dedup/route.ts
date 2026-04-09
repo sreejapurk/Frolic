@@ -17,6 +17,17 @@ export async function POST() {
   for (const group of dupes.rows) {
     const [masterId, ...dupeIds] = group.ids
 
+    // Copy any fields from duplicates that the master is missing
+    await query(`
+      UPDATE classes SET
+        video_url    = COALESCE(video_url,    (SELECT video_url    FROM classes WHERE id = ANY($2) AND video_url    IS NOT NULL LIMIT 1)),
+        video_urls   = COALESCE(video_urls,   (SELECT video_urls   FROM classes WHERE id = ANY($2) AND video_urls   IS NOT NULL LIMIT 1)),
+        video_thumbnail = COALESCE(video_thumbnail, (SELECT video_thumbnail FROM classes WHERE id = ANY($2) AND video_thumbnail IS NOT NULL LIMIT 1)),
+        image        = COALESCE(NULLIF(image,''), (SELECT image FROM classes WHERE id = ANY($2) AND image IS NOT NULL AND image != '' LIMIT 1)),
+        description  = COALESCE(description,  (SELECT description  FROM classes WHERE id = ANY($2) AND description  IS NOT NULL LIMIT 1))
+      WHERE id = $1
+    `, [masterId, dupeIds])
+
     for (const dupeId of dupeIds) {
       // Move slots from duplicate to master (skip exact date+time duplicates)
       await query(`
