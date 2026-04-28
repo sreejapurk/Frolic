@@ -7,11 +7,11 @@ const EMPTY_SLOT = { date: '', time: '', duration: '60 min', spots: '10' }
 const TIME_OPTIONS = (() => {
   const times: string[] = []
   for (let h = 6; h <= 22; h++) {
-    for (const m of [0, 30]) {
-      if (h === 22 && m === 30) continue
+    for (const m of [0, 15, 30, 45]) {
+      if (h === 22 && m > 0) continue
       const hour = h % 12 === 0 ? 12 : h % 12
       const ampm = h < 12 ? 'AM' : 'PM'
-      times.push(`${hour}:${m === 0 ? '00' : '30'} ${ampm}`)
+      times.push(`${hour}:${String(m).padStart(2, '0')} ${ampm}`)
     }
   }
   return times
