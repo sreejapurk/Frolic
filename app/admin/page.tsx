@@ -327,7 +327,7 @@ export default function AdminPage() {
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                    {['Studio', 'Email', 'Status', 'Joined', 'Action'].map(h => (
+                    {['Studio', 'Email', 'Status', 'Stripe', 'Joined', 'Action'].map(h => (
                       <th key={h} style={{ color: '#9CA3AF', fontSize: '14px', fontWeight: '600', textAlign: 'left', padding: '16px 20px' }}>{h}</th>
                     ))}
                   </tr>
@@ -340,6 +340,11 @@ export default function AdminPage() {
                       <td style={{ padding: '16px 20px' }}>
                         <span style={{ backgroundColor: s.approved ? 'rgba(34,197,94,0.2)' : 'rgba(249,115,22,0.2)', color: s.approved ? '#4ADE80' : '#F97316', padding: '4px 12px', borderRadius: '999px', fontSize: '12px', fontWeight: '600' }}>
                           {s.approved ? 'Approved' : 'Pending'}
+                        </span>
+                      </td>
+                      <td style={{ padding: '16px 20px' }}>
+                        <span style={{ backgroundColor: s.stripe_onboarded ? 'rgba(34,197,94,0.2)' : s.stripe_account_id ? 'rgba(249,115,22,0.2)' : 'rgba(107,114,128,0.2)', color: s.stripe_onboarded ? '#4ADE80' : s.stripe_account_id ? '#F97316' : '#6B7280', padding: '4px 12px', borderRadius: '999px', fontSize: '12px', fontWeight: '600' }}>
+                          {s.stripe_onboarded ? 'Connected' : s.stripe_account_id ? 'In Progress' : 'Not Connected'}
                         </span>
                       </td>
                       <td style={{ padding: '16px 20px', color: '#9CA3AF', fontSize: '14px' }}>{new Date(s.created_at).toLocaleDateString()}</td>

@@ -1,11 +1,11 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import * as XLSX from 'xlsx'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
 
-const EMPTY_SLOT = { date: '', time: '', duration: '60 min', spots: '10' }
+const EMPTY_SLOT = { date: '', time: '', duration: '60 min', spots: '10', label: '' }
 
 const TIME_OPTIONS = (() => {
   const times: string[] = []
@@ -103,40 +103,158 @@ function LocationInput({ initialValue, mapsUrl, onSelect }: { initialValue: stri
   )
 }
 
+function ImageCropModal({ src, aspectRatio, onConfirm, onCancel }: {
+  src: string; aspectRatio: number; onConfirm: (blob: Blob) => void; onCancel: () => void
+}) {
+  const viewW = 480
+  const viewH = Math.round(viewW / aspectRatio)
+  const imgRef = useRef<HTMLImageElement>(null)
+  const [natSize, setNatSize] = useState({ w: 0, h: 0 })
+  const [scale, setScale] = useState(1)
+  const [offset, setOffset] = useState({ x: 0, y: 0 })
+  const [minScale, setMinScale] = useState(1)
+  const dragRef = useRef({ active: false, lastX: 0, lastY: 0 })
+
+  const clamp = (ox: number, oy: number, sc: number, nw: number, nh: number) => ({
+    x: Math.min(0, Math.max(viewW - nw * sc, ox)),
+    y: Math.min(0, Math.max(viewH - nh * sc, oy)),
+  })
+
+  const onLoad = () => {
+    const { naturalWidth: nw, naturalHeight: nh } = imgRef.current!
+    const sc = Math.max(viewW / nw, viewH / nh)
+    setNatSize({ w: nw, h: nh })
+    setMinScale(sc)
+    setScale(sc)
+    setOffset(clamp((viewW - nw * sc) / 2, (viewH - nh * sc) / 2, sc, nw, nh))
+  }
+
+  const onMouseDown = (e: React.MouseEvent) => {
+    dragRef.current = { active: true, lastX: e.clientX, lastY: e.clientY }
+  }
+  const onMouseMove = (e: React.MouseEvent) => {
+    if (!dragRef.current.active) return
+    const dx = e.clientX - dragRef.current.lastX
+    const dy = e.clientY - dragRef.current.lastY
+    dragRef.current.lastX = e.clientX
+    dragRef.current.lastY = e.clientY
+    setOffset(prev => clamp(prev.x + dx, prev.y + dy, scale, natSize.w, natSize.h))
+  }
+  const stopDrag = () => { dragRef.current.active = false }
+
+  const onWheel = (e: React.WheelEvent) => {
+    e.preventDefault()
+    const newSc = Math.max(minScale, Math.min(minScale * 4, scale * (e.deltaY < 0 ? 1.1 : 0.9)))
+    const cx = viewW / 2, cy = viewH / 2
+    setScale(newSc)
+    setOffset(prev => clamp(cx - (cx - prev.x) * (newSc / scale), cy - (cy - prev.y) * (newSc / scale), newSc, natSize.w, natSize.h))
+  }
+
+  const onZoom = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newSc = parseFloat(e.target.value)
+    const cx = viewW / 2, cy = viewH / 2
+    setScale(newSc)
+    setOffset(prev => clamp(cx - (cx - prev.x) * (newSc / scale), cy - (cy - prev.y) * (newSc / scale), newSc, natSize.w, natSize.h))
+  }
+
+  const confirm = () => {
+    const outputW = 1200, outputH = Math.round(outputW / aspectRatio)
+    const canvas = document.createElement('canvas')
+    canvas.width = outputW; canvas.height = outputH
+    const ctx = canvas.getContext('2d')!
+    ctx.drawImage(imgRef.current!, -offset.x / scale, -offset.y / scale, viewW / scale, viewH / scale, 0, 0, outputW, outputH)
+    canvas.toBlob(blob => { if (blob) onConfirm(blob) }, 'image/jpeg', 0.92)
+  }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ background: '#1A2332', borderRadius: '16px', padding: '24px', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', gap: '16px', width: viewW + 48 }}>
+        <h3 style={{ color: 'white', fontWeight: '700', margin: 0 }}>Crop Image</h3>
+        <p style={{ color: '#9CA3AF', fontSize: '13px', margin: 0 }}>Drag to reposition · Scroll or use slider to zoom</p>
+        <div
+          style={{ width: viewW, height: viewH, overflow: 'hidden', borderRadius: '8px', cursor: 'grab', position: 'relative', userSelect: 'none', border: '2px solid #F97316', flexShrink: 0 }}
+          onMouseDown={onMouseDown} onMouseMove={onMouseMove} onMouseUp={stopDrag} onMouseLeave={stopDrag} onWheel={onWheel}
+        >
+          <img
+            ref={imgRef} src={src} onLoad={onLoad} draggable={false} alt="crop preview"
+            style={{ position: 'absolute', left: offset.x, top: offset.y, width: natSize.w * scale || 'auto', height: natSize.h * scale || 'auto', maxWidth: 'none' }}
+          />
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <span style={{ color: '#9CA3AF', fontSize: '12px', flexShrink: 0 }}>Zoom</span>
+          <input type="range" min={minScale} max={minScale * 4} step={0.001} value={scale} onChange={onZoom} style={{ flex: 1, accentColor: '#F97316' }} />
+        </div>
+        <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+          <button onClick={onCancel} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', color: '#9CA3AF', cursor: 'pointer', fontWeight: '600' }}>Cancel</button>
+          <button onClick={confirm} style={{ padding: '10px 20px', borderRadius: '8px', border: 'none', background: '#F97316', color: 'white', cursor: 'pointer', fontWeight: '700' }}>Crop & Use</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function ClassForm({ data, setData, onSave, saving, saveLabel }: any) {
   const [uploading, setUploading] = useState(false)
   const [thumbUploading, setThumbUploading] = useState(false)
+  const [cropModal, setCropModal] = useState<{ src: string; aspectRatio: number; onConfirm: (blob: Blob) => void } | null>(null)
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setUploading(true)
-    const formData = new FormData()
-    formData.append('file', file)
-    const res = await fetch('/api/upload', { method: 'POST', body: formData })
-    const json = await res.json()
-    setUploading(false)
-    if (res.ok) setData((d: any) => ({ ...d, image: json.url }))
-    else alert(json.error || 'Upload failed')
+  const openCropper = (file: File, aspectRatio: number, onConfirm: (blob: Blob) => void) => {
+    setCropModal({ src: URL.createObjectURL(file), aspectRatio, onConfirm })
+  }
+  const closeCropper = () => {
+    if (cropModal) URL.revokeObjectURL(cropModal.src)
+    setCropModal(null)
   }
 
-  const handleThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setThumbUploading(true)
+  const uploadBlob = async (blob: Blob): Promise<string | null> => {
     const formData = new FormData()
-    formData.append('file', file)
+    formData.append('file', blob, 'image.jpg')
     const res = await fetch('/api/upload', { method: 'POST', body: formData })
     const json = await res.json()
-    setThumbUploading(false)
-    if (res.ok) setData((d: any) => ({ ...d, video_thumbnail: json.url }))
-    else alert(json.error || 'Upload failed')
+    if (res.ok) return json.url
+    alert(json.error || 'Upload failed')
+    return null
+  }
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ''
+    openCropper(file, 16 / 9, async (blob) => {
+      closeCropper()
+      setUploading(true)
+      const url = await uploadBlob(blob)
+      setUploading(false)
+      if (url) setData((d: any) => ({ ...d, image: url }))
+    })
+  }
+
+  const handleThumbnailUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ''
+    openCropper(file, 16 / 9, async (blob) => {
+      closeCropper()
+      setThumbUploading(true)
+      const url = await uploadBlob(blob)
+      setThumbUploading(false)
+      if (url) setData((d: any) => ({ ...d, video_thumbnail: url }))
+    })
   }
 
   // Normalise: ensure video_urls array exists, seeded from legacy video_url if needed
   const videoUrls: string[] = data.video_urls?.length ? data.video_urls : (data.video_url ? [data.video_url] : [''])
 
   return (
+    <>
+      {cropModal && (
+        <ImageCropModal
+          src={cropModal.src}
+          aspectRatio={cropModal.aspectRatio}
+          onConfirm={cropModal.onConfirm}
+          onCancel={closeCropper}
+        />
+      )}
     <div style={{ backgroundColor: '#1A2332', borderRadius: '16px', padding: '28px', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
       {[
         { label: 'Class Title', key: 'title' },
@@ -237,7 +355,11 @@ function ClassForm({ data, setData, onSave, saving, saveLabel }: any) {
                 </div>
                 <div>
                   <label style={{ color: '#6B7280', fontSize: '12px', display: 'block', marginBottom: '4px' }}>Spots per session</label>
-                  <input type="number" value={slot.spots} onChange={e => setData((d: any) => ({ ...d, slots: d.slots.map((s: any, j: number) => j === i ? { ...s, spots: e.target.value } : s) }))} style={inputStyle} />
+                  <input type="number" min="1" value={slot.spots} onChange={e => setData((d: any) => ({ ...d, slots: d.slots.map((s: any, j: number) => j === i ? { ...s, spots: e.target.value } : s) }))} style={inputStyle} />
+                </div>
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={{ color: '#6B7280', fontSize: '12px', display: 'block', marginBottom: '4px' }}>Instructor / Instrument <span style={{ color: '#4B5563', fontWeight: '400' }}>(optional — e.g. "Piano · Ms. Smith")</span></label>
+                  <input type="text" value={slot.label || ''} onChange={e => setData((d: any) => ({ ...d, slots: d.slots.map((s: any, j: number) => j === i ? { ...s, label: e.target.value } : s) }))} placeholder="e.g. Piano · Ms. Smith" style={inputStyle} />
                 </div>
               </div>
             </div>
@@ -408,11 +530,13 @@ function ClassForm({ data, setData, onSave, saving, saveLabel }: any) {
         {saving ? 'Saving...' : saveLabel}
       </button>
     </div>
+    </>
   )
 }
 
-export default function StudioDashboard() {
+function StudioDashboardInner() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [classes, setClasses] = useState<any[]>([])
   const [earnings, setEarnings] = useState<any>(null)
   const [stripeStatus, setStripeStatus] = useState<any>(null)
@@ -428,6 +552,21 @@ export default function StudioDashboard() {
   const [columnMap, setColumnMap] = useState<Record<string, string>>({})
   const [rawRows, setRawRows] = useState<any[]>([])
   const [importStep, setImportStep] = useState<'upload' | 'map' | 'preview'>('upload')
+
+  // Restore edit state from URL on load/back-navigation
+  useEffect(() => {
+    const editId = searchParams.get('edit')
+    if (editId && classes.length > 0) {
+      const c = classes.find((cl: any) => cl.id === editId)
+      if (c) {
+        setEditingClass({ ...c, slots: (c.slots || []).length > 0 ? c.slots.map((s: any) => ({ ...s, spots: String(s.spots) })) : [{ date: c.date || '', time: c.time || '', duration: c.duration || '60 min', spots: String(c.spots || 10) }] })
+        setTab('edit')
+      }
+    } else if (!editId) {
+      setTab('classes')
+      setEditingClass(null)
+    }
+  }, [searchParams])
 
   useEffect(() => {
     loadClasses()
@@ -489,7 +628,7 @@ export default function StudioDashboard() {
       body: JSON.stringify(editingClass),
     })
     setSaving(false)
-    if (res.ok) { setTab('classes'); setEditingClass(null); loadClasses() }
+    if (res.ok) { setEditingClass(null); loadClasses(); router.replace('/studio/dashboard') }
     else alert('Failed to update class')
   }
 
@@ -501,8 +640,8 @@ export default function StudioDashboard() {
 
   const handleDuplicate = (c: any) => {
     const { id, spots_left, created_at, studio_user_id, ...rest } = c
-    const slots = (c.slots || []).map((s: any) => ({ date: s.date || '', time: '', duration: s.duration || '60 min', spots: String(s.spots || 10) }))
-    setNewClass({ ...EMPTY_CLASS, ...rest, slots: slots.length > 0 ? slots : [{ ...EMPTY_SLOT }] })
+    const slots = (c.slots || []).map((s: any) => ({ date: s.date || '', time: '', duration: s.duration || c.duration || '60 min', spots: String(s.spots || 10) }))
+    setNewClass({ ...EMPTY_CLASS, ...rest, slots: slots.length > 0 ? slots : [{ ...EMPTY_SLOT, duration: c.duration || '60 min' }] })
     setTab('add')
   }
 
@@ -642,9 +781,17 @@ export default function StudioDashboard() {
                       <span style={{ color: '#F97316', fontWeight: 'bold' }}>${c.price}</span>
                       <span style={{ color: '#9CA3AF', fontSize: '14px' }}>{c.spots_left} spots left</span>
                     </div>
-                    <p style={{ color: '#6B7280', fontSize: '14px', marginBottom: '12px' }}>{c.date} • {c.time}</p>
+                    <div style={{ marginBottom: '12px' }}>
+                      {(c.slots && c.slots.length > 0) ? (
+                        c.slots.map((s: any, i: number) => (
+                          <p key={i} style={{ color: '#6B7280', fontSize: '13px', margin: '2px 0' }}>{s.label ? <span style={{ color: '#9CA3AF', fontWeight: '600' }}>{s.label} — </span> : ''}{s.date} • {s.time}{s.duration ? ` • ${s.duration}` : ''}</p>
+                        ))
+                      ) : (
+                        <p style={{ color: '#6B7280', fontSize: '13px', margin: '2px 0' }}>{c.date} • {c.time}</p>
+                      )}
+                    </div>
                     <div style={{ display: 'flex', gap: '8px' }}>
-                      <button onClick={() => { setEditingClass({ ...c, slots: (c.slots || []).length > 0 ? c.slots.map((s: any) => ({ ...s, spots: String(s.spots) })) : [{ date: c.date || '', time: c.time || '', duration: c.duration || '60 min', spots: String(c.spots || 10) }] }); setTab('edit') }} style={{ flex: 1, backgroundColor: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.3)', color: '#F97316', padding: '8px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>Edit</button>
+                      <button onClick={() => router.push(`/studio/dashboard?edit=${c.id}`)} style={{ flex: 1, backgroundColor: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.3)', color: '#F97316', padding: '8px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>Edit</button>
                       <button onClick={() => handleDuplicate(c)} style={{ flex: 1, backgroundColor: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.3)', color: '#818CF8', padding: '8px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>Duplicate</button>
                       <button onClick={() => handleDelete(c.id)} style={{ flex: 1, backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#F87171', padding: '8px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>Delete</button>
                     </div>
@@ -772,6 +919,7 @@ export default function StudioDashboard() {
 
         {tab === 'edit' && editingClass && (
           <div style={{ maxWidth: '600px' }}>
+            <button onClick={() => router.push('/studio/dashboard')} style={{ background: 'none', border: 'none', color: '#9CA3AF', fontSize: '14px', cursor: 'pointer', marginBottom: '16px', padding: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>← Back to Classes</button>
             <h2 style={{ color: 'white', fontWeight: '900', fontSize: '24px', marginBottom: '24px' }}>Edit Class</h2>
             <ClassForm data={editingClass} setData={setEditingClass} onSave={handleEdit} saving={saving} saveLabel="Save Changes" />
           </div>
@@ -780,4 +928,8 @@ export default function StudioDashboard() {
       </div>
     </div>
   )
+}
+
+export default function StudioDashboard() {
+  return <Suspense fallback={<div style={{ minHeight: '100vh', backgroundColor: '#0F1624' }} />}><StudioDashboardInner /></Suspense>
 }

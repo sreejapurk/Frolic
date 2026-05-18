@@ -227,7 +227,7 @@ export default function ClassCard(props: ClassCardProps) {
               </p>
               {availableSlots.slice(0, 2).map(s => (
                 <p key={s.id} style={{ color: '#6B7280', fontSize: '12px', marginLeft: '19px' }}>
-                  {s.date} · {s.time} · {s.duration}
+                  {s.label ? <span style={{ color: '#9CA3AF', fontWeight: '600' }}>{s.label} — </span> : ''}{s.date} · {s.time} · {s.duration}
                 </p>
               ))}
               {availableSlots.length > 2 && <p style={{ color: '#4B5563', fontSize: '12px', marginLeft: '19px' }}>+{availableSlots.length - 2} more</p>}

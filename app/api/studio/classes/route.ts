@@ -21,7 +21,7 @@ export async function GET() {
     `SELECT c.*,
       COALESCE(
         json_agg(
-          json_build_object('id', s.id, 'date', s.date, 'time', s.time, 'duration', s.duration, 'spots', s.spots, 'spots_left', s.spots_left)
+          json_build_object('id', s.id, 'date', s.date, 'time', s.time, 'duration', s.duration, 'spots', s.spots, 'spots_left', s.spots_left, 'label', s.label)
           ORDER BY s.time
         ) FILTER (WHERE s.id IS NOT NULL),
         '[]'::json
@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
     const date = firstSlot.date || data.date || ''
     const time = firstSlot.time || data.time || ''
     const duration = firstSlot.duration || data.duration || '60 min'
-    const spots = parseInt(firstSlot.spots || data.spots || '10') || 10
+    const spots = Math.max(1, parseInt(firstSlot.spots || data.spots || '10') || 10)
 
     const result = await query(
       `INSERT INTO classes (id, title, studio, category, subcategory, price, level, duration, date, time, spots, spots_left, distance, rating, image, instructor, room, room_maps_url, studio_user_id, recurring, status, description, location_type, location_types, price_location, price_online, price_residence, instructor_background, video_url, video_urls, video_thumbnail)
@@ -71,10 +71,10 @@ export async function POST(req: NextRequest) {
     // Insert slots
     for (const slot of slots) {
       if (!slot.date || !slot.time) continue
-      const slotSpots = parseInt(slot.spots) || 10
+      const slotSpots = Math.max(1, parseInt(slot.spots) || 10)
       await query(
-        `INSERT INTO class_slots (class_id, date, time, duration, spots, spots_left) VALUES ($1, $2, $3, $4, $5, $5)`,
-        [id, slot.date, slot.time, slot.duration || '60 min', slotSpots]
+        `INSERT INTO class_slots (class_id, date, time, duration, spots, spots_left, label) VALUES ($1, $2, $3, $4, $5, $5, $6)`,
+        [id, slot.date, slot.time, slot.duration || '60 min', slotSpots, slot.label || null]
       )
     }
 

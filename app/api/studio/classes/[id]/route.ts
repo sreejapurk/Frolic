@@ -14,7 +14,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   const date = firstSlot.date || data.date || ''
   const time = firstSlot.time || data.time || ''
   const duration = firstSlot.duration || data.duration || '60 min'
-  const spots = parseInt(firstSlot.spots || data.spots || '10') || 10
+  const spots = Math.max(1, parseInt(firstSlot.spots || data.spots || '10') || 10)
 
   const result = await query(
     `UPDATE classes SET title=$1, category=$2, subcategory=$3, price=$4, level=$5, duration=$6, date=$7, time=$8, spots=$9, distance=$10, image=$11, instructor=$12, room=$13, room_maps_url=$14, recurring=$15, description=$16, location_type=$17, location_types=$18, price_location=$19, price_online=$20, price_residence=$21, instructor_background=$22, video_url=$23, video_urls=$24, video_thumbnail=$25
@@ -33,10 +33,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   await query('DELETE FROM class_slots WHERE class_id = $1', [id])
   for (const slot of slots) {
     if (!slot.date || !slot.time) continue
-    const slotSpots = parseInt(slot.spots) || 10
+    const slotSpots = Math.max(1, parseInt(slot.spots) || 10)
     await query(
-      `INSERT INTO class_slots (class_id, date, time, duration, spots, spots_left) VALUES ($1, $2, $3, $4, $5, $5)`,
-      [id, slot.date, slot.time, slot.duration || '60 min', slotSpots]
+      `INSERT INTO class_slots (class_id, date, time, duration, spots, spots_left, label) VALUES ($1, $2, $3, $4, $5, $5, $6)`,
+      [id, slot.date, slot.time, slot.duration || '60 min', slotSpots, slot.label || null]
     )
   }
 

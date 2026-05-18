@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
@@ -8,6 +8,17 @@ export default function StudioLoginPage() {
   const [form, setForm] = useState({ email: '', password: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    const checkAuth = () => {
+      fetch('/api/studio/classes', { cache: 'no-store' })
+        .then(res => { if (res.ok) router.replace('/studio/dashboard') })
+        .catch(() => {})
+    }
+    checkAuth()
+    window.addEventListener('pageshow', checkAuth)
+    return () => window.removeEventListener('pageshow', checkAuth)
+  }, [router])
 
   const handleChange = (e: any) => setForm(f => ({ ...f, [e.target.name]: e.target.value }))
 
@@ -21,7 +32,7 @@ export default function StudioLoginPage() {
     })
     const data = await res.json()
     setLoading(false)
-    if (!res.ok) { setError(data.error) } else { router.push('/studio/dashboard') }
+    if (!res.ok) { setError(data.error) } else { router.replace('/studio/dashboard') }
   }
 
   return (

@@ -71,7 +71,7 @@ export async function GET() {
       `SELECT c.*,
         COALESCE(
           json_agg(
-            json_build_object('id', s.id, 'date', s.date, 'time', s.time, 'duration', s.duration, 'spots', s.spots, 'spots_left', s.spots_left)
+            json_build_object('id', s.id, 'date', s.date, 'time', s.time, 'duration', s.duration, 'spots', s.spots, 'spots_left', s.spots_left, 'label', s.label)
             ORDER BY s.time
           ) FILTER (WHERE s.id IS NOT NULL),
           '[]'::json

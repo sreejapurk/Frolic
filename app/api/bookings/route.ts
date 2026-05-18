@@ -42,6 +42,23 @@ export async function POST(req: NextRequest) {
         `UPDATE class_slots SET spots_left = spots_left - 1 WHERE id = $1 AND spots_left > 0`,
         [data.slotId]
       )
+      // Block all other slots for the same teacher at the same date+time
+      // so the teacher can't be double-booked across different instruments/classes
+      await query(
+        `UPDATE class_slots cs
+         SET spots_left = 0
+         FROM classes c,
+              (SELECT cs2.date, cs2.time, c2.studio_user_id
+               FROM class_slots cs2
+               JOIN classes c2 ON c2.id = cs2.class_id
+               WHERE cs2.id = $1 AND c2.studio_user_id IS NOT NULL) booked
+         WHERE cs.class_id = c.id
+           AND c.studio_user_id = booked.studio_user_id
+           AND cs.date = booked.date
+           AND cs.time = booked.time
+           AND cs.id != $1`,
+        [data.slotId]
+      )
     } else {
       await query(
         `UPDATE classes SET spots_left = spots_left - 1 WHERE id = $1 AND spots_left > 0`,

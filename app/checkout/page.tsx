@@ -160,7 +160,7 @@ function CheckoutForm({ classData, classId }: { classData: any; classId: string 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                       <div style={{ width: '18px', height: '18px', borderRadius: '50%', border: selected ? '2px solid #F97316' : '2px solid rgba(255,255,255,0.2)', backgroundColor: selected ? '#F97316' : 'transparent', flexShrink: 0 }} />
                       <div>
-                        <span style={{ color: selected ? '#F97316' : 'white', fontWeight: '600', fontSize: '14px', display: 'block' }}>{slot.date} at {slot.time}</span>
+                        <span style={{ color: selected ? '#F97316' : 'white', fontWeight: '600', fontSize: '14px', display: 'block' }}>{slot.label ? `${slot.label} — ` : ''}{slot.date} at {slot.time}</span>
                         <span style={{ color: '#6B7280', fontSize: '12px' }}>{slot.duration} · {slot.spots_left} spot{slot.spots_left !== 1 ? 's' : ''} left</span>
                       </div>
                     </div>
@@ -316,6 +316,17 @@ function CheckoutContent() {
       .then(r => r.json())
       .then(d => { setClassData(d); setLoading(false) })
       .catch(() => setLoading(false))
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        fetch(`/api/classes/${classId}`)
+          .then(r => r.json())
+          .then(d => setClassData(d))
+          .catch(() => {})
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => document.removeEventListener('visibilitychange', handleVisibility)
   }, [classId])
 
   if (loading) return <div style={{ minHeight: '100vh', backgroundColor: '#0F1624', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>Loading...</div>
