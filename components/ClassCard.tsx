@@ -48,6 +48,7 @@ interface ClassSlot {
   duration: string
   spots: number
   spots_left: number
+  label?: string
 }
 
 interface ClassCardProps {
