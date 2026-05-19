@@ -113,7 +113,7 @@ export async function GET(req: NextRequest) {
         AND date IS NOT NULL AND date != ''
         AND id NOT IN (SELECT DISTINCT class_id FROM class_slots)
     `)
-    await query(`UPDATE classes SET status = 'active' WHERE status IS NULL OR status = '' OR status = 'deleted'`)
+    await query(`UPDATE classes SET status = 'active' WHERE status IS NULL OR status = ''`)
     // Mark all existing classes as recurring so they roll over each week
     await query(`UPDATE classes SET recurring = true WHERE status IS DISTINCT FROM 'deleted'`)
     // Reset spots_left on all slots so recurring classes refill each week
