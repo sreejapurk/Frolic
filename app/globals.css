@@ -232,8 +232,25 @@ body {
   gap: 24px;
 }
 
+@media (max-width: 1024px) {
+  .class-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+}
+
 @media (max-width: 640px) {
-  .class-grid { grid-template-columns: 1fr; gap: 16px; }
+  .class-grid {
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    gap: 16px;
+    padding-bottom: 12px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+  .class-grid > * {
+    flex: 0 0 272px;
+    scroll-snap-align: start;
+  }
+  .class-grid::-webkit-scrollbar { display: none; }
   .section { padding: 0 16px; }
 }
 
