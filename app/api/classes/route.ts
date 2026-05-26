@@ -42,17 +42,29 @@ function nextOccurrence(dateStr: string): string {
     return `${SHORT_DAYS[next.getDay()]}, ${SHORT_MONTHS[next.getMonth()]} ${next.getDate()}`
   }
 
-  // Try "Day, Month DD" or "Month DD" format (e.g., "Sat, Jun 28", "Mon, Jun 1")
-  const monthDayMatch = dateStr.match(/(?:\w+,\s*)?(\w+)\s+(\d+)/)
+  // Try "Day, Month DD" or "Month DD" format (e.g., "Sat, Jun 28", "Wed, Apr 8")
+  const monthDayMatch = dateStr.match(/(?:(\w+),\s*)?(\w+)\s+(\d+)/)
   if (monthDayMatch) {
-    const monthIdx = MONTH_NAMES[monthDayMatch[1].toLowerCase().slice(0, 3)]
-    const day = parseInt(monthDayMatch[2])
+    const dayNameHint = monthDayMatch[1]?.toLowerCase()
+    const monthIdx = MONTH_NAMES[monthDayMatch[2].toLowerCase().slice(0, 3)]
+    const day = parseInt(monthDayMatch[3])
     if (monthIdx !== undefined && day) {
       const year = today.getFullYear()
       const candidate = new Date(year, monthIdx, day)
       candidate.setHours(0, 0, 0, 0)
-      if (candidate < today) candidate.setFullYear(year + 1)
-      return `${SHORT_DAYS[candidate.getDay()]}, ${SHORT_MONTHS[candidate.getMonth()]} ${candidate.getDate()}`
+      if (candidate >= today) {
+        return `${SHORT_DAYS[candidate.getDay()]}, ${SHORT_MONTHS[candidate.getMonth()]} ${candidate.getDate()}`
+      }
+      // Past date — use the day name hint (or candidate's day) to find the next upcoming occurrence
+      const targetDay = (dayNameHint && DAY_NAMES[dayNameHint] !== undefined)
+        ? DAY_NAMES[dayNameHint]
+        : candidate.getDay()
+      const currentDay = today.getDay()
+      let daysAhead = targetDay - currentDay
+      if (daysAhead <= 0) daysAhead += 7
+      const next = new Date(today)
+      next.setDate(today.getDate() + daysAhead)
+      return `${SHORT_DAYS[next.getDay()]}, ${SHORT_MONTHS[next.getMonth()]} ${next.getDate()}`
     }
   }
 
