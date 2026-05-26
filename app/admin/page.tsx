@@ -93,6 +93,13 @@ export default function AdminPage() {
     loadData()
   }
 
+  const deleteAllByTitle = async (title: string) => {
+    const copies = classes.filter((c: any) => c.title.trim().toLowerCase() === title.trim().toLowerCase())
+    if (!confirm(`Delete ALL ${copies.length} copies of "${title}"? This cannot be undone.`)) return
+    await Promise.all(copies.map((c: any) => fetch(`/api/classes/${c.id}`, { method: 'DELETE' })))
+    loadData()
+  }
+
   const handleAddClass = async () => {
     setSaving(true)
     const res = await fetch('/api/classes', {
@@ -197,10 +204,15 @@ export default function AdminPage() {
           <div>
             <h2 style={{ color: 'white', fontWeight: '900', fontSize: '24px', marginBottom: '24px' }}>Classes ({classes.length})</h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
-              {classes.map(c => (
-                <div key={c.id} style={{ backgroundColor: '#1A2332', borderRadius: '12px', padding: '20px', border: '1px solid rgba(255,255,255,0.1)' }}>
+              {classes.map(c => {
+                const copyCount = classes.filter((x: any) => x.title.trim().toLowerCase() === c.title.trim().toLowerCase()).length
+                return (
+                <div key={c.id} style={{ backgroundColor: '#1A2332', borderRadius: '12px', padding: '20px', border: copyCount > 1 ? '1px solid rgba(239,68,68,0.3)' : '1px solid rgba(255,255,255,0.1)' }}>
                   {c.image && <img src={c.image} alt={c.title} style={{ width: '100%', height: '128px', objectFit: 'cover', borderRadius: '8px', marginBottom: '12px' }} />}
-                  <h3 style={{ color: 'white', fontWeight: 'bold', marginBottom: '4px' }}>{c.title}</h3>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                    <h3 style={{ color: 'white', fontWeight: 'bold', margin: 0 }}>{c.title}</h3>
+                    {copyCount > 1 && <span style={{ background: 'rgba(239,68,68,0.2)', color: '#F87171', fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '999px' }}>{copyCount} copies</span>}
+                  </div>
                   <p style={{ color: '#9CA3AF', fontSize: '14px', marginBottom: '8px' }}>{c.studio}</p>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                     <span style={{ color: '#F97316', fontWeight: 'bold' }}>${c.price}</span>
@@ -241,8 +253,14 @@ export default function AdminPage() {
                       Delete
                     </button>
                   </div>
+                  {copyCount > 1 && (
+                    <button onClick={() => deleteAllByTitle(c.title)} style={{ width: '100%', marginTop: '8px', backgroundColor: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.4)', color: '#F87171', padding: '6px', borderRadius: '8px', fontSize: '13px', fontWeight: '700', cursor: 'pointer' }}>
+                      Delete all {copyCount} copies
+                    </button>
+                  )}
                 </div>
-              ))}
+                )
+              })}
               {classes.length === 0 && <p style={{ color: '#6B7280' }}>No classes yet. Add one!</p>}
             </div>
           </div>
