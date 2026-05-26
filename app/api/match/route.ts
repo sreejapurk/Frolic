@@ -1,71 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db'
-import Anthropic from '@anthropic-ai/sdk'
 
-const client = new Anthropic()
+function buildReason(c: any, category: string, subcategory: string, level: string, ageGroup: string): string {
+  const parts: string[] = []
+  if (subcategory && c.subcategory?.toLowerCase() === subcategory.toLowerCase())
+    parts.push(`${c.subcategory} class`)
+  else if (category && c.category?.toLowerCase() === category.toLowerCase())
+    parts.push(`${c.category} class`)
+  if (c.instructor) parts.push(`taught by ${c.instructor}`)
+  if (level && c.level?.toLowerCase() === level.toLowerCase())
+    parts.push(`${c.level.toLowerCase()} level — a great fit`)
+  else if (c.level)
+    parts.push(`${c.level.toLowerCase()} level`)
+  if (ageGroup.includes('Child') && c.description?.toLowerCase().includes('kid'))
+    parts.push('welcoming for children')
+  return parts.length > 0 ? parts.join(', ') + '.' : `A strong match based on your preferences.`
+}
 
 export async function POST(req: NextRequest) {
   try {
     const { ageGroup, category, subcategory, level, freeText } = await req.json()
 
-    // Fetch all active classes
     const result = await query(
-      `SELECT id, title, instructor, category, subcategory, level, description, price
-       FROM classes
-       WHERE status IS DISTINCT FROM 'deleted'
-       ORDER BY created_at DESC`,
-      []
-    )
-
-    if (result.rows.length === 0) {
-      return NextResponse.json([])
-    }
-
-    const classList = result.rows.map(c => ({
-      id: c.id,
-      title: c.title,
-      instructor: c.instructor,
-      category: c.category,
-      subcategory: c.subcategory,
-      level: c.level,
-      description: c.description,
-      price: c.price,
-    }))
-
-    const preferences = [
-      ageGroup && `Age group: ${ageGroup}`,
-      category && `Category: ${category}`,
-      subcategory && `Specific interest: ${subcategory}`,
-      level && `Experience level: ${level}`,
-      freeText && `Additional details: ${freeText}`,
-    ].filter(Boolean).join('\n')
-
-    const message = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1024,
-      messages: [{
-        role: 'user',
-        content: `You are a class matching assistant for Frolic, a marketplace for music, sports, and dance classes.
-
-A student has these preferences:
-${preferences}
-
-Available classes:
-${JSON.stringify(classList, null, 2)}
-
-Return the top 3 to 5 best matching classes as a JSON array. Format:
-[{"id": "uuid", "reason": "One sentence explaining why this is a great match for them."}]
-
-Consider: age appropriateness, level match, relevance to interests, and variety. Only return the JSON array, nothing else.`,
-      }],
-    })
-
-    const text = message.content[0].type === 'text' ? message.content[0].text.trim() : '[]'
-    const matches: { id: string; reason: string }[] = JSON.parse(text)
-    const matchedIds = matches.map(m => m.id)
-
-    // Fetch full class data including slots for matched classes
-    const fullResult = await query(
       `SELECT c.*,
         COALESCE(
           json_agg(
@@ -76,20 +32,51 @@ Consider: age appropriateness, level match, relevance to interests, and variety.
         ) as slots
        FROM classes c
        LEFT JOIN class_slots s ON s.class_id = c.id
-       WHERE c.id = ANY($1)
+       WHERE c.status IS DISTINCT FROM 'deleted'
        GROUP BY c.id`,
-      [matchedIds]
+      []
     )
 
-    const ranked = matchedIds
-      .map(id => {
-        const cls = fullResult.rows.find(r => r.id === id)
-        if (!cls) return null
-        return { ...cls, matchReason: matches.find(m => m.id === id)?.reason || '' }
-      })
-      .filter(Boolean)
+    const freeTextLower = freeText?.toLowerCase() || ''
 
-    return NextResponse.json(ranked)
+    const scored = result.rows.map(c => {
+      let score = 0
+
+      // Category match
+      if (category && c.category?.toLowerCase() === category.toLowerCase()) score += 40
+      // Subcategory match
+      if (subcategory && c.subcategory?.toLowerCase() === subcategory.toLowerCase()) score += 35
+      // Level match
+      if (level && c.level?.toLowerCase() === level.toLowerCase()) score += 20
+      // Beginner bonus: if no level specified or beginner, prefer beginner-friendly
+      if (!level && c.level?.toLowerCase() === 'beginner') score += 5
+      // Free text keyword match against title/description/instructor
+      if (freeTextLower) {
+        const haystack = `${c.title} ${c.description || ''} ${c.instructor || ''}`.toLowerCase()
+        freeTextLower.split(/\s+/).forEach((word: string) => {
+          if (word.length > 3 && haystack.includes(word)) score += 10
+        })
+      }
+      // Age group hints
+      if (ageGroup.includes('Child')) {
+        const text = `${c.title} ${c.description || ''}`.toLowerCase()
+        if (text.includes('kid') || text.includes('child') || text.includes('junior') || text.includes('youth')) score += 15
+      }
+      // Spots available bonus
+      const totalSpots = (c.slots || []).reduce((s: number, sl: any) => s + (sl.spots_left || 0), 0) || c.spots_left || 0
+      if (totalSpots > 0) score += 5
+
+      return { ...c, score }
+    })
+
+    // Sort by score, take top 5
+    const top = scored
+      .filter(c => c.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 5)
+      .map(c => ({ ...c, matchReason: buildReason(c, category, subcategory, level, ageGroup) }))
+
+    return NextResponse.json(top)
   } catch (err: any) {
     console.error('Match error:', err)
     return NextResponse.json({ error: 'Matching failed' }, { status: 500 })
