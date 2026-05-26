@@ -125,7 +125,7 @@ export async function GET() {
       return aDate - bDate
     })
 
-    return NextResponse.json(rows)
+    return NextResponse.json(rows, { headers: { 'Cache-Control': 'no-store' } })
   } catch (error) {
     console.error('Error fetching classes:', error)
     return NextResponse.json({ error: 'Failed to fetch classes' }, { status: 500 })

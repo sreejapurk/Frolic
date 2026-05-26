@@ -76,6 +76,26 @@ function formatDateValue(raw: string) {
   const SHORT_M = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
   return `${SHORT_D[d.getDay()]}, ${SHORT_M[d.getMonth()]} ${d.getDate()}`
 }
+
+// Convert stored date string (e.g. "Thu, May 28" or "2026-05-28") to ISO format for <input type="date">
+function toIsoDate(dateStr: string): string {
+  if (!dateStr) return ''
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr
+  const MONTHS: Record<string, number> = { jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11 }
+  const m = dateStr.match(/(?:\w+,\s*)?(\w+)\s+(\d+)/)
+  if (m) {
+    const month = MONTHS[m[1].toLowerCase().slice(0,3)]
+    const day = parseInt(m[2])
+    if (month !== undefined && day) {
+      const today = new Date()
+      const year = today.getFullYear()
+      const candidate = new Date(year, month, day)
+      if (candidate < today) candidate.setFullYear(year + 1)
+      return candidate.toISOString().split('T')[0]
+    }
+  }
+  return ''
+}
 const EMPTY_CLASS = {
   title: '', studio: '', category: 'Sports', subcategory: '', price: '', level: 'Beginner',
   slots: [{ ...EMPTY_SLOT }] as { date: string; time: string; duration: string; spots: string }[],
@@ -294,7 +314,7 @@ export default function AdminPage() {
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button onClick={() => {
                       const videoUrls = c.video_urls?.length ? c.video_urls : (c.video_url ? [c.video_url] : [''])
-                      setEditingClass({ ...c, slots: (c.slots || []).length > 0 ? c.slots.map((s: any) => ({ ...s, spots: String(s.spots) })) : [{ date: c.date || '', time: c.time || '', duration: c.duration || '60 min', spots: String(c.spots || 10) }], video_urls: videoUrls })
+                      setEditingClass({ ...c, slots: (c.slots || []).length > 0 ? c.slots.map((s: any) => ({ ...s, spots: String(s.spots), rawDate: toIsoDate(s.date) })) : [{ date: c.date || '', time: c.time || '', duration: c.duration || '60 min', spots: String(c.spots || 10), rawDate: toIsoDate(c.date || '') }], video_urls: videoUrls })
                       setTab('edit')
                     }} style={{ flex: 1, backgroundColor: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.3)', color: '#F97316', padding: '8px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
                       Edit
