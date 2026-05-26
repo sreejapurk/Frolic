@@ -196,8 +196,13 @@ export default function AdminPage() {
       body: JSON.stringify(editingClass),
     })
     setSaving(false)
-    if (res.ok) { setTab('classes'); setEditingClass(null); loadData() }
-    else alert('Failed to save changes')
+    const result = await res.json().catch(() => ({}))
+    if (res.ok) {
+      alert(`Saved! Date stored as: ${result.savedDate || '(unknown)'}`)
+      setTab('classes'); setEditingClass(null); loadData()
+    } else {
+      alert('Failed to save: ' + (result.error || res.status))
+    }
   }
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
