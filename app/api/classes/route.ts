@@ -12,6 +12,11 @@ const DAY_NAMES: Record<string, number> = {
   sat: 6, saturday: 6,
 }
 
+const MONTH_NAMES: Record<string, number> = {
+  jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5,
+  jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11
+}
+
 const SHORT_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const SHORT_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
@@ -20,10 +25,9 @@ function nextOccurrence(dateStr: string): string {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
-  // Try to parse as a real date first (handles "Apr 7", "Mon, Apr 7", "2025-04-07", etc.)
+  // Try ISO / standard date parse first (handles "2026-06-28", "Apr 7, 2026", etc.)
   const attempted = new Date(dateStr)
   if (!isNaN(attempted.getTime())) {
-    // It's a real date — if in the future, show it; if past, roll forward by week
     attempted.setHours(0, 0, 0, 0)
     if (attempted >= today) {
       return `${SHORT_DAYS[attempted.getDay()]}, ${SHORT_MONTHS[attempted.getMonth()]} ${attempted.getDate()}`
@@ -36,6 +40,20 @@ function nextOccurrence(dateStr: string): string {
     const next = new Date(today)
     next.setDate(today.getDate() + daysAhead)
     return `${SHORT_DAYS[next.getDay()]}, ${SHORT_MONTHS[next.getMonth()]} ${next.getDate()}`
+  }
+
+  // Try "Day, Month DD" or "Month DD" format (e.g., "Sat, Jun 28", "Mon, Jun 1")
+  const monthDayMatch = dateStr.match(/(?:\w+,\s*)?(\w+)\s+(\d+)/)
+  if (monthDayMatch) {
+    const monthIdx = MONTH_NAMES[monthDayMatch[1].toLowerCase().slice(0, 3)]
+    const day = parseInt(monthDayMatch[2])
+    if (monthIdx !== undefined && day) {
+      const year = today.getFullYear()
+      const candidate = new Date(year, monthIdx, day)
+      candidate.setHours(0, 0, 0, 0)
+      if (candidate < today) candidate.setFullYear(year + 1)
+      return `${SHORT_DAYS[candidate.getDay()]}, ${SHORT_MONTHS[candidate.getMonth()]} ${candidate.getDate()}`
+    }
   }
 
   // Fall back to day-name matching ("Mon", "Tuesday", etc.)
