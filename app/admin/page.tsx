@@ -1,6 +1,56 @@
 'use client'
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import Link from 'next/link'
+
+function LocationInput({ value, mapsUrl, onChange }: { value: string; mapsUrl: string; onChange: (room: string, url: string) => void }) {
+  const [suggestions, setSuggestions] = useState<{ description: string; place_id: string }[]>([])
+  const [open, setOpen] = useState(false)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onChange(e.target.value, mapsUrl)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    if (e.target.value.length < 2) { setSuggestions([]); setOpen(false); return }
+    debounceRef.current = setTimeout(async () => {
+      const res = await fetch(`/api/places?input=${encodeURIComponent(e.target.value)}`)
+      const data = await res.json()
+      setSuggestions(data.suggestions || [])
+      setOpen(true)
+    }, 300)
+  }
+
+  const handleSelect = (s: { description: string; place_id: string }) => {
+    onChange(s.description, `https://www.google.com/maps/place/?q=place_id:${s.place_id}`)
+    setSuggestions([])
+    setOpen(false)
+  }
+
+  const inputStyle = { width: '100%', backgroundColor: '#0F1624', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '8px 12px', color: 'white', fontSize: '13px', outline: 'none', boxSizing: 'border-box' as const }
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <input type="text" value={value} onChange={handleChange} onBlur={() => setTimeout(() => setOpen(false), 150)}
+        placeholder="Search for an address..." style={inputStyle} autoComplete="off" />
+      {open && suggestions.length > 0 && (
+        <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, backgroundColor: '#1A2332', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '12px', marginTop: '4px', zIndex: 100, overflow: 'hidden' }}>
+          {suggestions.map(s => (
+            <div key={s.place_id} onMouseDown={() => handleSelect(s)}
+              style={{ padding: '12px 16px', cursor: 'pointer', color: 'white', fontSize: '14px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+              onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(249,115,22,0.1)')}
+              onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}>
+              📍 {s.description}
+            </div>
+          ))}
+        </div>
+      )}
+      {mapsUrl && (
+        <a href={mapsUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', marginTop: '6px', color: '#60A5FA', fontSize: '13px', textDecoration: 'none' }}>
+          View on Google Maps →
+        </a>
+      )}
+    </div>
+  )
+}
 
 const EMPTY_SLOT = { date: '', time: '', duration: '60 min', spots: '10' }
 
@@ -533,7 +583,11 @@ export default function AdminPage() {
               {/* Location */}
               <div>
                 <label style={{ color: '#9CA3AF', fontSize: '14px', display: 'block', marginBottom: '6px' }}>Location</label>
-                <input value={editingClass.room || ''} onChange={e => setEditingClass((c: any) => ({ ...c, room: e.target.value }))} placeholder="Address..." style={inputStyle} />
+                <LocationInput
+                  value={editingClass.room || ''}
+                  mapsUrl={editingClass.room_maps_url || ''}
+                  onChange={(room, url) => setEditingClass((c: any) => ({ ...c, room, room_maps_url: url }))}
+                />
               </div>
 
               {/* Recurring */}
@@ -749,7 +803,11 @@ export default function AdminPage() {
                         {selected && opt.value === 'location' && (
                           <div style={{ marginTop: '8px', paddingLeft: '12px' }}>
                             <label style={{ color: '#9CA3AF', fontSize: '13px', display: 'block', marginBottom: '4px' }}>Address</label>
-                            <input value={newClass.room} onChange={e => setNewClass(n => ({ ...n, room: e.target.value }))} placeholder="Enter address" style={inputStyle} />
+                            <LocationInput
+                              value={newClass.room}
+                              mapsUrl={(newClass as any).room_maps_url || ''}
+                              onChange={(room, url) => setNewClass(n => ({ ...n, room, room_maps_url: url }))}
+                            />
                           </div>
                         )}
                       </div>
