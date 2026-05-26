@@ -221,26 +221,15 @@ export default function HomePage() {
             ].map(({ name: cat, emoji, color }) => {
               const catClasses = filtered.filter(c => c.category === cat)
               if (catClasses.length === 0) return null
-              const preview = catClasses.slice(0, 6)
-              const hasMore = catClasses.length > 6
               return (
                 <div key={cat}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '22px' }}>{emoji}</span>
-                      <h3 style={{ color: 'white', fontSize: '22px', fontWeight: '800', letterSpacing: '-0.4px', margin: 0 }}>{cat}</h3>
-                      <span style={{ fontSize: '13px', color, background: `${color}18`, padding: '3px 10px', borderRadius: '999px', fontWeight: '600' }}>{catClasses.length} classes</span>
-                    </div>
-                    {hasMore && (
-                      <button onClick={() => setActiveCategory(cat)} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.1)', color: '#9CA3AF', fontSize: '13px', fontWeight: '600', cursor: 'pointer', padding: '6px 14px', borderRadius: '999px', transition: 'all 0.2s' }}
-                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'white'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.3)' }}
-                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#9CA3AF'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.1)' }}>
-                        See all {catClasses.length} →
-                      </button>
-                    )}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+                    <span style={{ fontSize: '22px' }}>{emoji}</span>
+                    <h3 style={{ color: 'white', fontSize: '22px', fontWeight: '800', letterSpacing: '-0.4px', margin: 0 }}>{cat}</h3>
+                    <span style={{ fontSize: '13px', color, background: `${color}18`, padding: '3px 10px', borderRadius: '999px', fontWeight: '600' }}>{catClasses.length} classes</span>
                   </div>
                   <div className="class-grid stagger">
-                    {preview.map(c => <ClassCard key={c.id} {...c} />)}
+                    {catClasses.map(c => <ClassCard key={c.id} {...c} />)}
                   </div>
                 </div>
               )
