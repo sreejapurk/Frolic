@@ -53,6 +53,14 @@ function nextOccurrence(dateStr: string): string {
 
 export async function GET() {
   try {
+    // Ensure required columns exist (auto-migration)
+    try {
+      await query(`ALTER TABLE class_slots ADD COLUMN IF NOT EXISTS label TEXT`)
+      await query(`ALTER TABLE class_slots ADD COLUMN IF NOT EXISTS spots_reset_at TIMESTAMP`)
+    } catch (e) {
+      console.error('Auto-migration skipped:', e)
+    }
+
     // Auto-reset spots for all class slots that are 7+ days old
     try {
       await query(`
