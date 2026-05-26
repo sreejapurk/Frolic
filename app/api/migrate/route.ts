@@ -116,6 +116,11 @@ export async function GET(req: NextRequest) {
     await query(`UPDATE classes SET status = 'active' WHERE status IS NULL OR status = ''`)
     // Mark all existing classes as recurring so they roll over each week
     await query(`UPDATE classes SET recurring = true WHERE status IS DISTINCT FROM 'deleted'`)
+    // Fix any negative or zero spots values — clamp to minimum of 1
+    await query(`UPDATE class_slots SET spots = GREATEST(spots, 1) WHERE spots < 1`)
+    await query(`UPDATE class_slots SET spots_left = GREATEST(spots_left, 0) WHERE spots_left < 0`)
+    await query(`UPDATE classes SET spots = GREATEST(spots, 1) WHERE spots < 1`)
+    await query(`UPDATE classes SET spots_left = GREATEST(spots_left, 0) WHERE spots_left < 0`)
     // Reset spots_left on all slots so recurring classes refill each week
     await query(`UPDATE class_slots SET spots_left = spots WHERE spots_left = 0`)
 
