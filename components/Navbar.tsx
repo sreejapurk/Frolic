@@ -34,8 +34,11 @@ export default function Navbar() {
 
         {/* Center toggle */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '2px', background: 'rgba(255,255,255,0.04)', borderRadius: '10px', padding: '3px', border: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>
-          <Link href="/" style={{ padding: '5px 12px', borderRadius: '7px', fontSize: '13px', fontWeight: '600', textDecoration: 'none', whiteSpace: 'nowrap', backgroundColor: !isStudios ? '#F97316' : 'transparent', color: !isStudios ? 'white' : '#9CA3AF' }}>
-            Search
+          <Link href="/" style={{ padding: '5px 12px', borderRadius: '7px', fontSize: '13px', fontWeight: '600', textDecoration: 'none', whiteSpace: 'nowrap', backgroundColor: !isStudios && pathname !== '/match' ? '#F97316' : 'transparent', color: !isStudios && pathname !== '/match' ? 'white' : '#9CA3AF' }}>
+            Browse
+          </Link>
+          <Link href="/match" style={{ padding: '5px 12px', borderRadius: '7px', fontSize: '13px', fontWeight: '600', textDecoration: 'none', whiteSpace: 'nowrap', backgroundColor: pathname === '/match' ? '#F97316' : 'transparent', color: pathname === '/match' ? 'white' : '#9CA3AF' }}>
+            Match Me
           </Link>
           <Link href="/for-studios" style={{ padding: '5px 12px', borderRadius: '7px', fontSize: '13px', fontWeight: '600', textDecoration: 'none', whiteSpace: 'nowrap', backgroundColor: isStudios ? '#F97316' : 'transparent', color: isStudios ? 'white' : '#9CA3AF' }}>
             For Studios
