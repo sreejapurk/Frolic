@@ -2,6 +2,25 @@
 import { useState } from 'react'
 import Link from 'next/link'
 
+function ExpandableDescription({ text }: { text: string }) {
+  const [expanded, setExpanded] = useState(false)
+  const limit = 100
+  const isLong = text.length > limit
+  return (
+    <p style={{ color: '#6B7280', fontSize: '13px', lineHeight: '1.5', marginBottom: '8px' }}>
+      {expanded || !isLong ? text : `${text.slice(0, limit).trimEnd()}...`}
+      {isLong && (
+        <button
+          onClick={e => { e.stopPropagation(); setExpanded(v => !v) }}
+          style={{ background: 'none', border: 'none', color: '#F97316', fontSize: '12px', fontWeight: '600', cursor: 'pointer', padding: '0 0 0 4px' }}
+        >
+          {expanded ? 'less' : 'more'}
+        </button>
+      )}
+    </p>
+  )
+}
+
 interface Slot {
   id: string
   date: string
@@ -135,6 +154,10 @@ export default function StudioCard({ studioName, classes }: StudioCardProps) {
                 {labels.join(' · ')}
               </p>
             )
+          })()}
+          {(() => {
+            const desc = classes.find(c => c.description)?.description
+            return desc ? <ExpandableDescription text={desc} /> : null
           })()}
           {room && (
             <p style={{ fontSize: '13px', color: '#6B7280', marginBottom: '8px' }}>
