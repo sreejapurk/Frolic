@@ -67,7 +67,6 @@ export default function StudioCard({ studioName, classes }: StudioCardProps) {
   const instructors = [...new Set(classes.map(c => c.instructor).filter(Boolean))]
   const categories = [...new Set(classes.map(c => c.category))]
   const image = classes.find(c => c.image)?.image || ''
-  const rating = classes[0]?.rating || '4.9'
   const room = classes.find(c => c.room)?.room || ''
   const room_maps_url = classes.find(c => c.room_maps_url)?.room_maps_url || ''
 
@@ -107,11 +106,6 @@ export default function StudioCard({ studioName, classes }: StudioCardProps) {
                 {cat}
               </span>
             ))}
-          </div>
-
-          {/* Rating */}
-          <div style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(8px)', borderRadius: '9999px', padding: '3px 9px', fontSize: '12px', fontWeight: '600', color: '#FBBF24' }}>
-            ⭐ {rating}
           </div>
 
           {isSoldOut && (
