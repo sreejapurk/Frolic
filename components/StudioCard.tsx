@@ -122,8 +122,14 @@ export default function StudioCard({ studioName, classes }: StudioCardProps) {
             <p style={{ color: '#9CA3AF', fontSize: '13px', marginBottom: '6px' }}>{instructors.join(' · ')}</p>
           )}
           {(() => {
-            const subcats = [...new Set(classes.map(c => c.subcategory).filter(Boolean))]
-            const labels = subcats.length > 0 ? subcats : [...new Set(classes.map(c => c.title))]
+            const INSTRUMENTS = ['Piano','Guitar','Violin','Drums','Vocals','Flute','Saxophone','Bass','Ukulele','Trumpet','Keyboard','Harp']
+            const found = new Set<string>()
+            classes.forEach(c => {
+              if (c.subcategory) { found.add(c.subcategory); return }
+              const t = c.title || ''
+              INSTRUMENTS.forEach(ins => { if (t.toLowerCase().includes(ins.toLowerCase())) found.add(ins) })
+            })
+            const labels = found.size > 0 ? [...found] : [...new Set(classes.map(c => c.title))]
             return (
               <p style={{ color: '#6B7280', fontSize: '13px', marginBottom: '8px' }}>
                 {labels.join(' · ')}
