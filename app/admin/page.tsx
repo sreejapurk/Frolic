@@ -163,6 +163,29 @@ export default function AdminPage() {
     loadData()
   }
 
+  const fixIraKlein = async () => {
+    const toFix = classes.filter((c: any) =>
+      c.instructor?.toLowerCase().includes('ira klein') ||
+      c.studio?.toLowerCase().includes('brooklyn guitar')
+    )
+    if (toFix.length === 0) { alert('No Ira Klein classes found'); return }
+    for (const c of toFix) {
+      const titleLower = (c.title || '').toLowerCase()
+      const sub = titleLower.includes('piano') && titleLower.includes('guitar')
+        ? null
+        : titleLower.includes('piano') ? 'Piano'
+        : titleLower.includes('guitar') ? 'Guitar'
+        : c.subcategory
+      await fetch(`/api/admin/classes/${c.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...c, studio: 'Ira Klein Music Lessons', subcategory: sub, slots: c.slots?.map((s: any) => ({ ...s, spots: String(s.spots), rawDate: s.date })) }),
+      })
+    }
+    alert(`Updated ${toFix.length} class(es) to "Ira Klein Music Lessons"`)
+    loadData()
+  }
+
   const deleteAllByTitle = async (title: string) => {
     const copies = classes.filter((c: any) => c.title.trim().toLowerCase() === title.trim().toLowerCase())
     if (!confirm(`Delete ALL ${copies.length} copies of "${title}"? This cannot be undone.`)) return
@@ -258,6 +281,12 @@ export default function AdminPage() {
             style={{ padding: '8px 16px', borderRadius: '999px', fontSize: '13px', fontWeight: '600', cursor: deduping ? 'not-allowed' : 'pointer', border: '1px solid rgba(96,165,250,0.4)', backgroundColor: 'rgba(96,165,250,0.08)', color: '#60A5FA', opacity: deduping ? 0.6 : 1 }}
           >
             {deduping ? 'Deduplicating...' : 'Dedup Classes'}
+          </button>
+          <button
+            onClick={fixIraKlein}
+            style={{ padding: '8px 16px', borderRadius: '999px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', border: '1px solid rgba(52,211,153,0.4)', backgroundColor: 'rgba(52,211,153,0.08)', color: '#34D399' }}
+          >
+            Fix Ira Klein Studio
           </button>
           {(['classes', 'bookings', 'applications', 'studios', 'add', 'reschedule'] as const).map(t => (
             <button key={t} onClick={() => setTab(t)} style={{ padding: '8px 16px', borderRadius: '999px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', border: 'none', backgroundColor: tab === t ? '#F97316' : 'transparent', color: 'white' }}>
