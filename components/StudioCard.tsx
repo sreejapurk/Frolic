@@ -119,8 +119,17 @@ export default function StudioCard({ studioName, classes }: StudioCardProps) {
         <div style={{ padding: '16px 20px 12px' }}>
           <h3 style={{ color: 'white', fontWeight: '800', fontSize: '17px', marginBottom: '4px', letterSpacing: '-0.2px' }}>{studioName}</h3>
           {instructors.length > 0 && (
-            <p style={{ color: '#9CA3AF', fontSize: '13px', marginBottom: '8px' }}>{instructors.join(' · ')}</p>
+            <p style={{ color: '#9CA3AF', fontSize: '13px', marginBottom: '6px' }}>{instructors.join(' · ')}</p>
           )}
+          {(() => {
+            const subcats = [...new Set(classes.map(c => c.subcategory).filter(Boolean))]
+            const labels = subcats.length > 0 ? subcats : [...new Set(classes.map(c => c.title))]
+            return (
+              <p style={{ color: '#6B7280', fontSize: '13px', marginBottom: '8px' }}>
+                {labels.join(' · ')}
+              </p>
+            )
+          })()}
           {room && (
             <p style={{ fontSize: '13px', color: '#6B7280', marginBottom: '8px' }}>
               {room_maps_url
