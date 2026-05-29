@@ -109,6 +109,9 @@ export default function ClassCard(props: ClassCardProps) {
   const availableSlots = (slots || []).filter(s => s.spots_left > 0)
   const totalSpotsLeft = slots && slots.length > 0 ? slots.reduce((sum, s) => sum + s.spots_left, 0) : spots_left
   const hasMultipleSlots = slots && slots.length > 1
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null)
+  const selectedSlot = availableSlots.find(s => s.id === selectedSlotId) || null
 
   const locationPriceMap: Record<string, number | undefined> = { location: price_location, online: price_online, residence: price_residence }
   const types: string[] = location_types || []
@@ -221,23 +224,7 @@ export default function ClassCard(props: ClassCardProps) {
             )}
           </div>
 
-          {hasMultipleSlots ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <p style={{ color: '#6B7280', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span>📅</span> {availableSlots.length} time slot{availableSlots.length !== 1 ? 's' : ''} available
-              </p>
-              {availableSlots.slice(0, 2).map(s => (
-                <p key={s.id} style={{ color: '#6B7280', fontSize: '12px', marginLeft: '19px' }}>
-                  {s.label ? <span style={{ color: '#9CA3AF', fontWeight: '600' }}>{s.label} — </span> : ''}{s.date} · {s.time} · {s.duration}
-                </p>
-              ))}
-              {availableSlots.length > 2 && <p style={{ color: '#4B5563', fontSize: '12px', marginLeft: '19px' }}>+{availableSlots.length - 2} more</p>}
-            </div>
-          ) : (
-            <p style={{ color: '#6B7280', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span>📅</span> {slots?.[0]?.date || date} · {slots?.[0]?.time || time}
-            </p>
-          )}
+          {/* Location info */}
           {(types.includes('location') && room) && (
             <p style={{ fontSize: '13px', color: '#6B7280' }}>
               {room_maps_url
@@ -258,20 +245,68 @@ export default function ClassCard(props: ClassCardProps) {
               <button disabled style={{ width: '100%', background: 'rgba(255,255,255,0.05)', color: '#6B7280', padding: '12px', borderRadius: '12px', fontWeight: '600', border: '1px solid rgba(255,255,255,0.08)', cursor: 'not-allowed', fontSize: '14px' }}>
                 Sold Out
               </button>
-            ) : (
+            ) : !pickerOpen ? (
               <>
-                <p style={{ fontSize: '13px', fontWeight: '600', marginBottom: '10px', color: isLow ? '#F97316' : '#4ADE80' }}>
-                  {isLow ? `⚡ Only ${totalSpotsLeft} spots left!` : `✓ ${totalSpotsLeft} spots available`}
+                <p style={{ fontSize: '13px', color: '#6B7280', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span>📅</span>
+                  {availableSlots.length > 0
+                    ? `${availableSlots.length} time slot${availableSlots.length !== 1 ? 's' : ''} available`
+                    : `${slots?.[0]?.date || date} · ${slots?.[0]?.time || time}`}
                 </p>
-                <Link
-                  href={`/checkout?classId=${id}`}
-                  style={{ display: 'block', width: '100%', background: '#F97316', color: 'white', padding: '12px', borderRadius: '12px', fontWeight: '700', textAlign: 'center', textDecoration: 'none', fontSize: '14px', transition: 'all 0.2s ease', boxShadow: '0 2px 12px rgba(249,115,22,0.25)' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#EA6C0A'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)' }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#F97316'; (e.currentTarget as HTMLElement).style.transform = 'translateY(0)' }}
+                <button
+                  onClick={() => { setPickerOpen(true); setSelectedSlotId(availableSlots.length === 1 ? availableSlots[0].id : null) }}
+                  style={{ display: 'block', width: '100%', background: '#F97316', color: 'white', padding: '12px', borderRadius: '12px', fontWeight: '700', textAlign: 'center', fontSize: '14px', border: 'none', cursor: 'pointer', boxShadow: '0 2px 12px rgba(249,115,22,0.25)' }}
                 >
-                  Book Now →
-                </Link>
+                  {availableSlots.length === 1 ? 'Book Now →' : 'See Available Times →'}
+                </button>
               </>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <p style={{ color: '#9CA3AF', fontSize: '12px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '2px' }}>
+                  Select a time slot
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '220px', overflowY: 'auto' }}>
+                  {availableSlots.map(slot => (
+                    <button
+                      key={slot.id}
+                      onClick={() => setSelectedSlotId(slot.id)}
+                      style={{
+                        width: '100%', textAlign: 'left', padding: '10px 14px', borderRadius: '10px', cursor: 'pointer',
+                        border: selectedSlotId === slot.id ? '2px solid #F97316' : '1px solid rgba(255,255,255,0.1)',
+                        background: selectedSlotId === slot.id ? 'rgba(249,115,22,0.1)' : 'rgba(255,255,255,0.03)',
+                        transition: 'all 0.15s',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          {slot.label && <p style={{ color: '#F97316', fontSize: '11px', fontWeight: '700', marginBottom: '2px' }}>{slot.label}</p>}
+                          <p style={{ color: 'white', fontSize: '13px', fontWeight: '600' }}>📅 {slot.date} · {slot.time}</p>
+                          <p style={{ color: '#6B7280', fontSize: '12px', marginTop: '2px' }}>{slot.duration}</p>
+                        </div>
+                        <span style={{ fontSize: '11px', fontWeight: '600', color: slot.spots_left <= 3 ? '#F97316' : '#4ADE80', flexShrink: 0, marginLeft: '8px' }}>
+                          {slot.spots_left <= 3 ? `⚡ ${slot.spots_left} left` : `✓ ${slot.spots_left} spots`}
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+
+                {selectedSlot && (
+                  <Link
+                    href={`/checkout?classId=${id}&slotId=${selectedSlot.id}`}
+                    style={{ display: 'block', width: '100%', background: '#F97316', color: 'white', padding: '12px', borderRadius: '12px', fontWeight: '700', textAlign: 'center', textDecoration: 'none', fontSize: '14px', boxShadow: '0 2px 12px rgba(249,115,22,0.25)', marginTop: '2px' }}
+                  >
+                    Book — {selectedSlot.date} · {selectedSlot.time} →
+                  </Link>
+                )}
+
+                <button
+                  onClick={() => { setPickerOpen(false); setSelectedSlotId(null) }}
+                  style={{ background: 'none', border: 'none', color: '#6B7280', fontSize: '13px', cursor: 'pointer', textAlign: 'center', padding: '4px' }}
+                >
+                  ← Back
+                </button>
+              </div>
             )}
           </div>
         </div>
