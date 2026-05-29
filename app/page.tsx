@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect, useMemo } from 'react'
 import Navbar from '@/components/Navbar'
-import ClassCard from '@/components/ClassCard'
+import StudioCard from '@/components/StudioCard'
 
 const CATEGORIES = ['All', 'Sports', 'Music', 'Dance']
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
@@ -54,6 +54,17 @@ export default function HomePage() {
       return matchCat && matchSub && matchSearch && matchDay
     })
   }, [classes, activeCategory, activeSubcategory, activeDay, search])
+
+  // Group filtered classes by studio
+  const studios = useMemo(() => {
+    const map: Record<string, any[]> = {}
+    filtered.forEach(c => {
+      const key = c.studio || 'Other'
+      if (!map[key]) map[key] = []
+      map[key].push(c)
+    })
+    return Object.entries(map).map(([name, studioClasses]) => ({ name, classes: studioClasses }))
+  }, [filtered])
 
   return (
     <main style={{ minHeight: '100vh', backgroundColor: '#0A0F1A' }}>
@@ -202,34 +213,34 @@ export default function HomePage() {
         {loading ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
             {[...Array(6)].map((_, i) => (
-              <div key={i} style={{ height: '380px', borderRadius: '16px', background: 'linear-gradient(90deg, #111827 25%, #1A2332 50%, #111827 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite' }} />
+              <div key={i} style={{ height: '340px', borderRadius: '16px', background: 'linear-gradient(90deg, #111827 25%, #1A2332 50%, #111827 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite' }} />
             ))}
           </div>
-        ) : filtered.length === 0 ? (
+        ) : studios.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '80px 24px' }}>
             <p style={{ fontSize: '40px', marginBottom: '16px' }}>🔍</p>
-            <p style={{ color: '#6B7280', fontSize: '18px', fontWeight: '600' }}>No classes found</p>
+            <p style={{ color: '#6B7280', fontSize: '18px', fontWeight: '600' }}>No studios found</p>
             <p style={{ color: '#4B5563', fontSize: '14px', marginTop: '8px' }}>Try a different search or category</p>
           </div>
         ) : activeCategory === 'All' && !activeSubcategory && !activeDay && !search ? (
-          // Grouped by category view
+          // Grouped by category, then by studio
           <div style={{ display: 'flex', flexDirection: 'column', gap: '56px' }}>
             {[
               { name: 'Music', emoji: '🎵', color: '#34D399' },
               { name: 'Sports', emoji: '⚡', color: '#60A5FA' },
               { name: 'Dance', emoji: '🎭', color: '#A78BFA' },
             ].map(({ name: cat, emoji, color }) => {
-              const catClasses = filtered.filter(c => c.category === cat)
-              if (catClasses.length === 0) return null
+              const catStudios = studios.filter(s => s.classes.some((c: any) => c.category === cat))
+              if (catStudios.length === 0) return null
               return (
                 <div key={cat}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
                     <span style={{ fontSize: '22px' }}>{emoji}</span>
                     <h3 style={{ color: 'white', fontSize: '22px', fontWeight: '800', letterSpacing: '-0.4px', margin: 0 }}>{cat}</h3>
-                    <span style={{ fontSize: '13px', color, background: `${color}18`, padding: '3px 10px', borderRadius: '999px', fontWeight: '600' }}>{catClasses.length} classes</span>
+                    <span style={{ fontSize: '13px', color, background: `${color}18`, padding: '3px 10px', borderRadius: '999px', fontWeight: '600' }}>{catStudios.length} studio{catStudios.length !== 1 ? 's' : ''}</span>
                   </div>
                   <div className="class-grid stagger">
-                    {catClasses.map(c => <ClassCard key={c.id} {...c} />)}
+                    {catStudios.map(s => <StudioCard key={s.name} studioName={s.name} classes={s.classes} />)}
                   </div>
                 </div>
               )
@@ -237,7 +248,7 @@ export default function HomePage() {
           </div>
         ) : (
           <div className="class-grid stagger">
-            {filtered.map(c => <ClassCard key={c.id} {...c} />)}
+            {studios.map(s => <StudioCard key={s.name} studioName={s.name} classes={s.classes} />)}
           </div>
         )}
       </section>
