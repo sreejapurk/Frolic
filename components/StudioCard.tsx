@@ -191,11 +191,26 @@ export default function StudioCard({ studioName, classes }: StudioCardProps) {
             if (clsSlots.length === 0) return null
             return (
               <div key={cls.id}>
-                <div style={{ marginBottom: '8px', paddingBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                  <p style={{ color: 'white', fontSize: '14px', fontWeight: '700' }}>{cls.title}</p>
-                  <p style={{ color: '#6B7280', fontSize: '12px', marginTop: '2px' }}>
-                    {cls.level} · {cls.duration} · <span style={{ color: '#F97316', fontWeight: '700' }}>{getDisplayPrice(cls)}</span>
+                <div style={{ marginBottom: '10px', paddingBottom: '10px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
+                    <p style={{ color: 'white', fontSize: '14px', fontWeight: '700' }}>{cls.title}</p>
+                    <span style={{ color: '#F97316', fontWeight: '700', fontSize: '14px', flexShrink: 0, marginLeft: '8px' }}>{getDisplayPrice(cls)}</span>
+                  </div>
+                  <p style={{ color: '#6B7280', fontSize: '12px', marginBottom: cls.description ? '6px' : '0' }}>
+                    {cls.level} · {cls.duration}{cls.instructor ? ` · ${cls.instructor}` : ''}
                   </p>
+                  {cls.description && (
+                    <p style={{ color: '#9CA3AF', fontSize: '12px', lineHeight: '1.5' }}>{cls.description}</p>
+                  )}
+                  {cls.location_types && cls.location_types.length > 0 && (
+                    <div style={{ display: 'flex', gap: '6px', marginTop: '6px', flexWrap: 'wrap' }}>
+                      {cls.location_types.map(t => (
+                        <span key={t} style={{ fontSize: '11px', fontWeight: '600', padding: '2px 8px', borderRadius: '999px', background: 'rgba(255,255,255,0.06)', color: '#9CA3AF' }}>
+                          {t === 'location' ? '📍 In-person' : t === 'online' ? '💻 Online' : '🏠 At your place'}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   {clsSlots.map(slot => {
@@ -241,10 +256,16 @@ export default function StudioCard({ studioName, classes }: StudioCardProps) {
           {/* Slotless classes — direct book button */}
           {slotlessBookable.map(cls => (
             <div key={cls.id} style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '12px' }}>
-              <p style={{ color: 'white', fontSize: '14px', fontWeight: '700', marginBottom: '2px' }}>{cls.title}</p>
-              <p style={{ color: '#6B7280', fontSize: '12px', marginBottom: '10px' }}>
-                {cls.level} · {cls.duration} · <span style={{ color: '#F97316', fontWeight: '700' }}>{getDisplayPrice(cls)}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
+                <p style={{ color: 'white', fontSize: '14px', fontWeight: '700' }}>{cls.title}</p>
+                <span style={{ color: '#F97316', fontWeight: '700', fontSize: '14px', flexShrink: 0, marginLeft: '8px' }}>{getDisplayPrice(cls)}</span>
+              </div>
+              <p style={{ color: '#6B7280', fontSize: '12px', marginBottom: cls.description ? '6px' : '10px' }}>
+                {cls.level} · {cls.duration}{cls.instructor ? ` · ${cls.instructor}` : ''}
               </p>
+              {cls.description && (
+                <p style={{ color: '#9CA3AF', fontSize: '12px', lineHeight: '1.5', marginBottom: '10px' }}>{cls.description}</p>
+              )}
               <Link
                 href={`/checkout?classId=${cls.id}`}
                 style={{ display: 'block', width: '100%', background: '#F97316', color: 'white', padding: '12px', borderRadius: '12px', fontWeight: '700', textAlign: 'center', textDecoration: 'none', fontSize: '14px', boxShadow: '0 2px 12px rgba(249,115,22,0.3)' }}
