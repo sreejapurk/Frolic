@@ -201,27 +201,36 @@ export default function StudioCard({ studioName, classes }: StudioCardProps) {
                   {clsSlots.map(slot => {
                     const isSelected = selected?.slot.id === slot.id
                     return (
-                      <button
-                        key={slot.id}
-                        onClick={() => setSelected(isSelected ? null : { classId: cls.id, slot })}
-                        style={{
-                          width: '100%', textAlign: 'left', padding: '10px 14px', borderRadius: '10px', cursor: 'pointer',
-                          border: isSelected ? '2px solid #F97316' : '1px solid rgba(255,255,255,0.1)',
-                          background: isSelected ? 'rgba(249,115,22,0.1)' : 'rgba(255,255,255,0.03)',
-                          transition: 'all 0.15s',
-                        }}
-                      >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <div>
-                            {slot.label && <p style={{ color: '#F97316', fontSize: '11px', fontWeight: '700', marginBottom: '2px' }}>{slot.label}</p>}
-                            <p style={{ color: 'white', fontSize: '13px', fontWeight: '600' }}>📅 {slot.date} · {slot.time}</p>
-                            <p style={{ color: '#6B7280', fontSize: '12px', marginTop: '2px' }}>{slot.duration}</p>
+                      <div key={slot.id}>
+                        <button
+                          onClick={() => setSelected(isSelected ? null : { classId: cls.id, slot })}
+                          style={{
+                            width: '100%', textAlign: 'left', padding: '10px 14px', borderRadius: '10px', cursor: 'pointer',
+                            border: isSelected ? '2px solid #F97316' : '1px solid rgba(255,255,255,0.1)',
+                            background: isSelected ? 'rgba(249,115,22,0.1)' : 'rgba(255,255,255,0.03)',
+                            transition: 'all 0.15s',
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div>
+                              {slot.label && <p style={{ color: '#F97316', fontSize: '11px', fontWeight: '700', marginBottom: '2px' }}>{slot.label}</p>}
+                              <p style={{ color: 'white', fontSize: '13px', fontWeight: '600' }}>📅 {slot.date} · {slot.time}</p>
+                              <p style={{ color: '#6B7280', fontSize: '12px', marginTop: '2px' }}>{slot.duration}</p>
+                            </div>
+                            <span style={{ fontSize: '11px', fontWeight: '600', color: slot.spots_left <= 3 ? '#F97316' : '#4ADE80', flexShrink: 0, marginLeft: '8px' }}>
+                              {slot.spots_left <= 3 ? `⚡ ${slot.spots_left} left` : `✓ ${slot.spots_left}`}
+                            </span>
                           </div>
-                          <span style={{ fontSize: '11px', fontWeight: '600', color: slot.spots_left <= 3 ? '#F97316' : '#4ADE80', flexShrink: 0, marginLeft: '8px' }}>
-                            {slot.spots_left <= 3 ? `⚡ ${slot.spots_left} left` : `✓ ${slot.spots_left}`}
-                          </span>
-                        </div>
-                      </button>
+                        </button>
+                        {isSelected && (
+                          <Link
+                            href={`/checkout?classId=${cls.id}&slotId=${slot.id}`}
+                            style={{ display: 'block', width: '100%', background: '#F97316', color: 'white', padding: '12px', borderRadius: '12px', fontWeight: '700', textAlign: 'center', textDecoration: 'none', fontSize: '14px', boxShadow: '0 2px 12px rgba(249,115,22,0.3)', marginTop: '6px' }}
+                          >
+                            Book — {slot.date} · {slot.time} →
+                          </Link>
+                        )}
+                      </div>
                     )
                   })}
                 </div>
@@ -245,14 +254,6 @@ export default function StudioCard({ studioName, classes }: StudioCardProps) {
             </div>
           ))}
 
-          {selected && (
-            <Link
-              href={`/checkout?classId=${selected.classId}&slotId=${selected.slot.id}`}
-              style={{ display: 'block', width: '100%', background: '#F97316', color: 'white', padding: '14px', borderRadius: '12px', fontWeight: '700', textAlign: 'center', textDecoration: 'none', fontSize: '15px', boxShadow: '0 2px 12px rgba(249,115,22,0.3)' }}
-            >
-              Book — {selected.slot.date} · {selected.slot.time} →
-            </Link>
-          )}
         </div>
       )}
     </div>
