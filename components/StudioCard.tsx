@@ -92,7 +92,11 @@ export default function StudioCard({ studioName, classes }: StudioCardProps) {
   const availableSlots = classes.flatMap(c =>
     (c.slots || []).filter(s => s.spots_left > 0).map(s => ({ ...s, _classId: c.id, _cls: c }))
   )
-  const totalSpots = availableSlots.reduce((sum, s) => sum + s.spots_left, 0)
+  // Classes with no slots but spots available — can still be booked directly
+  const slotlessBookable = classes.filter(c =>
+    (!c.slots || c.slots.length === 0) && (c.spots_left ?? 0) > 0
+  )
+  const totalSpots = availableSlots.reduce((sum, s) => sum + s.spots_left, 0) + slotlessBookable.reduce((sum, c) => sum + (c.spots_left ?? 0), 0)
   const isSoldOut = totalSpots === 0
 
   return (
@@ -224,6 +228,22 @@ export default function StudioCard({ studioName, classes }: StudioCardProps) {
               </div>
             )
           })}
+
+          {/* Slotless classes — direct book button */}
+          {slotlessBookable.map(cls => (
+            <div key={cls.id} style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '12px' }}>
+              <p style={{ color: 'white', fontSize: '14px', fontWeight: '700', marginBottom: '2px' }}>{cls.title}</p>
+              <p style={{ color: '#6B7280', fontSize: '12px', marginBottom: '10px' }}>
+                {cls.level} · {cls.duration} · <span style={{ color: '#F97316', fontWeight: '700' }}>{getDisplayPrice(cls)}</span>
+              </p>
+              <Link
+                href={`/checkout?classId=${cls.id}`}
+                style={{ display: 'block', width: '100%', background: '#F97316', color: 'white', padding: '12px', borderRadius: '12px', fontWeight: '700', textAlign: 'center', textDecoration: 'none', fontSize: '14px', boxShadow: '0 2px 12px rgba(249,115,22,0.3)' }}
+              >
+                Book Now →
+              </Link>
+            </div>
+          ))}
 
           {selected && (
             <Link
