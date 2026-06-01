@@ -9,14 +9,17 @@ const SHORT_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct
 function nextOccurrence(dateStr: string): string {
   if (!dateStr) return dateStr
   const today = new Date(); today.setHours(0,0,0,0)
-  const attempted = new Date(dateStr)
-  if (!isNaN(attempted.getTime())) {
-    attempted.setHours(0,0,0,0)
-    if (attempted >= today) return `${SHORT_DAYS[attempted.getDay()]}, ${SHORT_MONTHS[attempted.getMonth()]} ${attempted.getDate()}`
-    const targetDay = attempted.getDay(); const currentDay = today.getDay()
-    let daysAhead = targetDay - currentDay; if (daysAhead <= 0) daysAhead += 7
-    const next = new Date(today); next.setDate(today.getDate() + daysAhead)
-    return `${SHORT_DAYS[next.getDay()]}, ${SHORT_MONTHS[next.getMonth()]} ${next.getDate()}`
+  // Only use new Date() for ISO format (YYYY-MM-DD) — V8 misparses "Thu, Jun 4" as a wrong year
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    const attempted = new Date(dateStr + 'T00:00:00')
+    if (!isNaN(attempted.getTime())) {
+      attempted.setHours(0,0,0,0)
+      if (attempted >= today) return `${SHORT_DAYS[attempted.getDay()]}, ${SHORT_MONTHS[attempted.getMonth()]} ${attempted.getDate()}`
+      const targetDay = attempted.getDay(); const currentDay = today.getDay()
+      let daysAhead = targetDay - currentDay; if (daysAhead <= 0) daysAhead += 7
+      const next = new Date(today); next.setDate(today.getDate() + daysAhead)
+      return `${SHORT_DAYS[next.getDay()]}, ${SHORT_MONTHS[next.getMonth()]} ${next.getDate()}`
+    }
   }
   const monthDayMatch = dateStr.match(/(?:(\w+),\s*)?(\w+)\s+(\d+)/)
   if (monthDayMatch) {
