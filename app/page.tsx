@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo } from 'react'
 import Navbar from '@/components/Navbar'
 import StudioCard from '@/components/StudioCard'
 
-const CATEGORIES = ['All', 'Sports', 'Music']
+const CATEGORIES = ['All', 'Music']
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
 const SUBCATEGORIES: Record<string, string[]> = {
@@ -227,7 +227,6 @@ export default function HomePage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '56px' }}>
             {[
               { name: 'Music', emoji: '🎵', color: '#34D399' },
-              { name: 'Sports', emoji: '⚡', color: '#60A5FA' },
             ].map(({ name: cat, emoji, color }) => {
               const catStudios = studios.filter(s => s.classes.some((c: any) => c.category === cat))
               if (catStudios.length === 0) return null
