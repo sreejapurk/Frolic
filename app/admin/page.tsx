@@ -288,6 +288,18 @@ export default function AdminPage() {
           >
             Fix Ira Klein Studio
           </button>
+          <button
+            onClick={async () => {
+              if (!confirm('Replace ALL Brooklyn Music Workshop classes with the new schedule? This cannot be undone.')) return
+              const res = await fetch('/api/admin/seed-brooklyn', { method: 'POST' })
+              const data = await res.json()
+              if (res.ok) { alert(`Done! Created ${data.inserted?.length} classes.`); loadData() }
+              else alert('Error: ' + (data.error || res.status))
+            }}
+            style={{ padding: '8px 16px', borderRadius: '999px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', border: '1px solid rgba(168,85,247,0.4)', backgroundColor: 'rgba(168,85,247,0.08)', color: '#A855F7' }}
+          >
+            Seed Brooklyn Workshop
+          </button>
           {(['classes', 'bookings', 'applications', 'studios', 'add', 'reschedule'] as const).map(t => (
             <button key={t} onClick={() => setTab(t)} style={{ padding: '8px 16px', borderRadius: '999px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', border: 'none', backgroundColor: tab === t ? '#F97316' : 'transparent', color: 'white' }}>
               {t === 'add' ? '+ Add Class' : t === 'reschedule' ? 'Reschedule' : t === 'studios' ? 'Studios' : t.charAt(0).toUpperCase() + t.slice(1)}

@@ -2,11 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db'
 import { v4 as uuidv4 } from 'uuid'
 
-export async function GET(req: NextRequest) {
-  const secret = req.nextUrl.searchParams.get('secret')
-  if (!secret || secret !== process.env.ADMIN_SECRET) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+export async function POST(_req: NextRequest) {
 
   // Preserve image and studio_user_id from existing Brooklyn Music Workshop entry
   const existing = await query(
