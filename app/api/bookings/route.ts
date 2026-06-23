@@ -73,11 +73,12 @@ export async function POST(req: NextRequest) {
     )
     const studioEmail = studioResult.rows[0]?.email
 
-    // Send confirmation email to customer
+    // Send confirmation email to customer (and always BCC hello@joinfrolic.com)
     try {
       await resend.emails.send({
         from: 'Frolic <hello@joinfrolic.com>',
         to: data.email,
+        bcc: 'hello@joinfrolic.com',
         subject: `Booking Confirmed — ${data.className}`,
         html: `
           <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; background-color: #0F1624; color: white; padding: 40px; border-radius: 16px;">

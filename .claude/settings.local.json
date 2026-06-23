@@ -117,7 +117,8 @@
       "Bash(git add app/admin/page.tsx && git commit -m \"Add Fix Ira Klein Studio button to admin panel\" && git push origin main)",
       "Bash(git add components/StudioCard.tsx && git commit -m \"Add expandable description to studio cards\" && git push origin main)",
       "Bash(git add components/StudioCard.tsx && git commit -m \"Allow booking classes with no slots but spots available\" && git push origin main)",
-      "Bash(git add -A && git commit -m \"Add schedule_only mode: show slot times as info with single Book Now button\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\" && git push origin main)"
+      "Bash(git add -A && git commit -m \"Add schedule_only mode: show slot times as info with single Book Now button\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\" && git push origin main)",
+      "Bash(git add -A && git commit -m \"Always BCC hello@joinfrolic.com on bookings, add test email button in admin\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\" && git push origin main)"
     ]
   }
 }

@@ -300,6 +300,16 @@ export default function AdminPage() {
           >
             Seed Brooklyn Workshop
           </button>
+          <button
+            onClick={async () => {
+              const res = await fetch('/api/admin/test-email', { method: 'POST' })
+              if (res.ok) alert('Sample confirmation email sent to hello@joinfrolic.com!')
+              else alert('Failed to send email')
+            }}
+            style={{ padding: '8px 16px', borderRadius: '999px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', border: '1px solid rgba(251,191,36,0.4)', backgroundColor: 'rgba(251,191,36,0.08)', color: '#FBB724' }}
+          >
+            Send Test Email
+          </button>
           {(['classes', 'bookings', 'applications', 'studios', 'add', 'reschedule'] as const).map(t => (
             <button key={t} onClick={() => setTab(t)} style={{ padding: '8px 16px', borderRadius: '999px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', border: 'none', backgroundColor: tab === t ? '#F97316' : 'transparent', color: 'white' }}>
               {t === 'add' ? '+ Add Class' : t === 'reschedule' ? 'Reschedule' : t === 'studios' ? 'Studios' : t.charAt(0).toUpperCase() + t.slice(1)}
