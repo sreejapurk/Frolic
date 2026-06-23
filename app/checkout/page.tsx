@@ -61,7 +61,7 @@ function CheckoutForm({ classData, classId }: { classData: any; classId: string 
       alert('Please fill in all required fields')
       return
     }
-    if (hasSlots && !selectedSlot) {
+    if (hasSlots && !selectedSlot && !classData.schedule_only) {
       alert('Please select a time slot')
       return
     }
@@ -147,7 +147,7 @@ function CheckoutForm({ classData, classId }: { classData: any; classId: string 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-        {hasSlots && availableSlots.length > 1 && (
+        {hasSlots && availableSlots.length > 1 && !classData.schedule_only && (
           <div style={{ backgroundColor: '#1A2332', borderRadius: '16px', padding: '24px', border: '1px solid rgba(255,255,255,0.1)' }}>
             <h2 style={{ color: 'white', fontWeight: 'bold', fontSize: '20px', marginBottom: '8px' }}>Choose a Time Slot</h2>
             <p style={{ color: '#9CA3AF', fontSize: '14px', marginBottom: '16px' }}>Select the date and time that works best for you.</p>
@@ -272,16 +272,32 @@ function CheckoutForm({ classData, classId }: { classData: any; classId: string 
           <h3 style={{ color: 'white', fontWeight: 'bold', fontSize: '20px', marginBottom: '4px' }}>{classData.title}</h3>
           <p style={{ color: '#9CA3AF', fontSize: '14px', marginBottom: '20px' }}>{classData.studio}</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '14px', marginBottom: '20px' }}>
-            {[
-              ['Date & Time', selectedSlot ? `${selectedSlot.date} at ${selectedSlot.time}` : `${classData.date} at ${classData.time}`],
-              ['Location', selectedLocation === 'online' ? 'Online' : selectedLocation === 'residence' ? 'At your home' : classData.room || classData.studio],
-              ['Level', classData.level]
-            ].map(([label, value]) => (
-              <div key={label} style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: '#9CA3AF' }}>{label}:</span>
-                <span style={{ color: 'white', textAlign: 'right' }}>{value}</span>
+            {classData.schedule_only && (classData.slots || []).length > 0 ? (
+              <div>
+                <span style={{ color: '#9CA3AF', display: 'block', marginBottom: '8px' }}>Schedule:</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {(classData.slots || []).map((slot: any) => (
+                    <div key={slot.id} style={{ backgroundColor: '#0F1624', borderRadius: '8px', padding: '8px 12px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                      <span style={{ color: 'white', fontSize: '13px', fontWeight: '600' }}>📅 {slot.date} · {slot.time}</span>
+                      <span style={{ color: '#6B7280', fontSize: '12px', display: 'block' }}>{slot.duration}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            ))}
+            ) : (
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: '#9CA3AF' }}>Date & Time:</span>
+                <span style={{ color: 'white', textAlign: 'right' }}>{selectedSlot ? `${selectedSlot.date} at ${selectedSlot.time}` : `${classData.date} at ${classData.time}`}</span>
+              </div>
+            )}
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ color: '#9CA3AF' }}>Location:</span>
+              <span style={{ color: 'white', textAlign: 'right' }}>{selectedLocation === 'online' ? 'Online' : selectedLocation === 'residence' ? 'At your home' : classData.room || classData.studio}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ color: '#9CA3AF' }}>Level:</span>
+              <span style={{ color: 'white', textAlign: 'right' }}>{classData.level}</span>
+            </div>
           </div>
           <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '20px', display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', marginBottom: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -295,9 +311,11 @@ function CheckoutForm({ classData, classId }: { classData: any; classId: string 
             <span style={{ color: 'white', fontWeight: 'bold', fontSize: '20px' }}>Total:</span>
             <span style={{ color: '#F97316', fontWeight: 'bold', fontSize: '24px' }}>${total}</span>
           </div>
-          <div style={{ backgroundColor: '#0F1624', borderRadius: '12px', padding: '16px', border: '1px solid rgba(255,255,255,0.05)', fontSize: '14px', color: '#9CA3AF' }}>
-            <strong style={{ color: 'white' }}>Cancellation Policy:</strong> Full refund if cancelled 24 hours before the class starts.
-          </div>
+          {!classData.schedule_only && (
+            <div style={{ backgroundColor: '#0F1624', borderRadius: '12px', padding: '16px', border: '1px solid rgba(255,255,255,0.05)', fontSize: '14px', color: '#9CA3AF' }}>
+              <strong style={{ color: 'white' }}>Cancellation Policy:</strong> Full refund if cancelled 24 hours before the class starts.
+            </div>
+          )}
         </div>
       </div>
     </div>
