@@ -53,6 +53,7 @@ interface ClassItem {
   room?: string
   room_maps_url?: string
   rating?: string
+  schedule_only?: boolean
 }
 
 interface StudioCardProps {
@@ -189,29 +190,57 @@ export default function StudioCard({ studioName, classes }: StudioCardProps) {
           {classes.map(cls => {
             const clsSlots = (cls.slots || []).filter(s => s.spots_left > 0)
             if (clsSlots.length === 0) return null
+
+            const classDetails = (
+              <div style={{ marginBottom: '10px', paddingBottom: '10px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
+                  <p style={{ color: 'white', fontSize: '14px', fontWeight: '700' }}>{cls.title}</p>
+                  <span style={{ color: '#F97316', fontWeight: '700', fontSize: '14px', flexShrink: 0, marginLeft: '8px' }}>{getDisplayPrice(cls)}</span>
+                </div>
+                <p style={{ color: '#6B7280', fontSize: '12px', marginBottom: cls.description ? '6px' : '0' }}>
+                  {cls.level} · {cls.duration}{cls.instructor ? ` · ${cls.instructor}` : ''}
+                </p>
+                {cls.description && (
+                  <p style={{ color: '#9CA3AF', fontSize: '12px', lineHeight: '1.5' }}>{cls.description}</p>
+                )}
+                {cls.location_types && cls.location_types.length > 0 && (
+                  <div style={{ display: 'flex', gap: '6px', marginTop: '6px', flexWrap: 'wrap' }}>
+                    {cls.location_types.map(t => (
+                      <span key={t} style={{ fontSize: '11px', fontWeight: '600', padding: '2px 8px', borderRadius: '999px', background: 'rgba(255,255,255,0.06)', color: '#9CA3AF' }}>
+                        {t === 'location' ? '📍 In-person' : t === 'online' ? '💻 Online' : '🏠 At your place'}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )
+
+            if (cls.schedule_only) {
+              return (
+                <div key={cls.id}>
+                  {classDetails}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '12px' }}>
+                    {clsSlots.map(slot => (
+                      <div key={slot.id} style={{ padding: '8px 12px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                        {slot.label && <p style={{ color: '#F97316', fontSize: '11px', fontWeight: '700', marginBottom: '2px' }}>{slot.label}</p>}
+                        <p style={{ color: 'white', fontSize: '13px', fontWeight: '600' }}>📅 {slot.date} · {slot.time}</p>
+                        <p style={{ color: '#6B7280', fontSize: '12px', marginTop: '2px' }}>{slot.duration}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <Link
+                    href={`/checkout?classId=${cls.id}`}
+                    style={{ display: 'block', width: '100%', background: '#F97316', color: 'white', padding: '12px', borderRadius: '12px', fontWeight: '700', textAlign: 'center', textDecoration: 'none', fontSize: '14px', boxShadow: '0 2px 12px rgba(249,115,22,0.3)' }}
+                  >
+                    Book Now →
+                  </Link>
+                </div>
+              )
+            }
+
             return (
               <div key={cls.id}>
-                <div style={{ marginBottom: '10px', paddingBottom: '10px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
-                    <p style={{ color: 'white', fontSize: '14px', fontWeight: '700' }}>{cls.title}</p>
-                    <span style={{ color: '#F97316', fontWeight: '700', fontSize: '14px', flexShrink: 0, marginLeft: '8px' }}>{getDisplayPrice(cls)}</span>
-                  </div>
-                  <p style={{ color: '#6B7280', fontSize: '12px', marginBottom: cls.description ? '6px' : '0' }}>
-                    {cls.level} · {cls.duration}{cls.instructor ? ` · ${cls.instructor}` : ''}
-                  </p>
-                  {cls.description && (
-                    <p style={{ color: '#9CA3AF', fontSize: '12px', lineHeight: '1.5' }}>{cls.description}</p>
-                  )}
-                  {cls.location_types && cls.location_types.length > 0 && (
-                    <div style={{ display: 'flex', gap: '6px', marginTop: '6px', flexWrap: 'wrap' }}>
-                      {cls.location_types.map(t => (
-                        <span key={t} style={{ fontSize: '11px', fontWeight: '600', padding: '2px 8px', borderRadius: '999px', background: 'rgba(255,255,255,0.06)', color: '#9CA3AF' }}>
-                          {t === 'location' ? '📍 In-person' : t === 'online' ? '💻 Online' : '🏠 At your place'}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                {classDetails}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   {clsSlots.map(slot => {
                     const isSelected = selected?.slot.id === slot.id

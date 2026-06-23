@@ -21,8 +21,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         room=$13, room_maps_url=$14, recurring=$15, description=$16,
         location_type=$17, location_types=$18, price_location=$19, price_online=$20,
         price_residence=$21, instructor_background=$22, video_url=$23, distance=$24,
-        video_urls=$25, video_thumbnail=$26
-      WHERE id=$27`,
+        video_urls=$25, video_thumbnail=$26, schedule_only=$27
+      WHERE id=$28`,
       [data.title, data.studio, data.category, data.subcategory || null, data.price, data.level,
        duration, date, time, spots, data.image || null, data.instructor,
        data.room || null, data.room_maps_url || null, data.recurring ?? false, data.description || null,
@@ -30,7 +30,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
        data.price_location || null, data.price_online || null,
        data.price_residence || null, data.instructor_background || null,
        data.video_url || null, data.distance || '',
-       data.video_urls?.filter(Boolean) || null, data.video_thumbnail || null, id]
+       data.video_urls?.filter(Boolean) || null, data.video_thumbnail || null,
+       data.schedule_only ?? false, id]
     )
 
     // Replace slots — use rawDate (ISO) if available for clean storage

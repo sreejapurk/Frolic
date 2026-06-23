@@ -25,21 +25,22 @@ function nextOccurrence(dateStr: string): string {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
-  // Try ISO / standard date parse first (handles "2026-06-28", "Apr 7, 2026", etc.)
-  const attempted = new Date(dateStr)
-  if (!isNaN(attempted.getTime())) {
-    attempted.setHours(0, 0, 0, 0)
-    if (attempted >= today) {
-      return `${SHORT_DAYS[attempted.getDay()]}, ${SHORT_MONTHS[attempted.getMonth()]} ${attempted.getDate()}`
+  // Only use new Date() for ISO format (YYYY-MM-DD) — V8 misparses "Thu, Jun 4" as a wrong year
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    const attempted = new Date(dateStr + 'T00:00:00')
+    if (!isNaN(attempted.getTime())) {
+      attempted.setHours(0, 0, 0, 0)
+      if (attempted >= today) {
+        return `${SHORT_DAYS[attempted.getDay()]}, ${SHORT_MONTHS[attempted.getMonth()]} ${attempted.getDate()}`
+      }
+      const targetDay = attempted.getDay()
+      const currentDay = today.getDay()
+      let daysAhead = targetDay - currentDay
+      if (daysAhead <= 0) daysAhead += 7
+      const next = new Date(today)
+      next.setDate(today.getDate() + daysAhead)
+      return `${SHORT_DAYS[next.getDay()]}, ${SHORT_MONTHS[next.getMonth()]} ${next.getDate()}`
     }
-    // Past date: find next occurrence of that same day of week
-    const targetDay = attempted.getDay()
-    const currentDay = today.getDay()
-    let daysAhead = targetDay - currentDay
-    if (daysAhead <= 0) daysAhead += 7
-    const next = new Date(today)
-    next.setDate(today.getDate() + daysAhead)
-    return `${SHORT_DAYS[next.getDay()]}, ${SHORT_MONTHS[next.getMonth()]} ${next.getDate()}`
   }
 
   // Try "Day, Month DD" or "Month DD" format (e.g., "Sat, Jun 28", "Wed, Apr 8")
@@ -87,6 +88,7 @@ export async function GET() {
     try {
       await query(`ALTER TABLE class_slots ADD COLUMN IF NOT EXISTS label TEXT`)
       await query(`ALTER TABLE class_slots ADD COLUMN IF NOT EXISTS spots_reset_at TIMESTAMP`)
+      await query(`ALTER TABLE classes ADD COLUMN IF NOT EXISTS schedule_only BOOLEAN DEFAULT FALSE`)
     } catch (e) {
       console.error('Auto-migration skipped:', e)
     }

@@ -661,6 +661,10 @@ export default function AdminPage() {
                 <input type="checkbox" checked={editingClass.recurring || false} onChange={e => setEditingClass((c: any) => ({ ...c, recurring: e.target.checked }))} id="edit-recurring" />
                 <label htmlFor="edit-recurring" style={{ color: '#9CA3AF', fontSize: '14px', cursor: 'pointer' }}>Recurring class (repeats weekly)</label>
               </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <input type="checkbox" checked={editingClass.schedule_only || false} onChange={e => setEditingClass((c: any) => ({ ...c, schedule_only: e.target.checked }))} id="edit-schedule-only" />
+                <label htmlFor="edit-schedule-only" style={{ color: '#9CA3AF', fontSize: '14px', cursor: 'pointer' }}>Schedule only — show all times as info with one Book Now button</label>
+              </div>
 
               <button onClick={handleEditSave} disabled={saving}
                 style={{ width: '100%', backgroundColor: '#F97316', border: 'none', color: 'white', padding: '16px', borderRadius: '16px', fontWeight: 'bold', fontSize: '18px', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1 }}>
