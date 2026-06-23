@@ -267,49 +267,6 @@ export default function AdminPage() {
       <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', backgroundColor: '#1A2332', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
         <Link href="/" style={{ color: 'white', fontWeight: 'bold', fontSize: '20px', textDecoration: 'none' }}>Frolic Admin</Link>
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          <button
-            onClick={async () => {
-              if (!confirm('Merge all duplicate classes (same title + instructor) into one? This cannot be undone.')) return
-              setDeduping(true)
-              const res = await fetch('/api/admin/dedup', { method: 'POST' })
-              const data = await res.json()
-              setDeduping(false)
-              alert(data.message)
-              loadData()
-            }}
-            disabled={deduping}
-            style={{ padding: '8px 16px', borderRadius: '999px', fontSize: '13px', fontWeight: '600', cursor: deduping ? 'not-allowed' : 'pointer', border: '1px solid rgba(96,165,250,0.4)', backgroundColor: 'rgba(96,165,250,0.08)', color: '#60A5FA', opacity: deduping ? 0.6 : 1 }}
-          >
-            {deduping ? 'Deduplicating...' : 'Dedup Classes'}
-          </button>
-          <button
-            onClick={fixIraKlein}
-            style={{ padding: '8px 16px', borderRadius: '999px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', border: '1px solid rgba(52,211,153,0.4)', backgroundColor: 'rgba(52,211,153,0.08)', color: '#34D399' }}
-          >
-            Fix Ira Klein Studio
-          </button>
-          <button
-            onClick={async () => {
-              if (!confirm('Replace ALL Brooklyn Music Workshop classes with the new schedule? This cannot be undone.')) return
-              const res = await fetch('/api/admin/seed-brooklyn', { method: 'POST' })
-              const data = await res.json()
-              if (res.ok) { alert(`Done! Created ${data.inserted?.length} classes.`); loadData() }
-              else alert('Error: ' + (data.error || res.status))
-            }}
-            style={{ padding: '8px 16px', borderRadius: '999px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', border: '1px solid rgba(168,85,247,0.4)', backgroundColor: 'rgba(168,85,247,0.08)', color: '#A855F7' }}
-          >
-            Seed Brooklyn Workshop
-          </button>
-          <button
-            onClick={async () => {
-              const res = await fetch('/api/admin/test-email', { method: 'POST' })
-              if (res.ok) alert('Sample confirmation email sent to hello@joinfrolic.com!')
-              else alert('Failed to send email')
-            }}
-            style={{ padding: '8px 16px', borderRadius: '999px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', border: '1px solid rgba(251,191,36,0.4)', backgroundColor: 'rgba(251,191,36,0.08)', color: '#FBB724' }}
-          >
-            Send Test Email
-          </button>
           {(['classes', 'bookings', 'applications', 'studios', 'add', 'reschedule'] as const).map(t => (
             <button key={t} onClick={() => setTab(t)} style={{ padding: '8px 16px', borderRadius: '999px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', border: 'none', backgroundColor: tab === t ? '#F97316' : 'transparent', color: 'white' }}>
               {t === 'add' ? '+ Add Class' : t === 'reschedule' ? 'Reschedule' : t === 'studios' ? 'Studios' : t.charAt(0).toUpperCase() + t.slice(1)}
