@@ -311,11 +311,6 @@ function CheckoutForm({ classData, classId }: { classData: any; classId: string 
             <span style={{ color: 'white', fontWeight: 'bold', fontSize: '20px' }}>Total:</span>
             <span style={{ color: '#F97316', fontWeight: 'bold', fontSize: '24px' }}>${total}</span>
           </div>
-          {!classData.schedule_only && (
-            <div style={{ backgroundColor: '#0F1624', borderRadius: '12px', padding: '16px', border: '1px solid rgba(255,255,255,0.05)', fontSize: '14px', color: '#9CA3AF' }}>
-              <strong style={{ color: 'white' }}>Cancellation Policy:</strong> Full refund if cancelled 24 hours before the class starts.
-            </div>
-          )}
         </div>
       </div>
     </div>
