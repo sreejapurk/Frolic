@@ -107,7 +107,6 @@ export async function POST(req: NextRequest) {
               </table>
             </div>
 
-            <p style="color: #9CA3AF; font-size: 14px; margin-bottom: 8px;">Cancellation Policy: Full refund if cancelled 24 hours before the class starts.</p>
             <p style="color: #6B7280; font-size: 13px;">See you at class!</p>
             <p style="color: #F97316; font-size: 18px; font-weight: bold; margin-top: 24px;">Frolic</p>
           </div>
