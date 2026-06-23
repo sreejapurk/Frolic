@@ -99,6 +99,8 @@ export default function StudioCard({ studioName, classes }: StudioCardProps) {
   )
   const totalSpots = availableSlots.reduce((sum, s) => sum + s.spots_left, 0) + slotlessBookable.reduce((sum, c) => sum + (c.spots_left ?? 0), 0)
   const isSoldOut = totalSpots === 0
+  // Single schedule_only class — show Book Now directly on card without expanding
+  const directBookClass = classes.length === 1 && classes[0].schedule_only ? classes[0] : null
 
   return (
     <div className="card animate-fade-up" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
@@ -171,16 +173,26 @@ export default function StudioCard({ studioName, classes }: StudioCardProps) {
                 : `📍 ${room}`}
             </p>
           )}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ color: '#6B7280', fontSize: '13px' }}>
-              {classes.length} class{classes.length !== 1 ? 'es' : ''} · {availableSlots.length} slot{availableSlots.length !== 1 ? 's' : ''} available
-            </span>
-            {!isSoldOut && (
-              <span style={{ color: '#F97316', fontSize: '13px', fontWeight: '700' }}>
-                {open ? 'Hide ↑' : 'Book ↓'}
+          {directBookClass ? (
+            <Link
+              href={`/checkout?classId=${directBookClass.id}`}
+              onClick={e => e.stopPropagation()}
+              style={{ display: 'block', width: '100%', background: '#F97316', color: 'white', padding: '12px', borderRadius: '12px', fontWeight: '700', textAlign: 'center', textDecoration: 'none', fontSize: '14px', boxShadow: '0 2px 12px rgba(249,115,22,0.3)', marginTop: '4px' }}
+            >
+              Book Now →
+            </Link>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ color: '#6B7280', fontSize: '13px' }}>
+                {classes.length} class{classes.length !== 1 ? 'es' : ''} · {availableSlots.length} slot{availableSlots.length !== 1 ? 's' : ''} available
               </span>
-            )}
-          </div>
+              {!isSoldOut && (
+                <span style={{ color: '#F97316', fontSize: '13px', fontWeight: '700' }}>
+                  {open ? 'Hide ↑' : 'Book ↓'}
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
